@@ -1,0 +1,4 @@
+PyMySQL==0.10.1
+sqlparse==0.4.1
+tabulate==0.8.7
+yoyo-migrations==7.2.0
