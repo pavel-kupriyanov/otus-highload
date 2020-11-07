@@ -1,4 +1,10 @@
+click==7.1.2
+fastapi==0.61.2
+h11==0.11.0
+pydantic==1.7.2
 PyMySQL==0.10.1
 sqlparse==0.4.1
+starlette==0.13.6
 tabulate==0.8.7
+uvicorn==0.12.2
 yoyo-migrations==7.2.0

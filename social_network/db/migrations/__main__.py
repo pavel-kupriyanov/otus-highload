@@ -1,4 +1,4 @@
-# TODO: add rollback and apply actions
+# TODO: improve migration tool
 import os.path
 
 from yoyo import read_migrations
