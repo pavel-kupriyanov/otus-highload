@@ -1,5 +1,7 @@
 import uvicorn
 
+from social_network.settings import UvicornSettings
 
-def run():
-    uvicorn.run('web:app', host='0.0.0.0', port=8000, reload=True)
+
+def run(conf: UvicornSettings, reload=False):
+    uvicorn.run(conf.ASGI_PATH, host=conf.HOST, port=conf.PORT, reload=reload)
