@@ -1,3 +1,4 @@
+# TODO: add rollback and apply actions
 import os.path
 
 from yoyo import read_migrations
