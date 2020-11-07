@@ -4,7 +4,7 @@ import os.path
 from yoyo import read_migrations
 from yoyo import get_backend
 
-from settings.settings import (
+from social_network.settings.settings import (
     DB_HOST,
     DB_PORT,
     DB_USER,
