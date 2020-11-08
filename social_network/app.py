@@ -1,7 +1,9 @@
 import uvicorn
 
-from social_network.settings import UvicornSettings
+from social_network.settings import BaseSettings
 
 
-def run(conf: UvicornSettings, reload=False):
-    uvicorn.run(conf.ASGI_PATH, host=conf.HOST, port=conf.PORT, reload=reload)
+def run(conf: BaseSettings):
+    u_conf = conf.UVICORN
+    uvicorn.run(u_conf.ASGI_PATH, host=u_conf.HOST, port=u_conf.PORT,
+                reload=conf.DEBUG)

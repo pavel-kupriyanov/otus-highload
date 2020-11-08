@@ -1,1 +1,5 @@
-from .base import Database
+from .db import (
+    database,
+    DatabaseConnector
+)
+from .users import UserManager

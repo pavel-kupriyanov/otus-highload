@@ -8,11 +8,11 @@ from social_network.settings import DatabaseSettings
 
 
 def get_db_str(s: DatabaseSettings):
-    return f'{s.DB}://{s.USER}:{s.PASSWORD.get_secret_value()}@{s.HOST}:{s.PORT}/{s.NAME}'
+    return f'{s.DB}://{s.USER}:{s.PASSWORD.get_secret_value()}' \
+           f'@{s.HOST}:{s.PORT}/{s.NAME}'
 
 
 def migrate(conf: DatabaseSettings):
-    print(get_db_str(conf))
     backend = get_backend(get_db_str(conf))
     migrations = read_migrations('/'.join([os.path.dirname(__file__), 'sql']))
 
