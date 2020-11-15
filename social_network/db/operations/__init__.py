@@ -1,5 +1,7 @@
 from .db import (
-    database,
+    get_connector,
+    BaseDatabaseConnector,
     DatabaseConnector
 )
-from .users import UserManager
+from .base import BaseManager
+from .users import UserManager, get_user_manager

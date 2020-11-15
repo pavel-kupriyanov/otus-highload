@@ -1,4 +1,5 @@
 from typing import Optional, Tuple, Any, Union
+from functools import lru_cache
 
 import aiomysql
 
@@ -71,5 +72,6 @@ class DatabaseConnector(BaseDatabaseConnector):
         await pool.wait_closed()
 
 
-# TODO: factory instead hardcode
-database = DatabaseConnector(settings.DATABASE)
+@lru_cache(1)
+def get_connector() -> BaseDatabaseConnector:
+    return DatabaseConnector(settings.DATABASE)

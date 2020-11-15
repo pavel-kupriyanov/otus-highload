@@ -1,5 +1,7 @@
 from typing import Tuple, Any, Optional
 
+from aiomysql import DatabaseError as RawDatabaseError
+
 from .db import (
     BaseDatabaseConnector,
     DatabaseError,
@@ -20,5 +22,5 @@ class BaseManager:
         try:
             return await self.db.make_query(query, params,
                                             last_row_id=last_row_id)
-        except Exception as e:
-            raise DatabaseError from e
+        except RawDatabaseError as e:
+            raise DatabaseError(e.args) from e
