@@ -1,7 +1,4 @@
-from random import choice
-from string import ascii_letters, digits
 from datetime import datetime, timedelta
-from typing import Optional
 
 from fastapi import (
     APIRouter,
@@ -11,57 +8,27 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 from fastapi_utils.cbv import cbv
 
-from pydantic import (
-    BaseModel,
-    EmailStr,
-    SecretStr,
-    Field
-)
-
 from social_network.settings import settings
 from social_network.db import (
-    get_connector,
-    get_user_manager,
-    BaseDatabaseConnector,
     UserManager,
     DatabaseError,
-    AuthUserModel,
     AccessTokenModel,
     AccessTokenManager,
-    get_access_token_manager
 )
-from social_network.utils.security import (
-    hash_password,
-    check_hash
+from social_network.utils.security import hash_password
+
+from .utils import (
+    is_valid_password,
+    generate_token_value,
+    get_user_manager_depends,
+    get_access_token_manager_depends
+)
+from .models import (
+    LoginPayload,
+    RegistrationPayload
 )
 
 router = APIRouter()
-
-
-# TODO: split file
-
-def get_user_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector)
-) -> UserManager:
-    return get_user_manager(connector)
-
-
-def get_access_token_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector)
-) -> AccessTokenManager:
-    return get_access_token_manager(connector)
-
-
-class LoginPayload(BaseModel):
-    email: EmailStr
-    password: SecretStr = Field(..., min_length=8, max_length=255)
-
-
-class RegistrationPayload(BaseModel):
-    email: EmailStr
-    password: SecretStr = Field(..., min_length=8, max_length=255)
-    first_name: str = Field(..., min_length=2, max_length=255)
-    last_name: Optional[str] = Field(None, min_length=2, max_length=255)
 
 
 @cbv(router)
@@ -114,14 +81,3 @@ class AuthViewSet:
         hashed_password, salt = hash_password(p.password.get_secret_value())
         await self.user_manager.create(p.email, hashed_password, salt,
                                        p.first_name, p.last_name)
-
-
-def is_valid_password(user: AuthUserModel, password: str) -> bool:
-    user_password = user.password.get_secret_value()
-    salt = user.salt.get_secret_value()
-    return check_hash(password, user_password, salt)
-
-
-def generate_token_value(length=255) -> str:
-    alphabet = ascii_letters + digits
-    return ''.join((choice(alphabet) for _ in range(length)))
