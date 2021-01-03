@@ -9,46 +9,41 @@ from pydantic import (
 )
 
 from .base import BaseManager
-from .db import BaseDatabaseConnector
-
-# TODO: maybe move queries into separate file?
-
-EMAIL_CHECK_QUERY = '''
-    SELECT id FROM users
-    WHERE email = %s;
-'''
-
-USER_CREATE_QUERY = '''
-INSERT INTO users(email, password, salt, first_name, last_name)
-VALUES (%s, %s, %s, %s, %s);
-SELECT LAST_INSERT_ID();
-'''
-
-USER_SELECT_QUERY = '''
-    SELECT * FROM users;
-'''
-
-RawUserModel = namedtuple('RawUserModel',
-                          'id, email, password, first_name, last_name')
+from .db import BaseDatabaseConnector, DatabaseError
+from .queries import UserQueries
 
 
 class UserModel(BaseModel):
     id: int
     email: EmailStr
-    password: SecretStr
-    salt: str
     first_name: str
     last_name: Optional[str]
+
+    _raw_user_model = namedtuple('_', 'id, email, first_name, last_name')
+
+    @classmethod
+    def from_db(cls, raw_user: tuple) -> 'UserModel':
+        return cls(**cls._raw_user_model(*raw_user)._asdict())
+
+
+class AuthUserModel(UserModel):
+    password: SecretStr
+    salt: SecretStr
+
+    _raw_user_model = namedtuple('_',
+                                 'id, email, password, first_name, last_name,'
+                                 'salt')
 
 
 class UserManager(BaseManager):
 
     async def create(self, email: EmailStr, hashed_password: str, salt: str,
                      first_name: str, last_name: Optional[str] = None) \
-            -> UserModel:
+            -> AuthUserModel:
         params = (email, hashed_password, salt, first_name, last_name)
-        id = await self._execute(USER_CREATE_QUERY, params, last_row_id=True)
-        return UserModel(
+        id = await self.execute(UserQueries.CREATE_USER, params,
+                                last_row_id=True)
+        return AuthUserModel(
             id=id,
             email=email,
             password=hashed_password,
@@ -58,14 +53,20 @@ class UserManager(BaseManager):
         )
 
     async def is_email_already_used(self, email: EmailStr) -> bool:
-        results = await self._execute(EMAIL_CHECK_QUERY, (email,))
+        results = await self.execute(UserQueries.GET_USER, (email, None))
         return bool(results)
 
-    async def get_users(self) -> List[UserModel]:
-        raw_users = await self._execute(USER_SELECT_QUERY)
-        # TODO: rewrite this shit
-        return [UserModel(**RawUserModel(*raw_user)._asdict())
-                for raw_user in raw_users]
+    async def get_auth_user(self, id: Optional[int] = None,
+                            email: Optional[EmailStr] = None) -> AuthUserModel:
+        users = await self.execute(UserQueries.GET_AUTH_USER,
+                                   (email, id))
+        if not users:
+            raise DatabaseError(f'User {email or id} not found.')
+        return AuthUserModel.from_db(users[0])
+
+    async def get_users(self) -> List[AuthUserModel]:
+        results = await self.execute(UserQueries.GET_USERS)
+        return [AuthUserModel.from_db(raw_user) for raw_user in results]
 
 
 @lru_cache(1)

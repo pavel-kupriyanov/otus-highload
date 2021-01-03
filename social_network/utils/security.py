@@ -1,6 +1,7 @@
 import os
 import base64
 from hashlib import pbkdf2_hmac
+from typing import Tuple
 
 ITERATIONS = 100000
 
@@ -19,5 +20,14 @@ def serialize(b: bytes) -> str:
     return base64.b64encode(b).decode("ascii").strip()
 
 
-def check_hash(raw: str, hash_: str, salt: bytes) -> bool:
-    return make_hash(raw, salt) == hash_
+def deserialize(s: str) -> bytes:
+    return base64.b64decode(s.encode('ascii'))
+
+
+def check_hash(raw: str, hash_: str, salt: str) -> bool:
+    return make_hash(raw, deserialize(salt)) == hash_
+
+
+def hash_password(raw_password: str) -> Tuple[str, str]:
+    salt = get_salt()
+    return make_hash(raw_password, salt), serialize(salt)

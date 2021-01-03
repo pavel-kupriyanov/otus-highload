@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     DEBUG = True
     UVICORN = UvicornSettings()
     DATABASE = DatabaseSettings(PASSWORD='password', NAME='otus_highload')
+    TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
 
 
 settings = Settings.from_json(CONFIG_PATH)
