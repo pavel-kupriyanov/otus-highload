@@ -20,8 +20,10 @@ from social_network.utils.security import hash_password
 from .utils import (
     is_valid_password,
     generate_token_value,
-    get_user_manager_depends,
-    get_access_token_manager_depends
+)
+from ..utils import (
+    get_access_token_manager_depends,
+    get_user_manager_depends
 )
 from .models import (
     LoginPayload,

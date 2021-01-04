@@ -8,6 +8,7 @@ from .operations import (
     UserManager,
     DatabaseError,
     AuthUserModel,
+    UserModel,
     AccessTokenManager,
     AccessTokenModel,
     get_access_token_manager

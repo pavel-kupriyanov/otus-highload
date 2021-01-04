@@ -7,6 +7,7 @@ from .db import (
 from .base import BaseManager
 from .users import (
     UserManager,
+    UserModel,
     AuthUserModel,
     get_user_manager,
 )

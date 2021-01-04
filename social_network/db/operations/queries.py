@@ -9,13 +9,16 @@ class UserQueries(str, Enum):
     '''
 
     GET_USER = '''
-        SELECT id, email, first_name, last_name FROM users
+        SELECT id, first_name, last_name FROM users
         WHERE email = %s OR id = %s
         LIMIT 1;
     '''
 
     GET_USERS = '''
-        SELECT id, email, first_name, last_name FROM users;
+        SELECT id, first_name, last_name FROM users
+        WHERE 
+        (first_name LIKE CONCAT('%%', %s, '%%')) OR 
+        (last_name LIKE CONCAT('%%', %s, '%%'))
     '''
 
     GET_AUTH_USER = '''
