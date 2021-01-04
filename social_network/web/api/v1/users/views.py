@@ -11,14 +11,11 @@ from social_network.db import (
 )
 
 from .models import UsersPayload
-from ..utils import (
-    get_user_manager_depends,
-)
+from .utils import get_user_manager_depends
 
 router = APIRouter()
 
 
-# TODO: update self
 @cbv(router)
 class UserViewSet:
     user_manager: UserManager = Depends(get_user_manager_depends)

@@ -10,7 +10,7 @@ class UserQueries(str, Enum):
 
     GET_USER = '''
         SELECT id, first_name, last_name FROM users
-        WHERE email = %s OR id = %s
+        WHERE id = %s
         LIMIT 1
     '''
 
@@ -21,11 +21,17 @@ class UserQueries(str, Enum):
         (last_name LIKE CONCAT('%%', %s, '%%'))
     '''
 
-    GET_AUTH_USER = '''
+    GET_USER_BY_EMAIL_OR_ID = '''
         SELECT id, email, password, first_name, last_name, salt FROM users
         WHERE email = %s OR users.id = %s
         LIMIT 1
     '''
+
+    GET_AUTH_USER = '''
+           SELECT id, email, password, first_name, last_name, salt FROM users
+           WHERE id = %s
+           LIMIT 1
+       '''
 
 
 class AccessTokenQueries(str, Enum):
@@ -48,8 +54,19 @@ class AccessTokenQueries(str, Enum):
 
     GET_TOKEN = '''
         SELECT id, value, user_id, expired_at FROM access_tokens
+        WHERE id = %s
+        LIMIT 1
+    '''
+
+    GET_TOKEN_BY_VALUE_OR_ID = '''
+        SELECT id, value, user_id, expired_at FROM access_tokens
         WHERE id = %s OR value = %s
         LIMIT 1
+    '''
+
+    DELETE_TOKEN = '''
+        DELETE FROM access_tokens
+        WHERE id = %s
     '''
 
 

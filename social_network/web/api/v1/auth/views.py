@@ -10,7 +10,7 @@ from fastapi_utils.cbv import cbv
 
 from social_network.settings import settings
 from social_network.db import (
-    UserManager,
+    AuthUserManager,
     DatabaseError,
     AccessTokenModel,
     AccessTokenManager,
@@ -20,11 +20,10 @@ from social_network.utils.security import hash_password
 from .utils import (
     is_valid_password,
     generate_token_value,
-)
-from ..utils import (
     get_access_token_manager_depends,
-    get_user_manager_depends
+    get_auth_user_manager_depends
 )
+
 from .models import (
     LoginPayload,
     RegistrationPayload
@@ -35,7 +34,7 @@ router = APIRouter()
 
 @cbv(router)
 class AuthViewSet:
-    user_manager: UserManager = Depends(get_user_manager_depends)
+    user_manager: AuthUserManager = Depends(get_auth_user_manager_depends)
     access_token_manager: AccessTokenManager = Depends(
         get_access_token_manager_depends
     )
@@ -46,10 +45,10 @@ class AuthViewSet:
     })
     async def login(self, p: LoginPayload):
         try:
-            user = await self.user_manager.get_auth_user(email=p.email)
+            user = await self.user_manager.get(email=p.email)
             if not is_valid_password(user, p.password.get_secret_value()):
                 raise ValueError
-        except (DatabaseError, ValueError) as e:
+        except (DatabaseError, ValueError):
             msg = 'Invalid email or password'
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
                                 content={'detail': msg})
@@ -57,18 +56,18 @@ class AuthViewSet:
         expired_at = datetime.now() + timedelta(
             seconds=settings.TOKEN_EXPIRATION_TIME
         )
-        active_tokens = await self.access_token_manager \
-            .list_active(user.id)
-        if not active_tokens:
-            return await self.access_token_manager.create(
+        tokens = await self.access_token_manager.list_user_active(user.id)
+        if not tokens:
+            a = await self.access_token_manager.create(
                 user_id=user.id,
                 expired_at=expired_at,
                 value=generate_token_value()
             )
-        return await self.access_token_manager.update(
-            token_id=active_tokens[0].id,
+        a = await self.access_token_manager.update(
+            token_id=tokens[0].id,
             new_expired_at=expired_at
         )
+        return a
 
     @router.post('/register', status_code=201, responses={
         201: {'description': 'User created'},

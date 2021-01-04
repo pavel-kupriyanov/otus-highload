@@ -24,5 +24,5 @@ class UsersPayload(BaseModel):
     order_by: OrderBy = Field(OrderBy.LAST_NAME)
     order: Order = Field(Order.ASC)
     page: int = Field(1, ge=1)
-    paginate_by: int = Field(settings.MAX_USERS_ON_PAGE,
-                             le=settings.MAX_USERS_ON_PAGE)
+    paginate_by: int = Field(settings.BASE_PAGE_LIMIT,
+                             le=settings.BASE_PAGE_LIMIT)

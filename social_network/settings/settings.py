@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     UVICORN = UvicornSettings()
     DATABASE = DatabaseSettings(PASSWORD='password', NAME='otus_highload')
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
-    MAX_USERS_ON_PAGE = 100
+    BASE_PAGE_LIMIT = 100
 
 
 settings = Settings.from_json(CONFIG_PATH)

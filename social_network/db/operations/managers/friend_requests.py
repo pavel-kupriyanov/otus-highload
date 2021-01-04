@@ -1,11 +1,13 @@
 from enum import Enum
 from collections import namedtuple
-from typing import Optional, List
+from typing import List
 from functools import lru_cache
 
-from ..base import BaseManager, BaseModel
+from ..base import BaseModel
 from ..db import BaseDatabaseConnector
 from ..queries import FriendRequestQueries
+
+from .crud import BaseCRUDManager, CRUD
 
 
 class FriendRequestStatus(str, Enum):
@@ -21,44 +23,40 @@ class FriendRequestModel(BaseModel):
     status: FriendRequestStatus
 
 
-class FriendRequestManager(BaseManager):
+class FriendRequestManager(BaseCRUDManager):
+    fields = ('id', 'from_user', 'to_user', 'status')
+    model = FriendRequestModel
+    queries = {
+        CRUD.RETRIEVE: FriendRequestQueries.GET_FRIEND_REQUEST,
+        CRUD.LIST: FriendRequestQueries.GET_FRIEND_REQUESTS,
+        CRUD.DELETE: FriendRequestQueries.DROP_FRIEND_REQUEST,
+        CRUD.CREATE: FriendRequestQueries.CREATE_FRIEND_REQUEST,
+        CRUD.UPDATE: FriendRequestQueries.UPDATE_FRIEND_REQUEST
+    }
 
     async def create(self, from_user: int, to_user: int,
                      base_status=FriendRequestStatus.WAITING) \
             -> FriendRequestModel:
-        params = (from_user, to_user, base_status)
-        id = self.execute(FriendRequestQueries.CREATE_FRIEND_REQUEST, params,
-                          last_row_id=True)
-        return FriendRequestModel(
-            id=id,
-            from_user=from_user,
-            to_user=to_user,
-            status=base_status
-        )
+        return await self._create((from_user, to_user, base_status))
 
-    async def update(self, id: int, status: FriendRequestStatus):
-        await self.execute(FriendRequestQueries.UPDATE_FRIEND_REQUEST,
-                           (status, id))
+    async def update(self, id: int, status: FriendRequestStatus) \
+            -> FriendRequestModel:
+        return await self._update(id, (status, id))
+
+    async def list_for_user_exclude_status(self, user_id: int,
+                                           status: FriendRequestStatus) \
+            -> List[FriendRequestModel]:
+        query = FriendRequestQueries.GET_NON_STATUS_FRIEND_REQUESTS
+        return await self._list((user_id, user_id, status), query)
+
+    async def list_for_user(self, user_id: int) -> List[FriendRequestModel]:
+        return await self._list((user_id, user_id))
 
     async def delete(self, id: int):
-        await self.execute(FriendRequestQueries.DROP_FRIEND_REQUEST, (id,))
-
-    async def list(self, user_id: int,
-                   exclude_status: Optional[FriendRequestStatus] = None
-                   ) -> List[FriendRequestModel]:
-        query = FriendRequestQueries.GET_FRIEND_REQUESTS
-        params = [user_id, user_id]
-        if exclude_status:
-            query = FriendRequestQueries.GET_NON_STATUS_FRIEND_REQUESTS
-            params.append(exclude_status)
-
-        requests = await self.execute(query, params)
-        return [FriendRequestModel.from_db(request) for request in requests]
+        await self._delete(id)
 
     async def get(self, id: int) -> FriendRequestModel:
-        request = await self.execute(FriendRequestQueries.GET_FRIEND_REQUEST,
-                                     (id,))
-        return FriendRequestModel.from_db(request)
+        return await self._get(id)
 
 
 @lru_cache(1)

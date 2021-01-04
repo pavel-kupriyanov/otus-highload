@@ -5,11 +5,13 @@ from .operations import (
     BaseDatabaseConnector,
     DatabaseConnector,
     BaseManager,
+    AuthUserManager,
     UserManager,
     DatabaseError,
     AuthUserModel,
     UserModel,
     AccessTokenManager,
     AccessTokenModel,
-    get_access_token_manager
+    get_access_token_manager,
+    get_auth_user_manager
 )

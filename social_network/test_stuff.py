@@ -2,10 +2,10 @@ import asyncio
 
 from social_network.db.operations import (
     get_connector,
-    UserManager
+    AuthUserManager
 )
 
-manager = UserManager(get_connector())
+manager = AuthUserManager(get_connector())
 
 
 async def main():

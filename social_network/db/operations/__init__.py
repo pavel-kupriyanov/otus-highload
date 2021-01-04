@@ -8,8 +8,12 @@ from .base import BaseManager
 from .managers.users import (
     UserManager,
     UserModel,
-    AuthUserModel,
     get_user_manager,
+)
+from .managers.auth import (
+    AuthUserManager,
+    AuthUserModel,
+    get_auth_user_manager,
 )
 from .managers.tokens import (
     AccessTokenManager,
