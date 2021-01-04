@@ -5,13 +5,13 @@ from .db import (
     DatabaseError,
 )
 from .base import BaseManager
-from .users import (
+from .managers.users import (
     UserManager,
     UserModel,
     AuthUserModel,
     get_user_manager,
 )
-from .tokens import (
+from .managers.tokens import (
     AccessTokenManager,
     AccessTokenModel,
     get_access_token_manager

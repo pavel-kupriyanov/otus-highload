@@ -58,14 +58,14 @@ class AuthViewSet:
             seconds=settings.TOKEN_EXPIRATION_TIME
         )
         active_tokens = await self.access_token_manager \
-            .get_active_user_tokens(user.id)
+            .list_active(user.id)
         if not active_tokens:
             return await self.access_token_manager.create(
                 user_id=user.id,
                 expired_at=expired_at,
                 value=generate_token_value()
             )
-        return await self.access_token_manager.update_token(
+        return await self.access_token_manager.update(
             token_id=active_tokens[0].id,
             new_expired_at=expired_at
         )

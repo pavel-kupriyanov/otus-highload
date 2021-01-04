@@ -1,4 +1,14 @@
-from typing import Tuple, Any, Optional
+from typing import (
+    Tuple,
+    Any,
+    Optional,
+    Iterable,
+    TypeVar,
+    Type
+)
+from collections import namedtuple
+
+from pydantic import BaseModel as PydanticBaseModel
 
 from aiomysql import DatabaseError as RawDatabaseError
 
@@ -7,6 +17,18 @@ from .db import (
     DatabaseError,
     DatabaseResponse
 )
+
+M = TypeVar('M', covariant=True)
+
+
+class BaseModel(PydanticBaseModel):
+    _parsing_tuple: Type[namedtuple]
+
+    id: int
+
+    @classmethod
+    def from_db(cls: Type[M], tpl: tuple) -> M:
+        return cls(**cls._parsing_tuple(*tpl)._asdict())
 
 
 class BaseManager:
@@ -18,7 +40,7 @@ class BaseManager:
 
     async def execute(self,
                       query: str,
-                      params: Optional[Tuple[Any, ...]] = None,
+                      params: Optional[Iterable[Any]] = None,
                       last_row_id=False
                       ) -> DatabaseResponse:
         try:

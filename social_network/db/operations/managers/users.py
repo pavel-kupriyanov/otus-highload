@@ -3,38 +3,33 @@ from typing import Optional, List
 from functools import lru_cache
 
 from pydantic import (
-    BaseModel,
     EmailStr,
     SecretStr
 )
 
 from social_network.settings import settings
 
-from .base import BaseManager
-from .db import BaseDatabaseConnector, DatabaseError
-from .queries import UserQueries
+from ..base import BaseManager, BaseModel
+from ..db import BaseDatabaseConnector, DatabaseError
+from ..queries import UserQueries
 
 
+# TODO: additional user info
 class UserModel(BaseModel):
-    id: int
+    _parsing_tuple = namedtuple('_', 'id, first_name, last_name')
+
     first_name: str
     last_name: Optional[str]
 
-    _raw_user_model = namedtuple('_', 'id, first_name, last_name')
-
-    @classmethod
-    def from_db(cls, raw_user: tuple) -> 'UserModel':
-        return cls(**cls._raw_user_model(*raw_user)._asdict())
-
 
 class AuthUserModel(UserModel):
+    _parsing_tuple = namedtuple('_',
+                                'id, email, password, first_name, last_name,'
+                                'salt')
+
     email: EmailStr
     password: SecretStr
     salt: SecretStr
-
-    _raw_user_model = namedtuple('_',
-                                 'id, email, password, first_name, last_name,'
-                                 'salt')
 
 
 class UserManager(BaseManager):
@@ -67,8 +62,8 @@ class UserManager(BaseManager):
             raise DatabaseError(f'User {email or id} not found.')
         return AuthUserModel.from_db(users[0])
 
-    async def get_users(self, search='', order_by='last_name', order='ASC',
-                        limit=settings.MAX_USERS_ON_PAGE, offset=0) \
+    async def list(self, search='', order_by='last_name', order='ASC',
+                   limit=settings.MAX_USERS_ON_PAGE, offset=0) \
             -> List[UserModel]:
         params = (search, search)
         query = self._add_order(UserQueries.GET_USERS, order_by, order)

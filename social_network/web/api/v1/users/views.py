@@ -18,6 +18,7 @@ from ..utils import (
 router = APIRouter()
 
 
+# TODO: update self
 @cbv(router)
 class UserViewSet:
     user_manager: UserManager = Depends(get_user_manager_depends)
@@ -27,8 +28,8 @@ class UserViewSet:
     })
     async def users(self, p: UsersPayload = UsersPayload()):
         offset = (p.page - 1) * p.paginate_by
-        return await self.user_manager.get_users(search=p.search,
-                                                 order=p.order,
-                                                 order_by=p.order_by,
-                                                 limit=p.paginate_by,
-                                                 offset=offset)
+        return await self.user_manager.list(search=p.search,
+                                            order=p.order,
+                                            order_by=p.order_by,
+                                            limit=p.paginate_by,
+                                            offset=offset)
