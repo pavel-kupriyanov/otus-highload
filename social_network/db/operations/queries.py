@@ -2,23 +2,16 @@ from enum import Enum
 
 
 class UserQueries(str, Enum):
-    CREATE_USER = '''
-        INSERT INTO users(email, password, salt, first_name, last_name)
-        VALUES (%s, %s, %s, %s, %s);
-        SELECT LAST_INSERT_ID()
-    '''
-
-    GET_USER = '''
-        SELECT id, first_name, last_name FROM users
-        WHERE id = %s
-        LIMIT 1
-    '''
-
     GET_USERS = '''
         SELECT id, first_name, last_name FROM users
         WHERE 
         (first_name LIKE CONCAT('%%', %s, '%%')) OR 
         (last_name LIKE CONCAT('%%', %s, '%%'))
+    '''
+
+    GET_USERS_BY_IDS = '''
+        SELECT id, first_name, last_name FROM users
+        WHERE id IN %s
     '''
 
     GET_USER_BY_EMAIL_OR_ID = '''
@@ -27,20 +20,8 @@ class UserQueries(str, Enum):
         LIMIT 1
     '''
 
-    GET_AUTH_USER = '''
-           SELECT id, email, password, first_name, last_name, salt FROM users
-           WHERE id = %s
-           LIMIT 1
-       '''
-
 
 class AccessTokenQueries(str, Enum):
-    CREATE_TOKEN = '''
-        INSERT INTO access_tokens(value, user_id, expired_at)
-        VALUES (%s, %s, %s);
-        SELECT LAST_INSERT_ID()
-    '''
-
     GET_USER_ACTIVE_TOKENS = '''
         SELECT id, value, user_id, expired_at FROM access_tokens
         WHERE user_id = %s and expired_at > NOW()
@@ -52,39 +33,17 @@ class AccessTokenQueries(str, Enum):
         WHERE id = %s
     '''
 
-    GET_TOKEN = '''
-        SELECT id, value, user_id, expired_at FROM access_tokens
-        WHERE id = %s
-        LIMIT 1
-    '''
-
     GET_TOKEN_BY_VALUE_OR_ID = '''
         SELECT id, value, user_id, expired_at FROM access_tokens
         WHERE id = %s OR value = %s
         LIMIT 1
     '''
 
-    DELETE_TOKEN = '''
-        DELETE FROM access_tokens
-        WHERE id = %s
-    '''
-
 
 class FriendRequestQueries(str, Enum):
-    CREATE_FRIEND_REQUEST = '''
-        INSERT INTO friend_requests(from_user, to_user, status)
-        VALUES (%s, %s, %s);
-        SELECT LAST_INSERT_ID()
-    '''
-
     UPDATE_FRIEND_REQUEST = '''
         UPDATE friend_requests
         SET status = %s
-        WHERE id = %s
-    '''
-
-    DROP_FRIEND_REQUEST = '''
-        DELETE FROM friend_requests
         WHERE id = %s
     '''
 
@@ -98,8 +57,21 @@ class FriendRequestQueries(str, Enum):
         WHERE (from_user = %s OR to_user = %s) AND status != %s
     '''
 
-    GET_FRIEND_REQUEST = '''
+    GET_FRIEND_REQUEST_BY_USERS = '''
     SELECT (id, from_user, to_user, status) FROM friend_requests
-    WHERE id = %s
+    WHERE from_user = %s AND to_user = %s
     LIMIT 1
+    '''
+
+
+class FriendshipQueries(str, Enum):
+    GET_FRIENDSHIPS = '''
+        SELECT (id, user_id1, user_id2) FROM friendships
+        WHERE user_id1 = %s OR user_id2 = %s
+    '''
+
+    GET_FRIENDSHIP_BY_IDS = '''
+        SELECT (id, user_id1, user_id2) FROM friendships
+        WHERE (user_id1 = %s OR user_id2 = %s)
+        OR (user_id1 = %s OR user_id2 = %s)
     '''

@@ -7,16 +7,26 @@ from .db import (
 from .base import BaseManager
 from .managers.users import (
     UserManager,
-    UserModel,
+    User,
     get_user_manager,
 )
 from .managers.auth import (
     AuthUserManager,
-    AuthUserModel,
+    AuthUser,
     get_auth_user_manager,
 )
 from .managers.tokens import (
     AccessTokenManager,
-    AccessTokenModel,
+    AccessToken,
     get_access_token_manager
+)
+from .managers.friend_requests import (
+    FriendRequestManager,
+    FriendRequest,
+    get_friend_request_manager
+)
+from .managers.friendships import (
+    FriendshipManager,
+    Friendship,
+    get_friendship_manager
 )

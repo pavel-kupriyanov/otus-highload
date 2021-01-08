@@ -12,21 +12,25 @@ from social_network.settings import settings
 from social_network.db import (
     AuthUserManager,
     DatabaseError,
-    AccessTokenModel,
+    AccessToken,
     AccessTokenManager,
+    AuthUser
 )
 from social_network.utils.security import hash_password
 
 from .utils import (
     is_valid_password,
     generate_token_value,
-    get_access_token_manager_depends,
-    get_auth_user_manager_depends
 )
 
 from .models import (
     LoginPayload,
     RegistrationPayload
+)
+
+from ..depends import (
+    get_access_token_manager_depends,
+    get_auth_user_manager_depends
 )
 
 router = APIRouter()
@@ -39,7 +43,7 @@ class AuthViewSet:
         get_access_token_manager_depends
     )
 
-    @router.post('/login', response_model=AccessTokenModel, responses={
+    @router.post('/login', response_model=AccessToken, responses={
         201: {'description': 'Success login'},
         400: {'description': 'Invalid email or password'}
     })
@@ -58,21 +62,21 @@ class AuthViewSet:
         )
         tokens = await self.access_token_manager.list_user_active(user.id)
         if not tokens:
-            a = await self.access_token_manager.create(
+            return await self.access_token_manager.create(
                 user_id=user.id,
                 expired_at=expired_at,
                 value=generate_token_value()
             )
-        a = await self.access_token_manager.update(
+        return await self.access_token_manager.update(
             token_id=tokens[0].id,
             new_expired_at=expired_at
         )
-        return a
 
-    @router.post('/register', status_code=201, responses={
-        201: {'description': 'User created'},
-        400: {'description': 'Invalid email'}
-    })
+    @router.post('/register', status_code=201, response_model=AuthUser,
+                 responses={
+                     201: {'description': 'User created'},
+                     400: {'description': 'Invalid email'}
+                 })
     async def register(self, p: RegistrationPayload):
         if await self.user_manager.is_email_already_used(p.email):
             msg = 'User with this email already exists'
@@ -80,5 +84,5 @@ class AuthViewSet:
                                 content={'detail': msg})
 
         hashed_password, salt = hash_password(p.password.get_secret_value())
-        await self.user_manager.create(p.email, hashed_password, salt,
-                                       p.first_name, p.last_name)
+        return await self.user_manager.create(p.email, hashed_password, salt,
+                                              p.first_name, p.last_name)

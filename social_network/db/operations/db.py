@@ -4,7 +4,7 @@ from functools import lru_cache
 import aiomysql
 
 from social_network.settings import (
-    settings,
+    Settings,
     DatabaseSettings
 )
 
@@ -71,7 +71,6 @@ class DatabaseConnector(BaseDatabaseConnector):
         pool.close()
         await pool.wait_closed()
 
-
 @lru_cache(1)
-def get_connector() -> BaseDatabaseConnector:
+def get_connector(settings: Settings) -> BaseDatabaseConnector:
     return DatabaseConnector(settings.DATABASE)

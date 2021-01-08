@@ -35,11 +35,16 @@ class BaseSettings(PydanticSettings):
             merged_settings = deep_merge(cls().dict(), json.load(fp))
         return cls.parse_obj(merged_settings)
 
+    def __hash__(self):
+        # For lru cache
+        return hash(self.json())
+
 
 def deep_merge(first: dict, second: dict) -> dict:
     res = deepcopy(first)
     for key, value in second.items():
-        if key in res and isinstance(res[key], dict) and isinstance(value, dict):
+        if key in res and isinstance(res[key], dict) and isinstance(value,
+                                                                    dict):
             res[key] = deep_merge(res[key], value)
         else:
             res[key] = value

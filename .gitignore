@@ -138,4 +138,5 @@ dmypy.json
 cython_debug/
 
 
+tests/settings/settings.json
 social_network/settings/settings.json

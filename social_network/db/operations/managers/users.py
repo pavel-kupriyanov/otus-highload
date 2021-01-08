@@ -12,30 +12,44 @@ from .crud import BaseCRUDManager, CRUD
 
 
 # TODO: additional user info
-class UserModel(BaseModel):
-    _parsing_tuple = namedtuple('_', 'id, first_name, last_name')
+class User(BaseModel):
+    _table_name = 'users'
+    _fields = ('id', 'first_name', 'last_name')
 
     first_name: str
     last_name: Optional[str]
 
 
 class UserManager(BaseCRUDManager):
-    fields = ('id', 'first_name', 'last_name')
-    model = UserModel
+    model = User
     queries = {
-        CRUD.LIST: UserQueries.GET_USERS
+        CRUD.LIST: UserQueries.GET_USERS,
     }
 
-    # TODO: update, retrieve
-    async def list(self,
-                   search='',
-                   order_by='last_name',
-                   order='ASC',
-                   limit=settings.BASE_PAGE_LIMIT,
-                   offset=0) -> List[UserModel]:
+    # TODO: update
+    async def search_list(self,
+                          search='',
+                          order_by='last_name',
+                          order='ASC',
+                          limit=settings.BASE_PAGE_LIMIT,
+                          offset=0) -> List[User]:
         return await self._list((search, search),
                                 order_by=order_by, order=order,
                                 limit=limit, offset=offset)
+
+    async def list_by_ids(self,
+                          ids: List[int],
+                          order_by='last_name',
+                          order='ASC',
+                          limit=settings.BASE_PAGE_LIMIT,
+                          offset=0) -> List[User]:
+        query = UserQueries.GET_USERS_BY_IDS
+        return await self._list((ids,), query,
+                                order_by=order_by, order=order,
+                                limit=limit, offset=offset)
+
+    async def get(self, id: int) -> User:
+        return await self._get(id)
 
 
 @lru_cache(1)

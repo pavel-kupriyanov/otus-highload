@@ -4,8 +4,9 @@ from social_network.db.operations import (
     get_connector,
     AuthUserManager
 )
+from social_network.settings import settings
 
-manager = AuthUserManager(get_connector())
+manager = AuthUserManager(get_connector(settings))
 
 
 async def main():

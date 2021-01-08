@@ -13,16 +13,19 @@ Timestamp = float  # Alias
 TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
-class AccessTokenModel(BaseModel):
+class AccessToken(BaseModel):
+    _table_name = 'access_tokens'
+    _fields = ('id', 'value', 'user_id', 'expired_at')
+
     value: str
     user_id: int
     expired_at: Timestamp
 
-    _parsing_tuple = namedtuple('_', 'id, value, user_id, expired_at')
-
+    # TODO: refactor it
     @classmethod
     def from_db(cls: Type[M], tpl: tuple) -> M:
-        raw = cls._parsing_tuple(*tpl)._asdict()
+        parsing_tuple = namedtuple('_', cls._fields)
+        raw = parsing_tuple(*tpl)._asdict()
         expired_at = raw['expired_at']
         if isinstance(expired_at, str):
             expired_at = datetime.strptime(expired_at, TIMESTAMP_FORMAT)
@@ -32,30 +35,33 @@ class AccessTokenModel(BaseModel):
 
 
 class AccessTokenManager(BaseCRUDManager):
-    model = AccessTokenModel
+    model = AccessToken
     queries = {
-        CRUD.CREATE: AccessTokenQueries.CREATE_TOKEN,
         CRUD.UPDATE: AccessTokenQueries.UPDATE_TOKEN,
-        CRUD.RETRIEVE: AccessTokenQueries.GET_TOKEN,
         CRUD.LIST: AccessTokenQueries.GET_USER_ACTIVE_TOKENS,
-        CRUD.DELETE: AccessTokenQueries.DELETE_TOKEN,
     }
 
     async def create(self, value: str, user_id: int, expired_at: datetime) \
-            -> AccessTokenModel:
+            -> AccessToken:
         params = (value, user_id, expired_at.strftime(TIMESTAMP_FORMAT))
         return await self._create(params)
 
     async def update(self, token_id: int, new_expired_at: datetime) \
-            -> AccessTokenModel:
+            -> AccessToken:
         params = (new_expired_at.strftime(TIMESTAMP_FORMAT), token_id)
         return await self._update(token_id, params)
 
-    async def list_user_active(self, user_id: int) -> List[AccessTokenModel]:
+    async def list_user_active(self, user_id: int) -> List[AccessToken]:
         return await self._list((user_id,))
 
-    async def get(self, id: int) -> AccessTokenModel:
+    async def get(self, id: int) -> AccessToken:
         return await self._get(id)
+
+    async def get_by_value(self, value: str) -> AccessToken:
+        params = (None, value)
+        token = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE_OR_ID,
+                                   params)
+        return AccessToken.from_db(token)
 
     async def _delete(self, id: int):
         await self._delete(id)

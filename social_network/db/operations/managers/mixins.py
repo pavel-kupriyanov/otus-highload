@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from ..base import M
 
 
 class LimitMixin:
@@ -16,14 +16,14 @@ class LimitMixin:
 
 
 class OrderMixin:
-    fields: Optional[Tuple[str]]
+    model: M
     order = ('ASC', 'DESC')
 
     ORDER_QUERY = 'ORDER BY {0} {1}'
 
     # TODO: add handling in view:
     def validate_order(self, field: str, order: str):
-        if field not in self.fields or order not in self.order:
+        if field not in self.model._fields or order not in self.order:
             raise ValueError(f'Invalid values: {field}, {order}')
 
     def add_order(self, query: str, field: str, order='ASC') -> str:

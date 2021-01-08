@@ -4,7 +4,7 @@ from typing import (
     Optional,
     Iterable,
     TypeVar,
-    Type
+    Type,
 )
 from collections import namedtuple
 
@@ -22,13 +22,16 @@ M = TypeVar('M', covariant=True)
 
 
 class BaseModel(PydanticBaseModel):
-    _parsing_tuple: Type[namedtuple]
+    _table_name: str
+    _fields: Tuple[Any, ...]
 
     id: int
 
     @classmethod
     def from_db(cls: Type[M], tpl: tuple) -> M:
-        return cls(**cls._parsing_tuple(*tpl)._asdict())
+        parsing_tuple = namedtuple('_', cls._fields)
+        fields = parsing_tuple(*tpl)._asdict()
+        return cls(**fields)
 
 
 class BaseManager:
@@ -39,8 +42,7 @@ class BaseManager:
     async def execute(self,
                       query: str,
                       params: Optional[Iterable[Any]] = None,
-                      last_row_id=False
-                      ) -> DatabaseResponse:
+                      last_row_id=False) -> DatabaseResponse:
         try:
             return await self.db.make_query(query, params,
                                             last_row_id=last_row_id)
