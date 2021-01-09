@@ -58,8 +58,6 @@ class FriendRequestManager(BaseCRUDManager):
             -> FriendRequest:
         query = FriendRequestQueries.GET_FRIEND_REQUEST_BY_USERS
         requests = await self.execute(query, (from_user, to_user))
-        if not requests:
-            raise RowsNotFoundError(f'{type(self.model)} not found.')
         return FriendRequest.from_db(requests[0])
 
 

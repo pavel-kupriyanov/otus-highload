@@ -27,7 +27,8 @@ class BaseDatabaseConnector:
                          query_template: str,
                          params: Optional[Tuple[Any, ...]] = None,
                          max_rows: Optional[int] = None,
-                         last_row_id=False) \
+                         last_row_id=False,
+                         raise_if_empty=True) \
             -> DatabaseResponse:
         raise NotImplementedError
 
@@ -47,7 +48,8 @@ class DatabaseConnector(BaseDatabaseConnector):
                          query_template: str,
                          params: Optional[Tuple[Any, ...]] = None,
                          max_rows: Optional[int] = None,
-                         last_row_id=False) \
+                         last_row_id=False,
+                         raise_if_empty=True) \
             -> DatabaseResponse:
         pool = await self.get_pool()
         async with pool.acquire() as conn:  # type: aiomysql.Connection
@@ -55,7 +57,11 @@ class DatabaseConnector(BaseDatabaseConnector):
                 rowcount = await cursor.execute(query_template, params)
                 if last_row_id:
                     return cursor.lastrowid
-                return await cursor.fetchmany(max_rows or rowcount)
+                data = await cursor.fetchmany(max_rows or rowcount)
+
+                if raise_if_empty and not data:
+                    raise RowsNotFoundError
+                return data
 
     async def get_pool(self) -> aiomysql.Pool:
         if self.pool is None:
@@ -74,6 +80,7 @@ class DatabaseConnector(BaseDatabaseConnector):
         pool = await self.get_pool()
         pool.close()
         await pool.wait_closed()
+
 
 @lru_cache(1)
 def get_connector(settings: Settings) -> BaseDatabaseConnector:

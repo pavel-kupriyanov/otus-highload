@@ -42,9 +42,11 @@ class BaseManager:
     async def execute(self,
                       query: str,
                       params: Optional[Iterable[Any]] = None,
-                      last_row_id=False) -> DatabaseResponse:
+                      last_row_id=False,
+                      raise_if_empty=True) -> DatabaseResponse:
         try:
             return await self.db.make_query(query, params,
-                                            last_row_id=last_row_id)
+                                            last_row_id=last_row_id,
+                                            raise_if_empty=raise_if_empty)
         except RawDatabaseError as e:
             raise DatabaseError(e.args) from e

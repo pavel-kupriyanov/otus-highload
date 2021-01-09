@@ -34,7 +34,7 @@ class FriendshipManager(BaseCRUDManager):
     async def already_friends(self, user_id1: int, user_id2: int) -> bool:
         params = (user_id1, user_id2, user_id2, user_id1)
         query = FriendshipQueries.GET_FRIENDSHIP_BY_IDS
-        friendships = await self.execute(query, params)
+        friendships = await self.execute(query, params, raise_if_empty=False)
         return bool(friendships)
 
 

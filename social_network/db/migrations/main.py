@@ -1,4 +1,3 @@
-# TODO: improve migration tool
 import os
 
 from yoyo import read_migrations

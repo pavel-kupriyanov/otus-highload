@@ -36,8 +36,6 @@ class AuthUserManager(BaseCRUDManager):
                   email: Optional[EmailStr] = None) -> AuthUser:
         users = await self.execute(UserQueries.GET_USER_BY_EMAIL_OR_ID,
                                    (email, id))
-        if not users:
-            raise RowsNotFoundError(f'User {email or id} not found.')
         return AuthUser.from_db(users[0])
 
     async def is_email_already_used(self, email: EmailStr) -> bool:

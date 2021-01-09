@@ -26,15 +26,14 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         return await self._get(id)
 
     async def _update(self, id: int, params: Tuple[Any, ...]) -> M:
-        await self.execute(self.queries[CRUD.UPDATE], params)
+        await self.execute(self.queries[CRUD.UPDATE], params,
+                           raise_if_empty=False)
         return await self._get(id)
 
     async def _get(self, id: int) -> M:
         model: BaseModel = self.model
         query = self.queries.get(CRUD.RETRIEVE) or get_query(self.model)
         rows = await self.execute(query, (id,))
-        if not rows:
-            raise RowsNotFoundError(f'{type(model)} {id} not found.')
         return model.from_db(rows[0])
 
     async def _list(self,
@@ -49,12 +48,12 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         if order_by and order:
             query = self.add_order(query, order_by, order)
         query = self.add_limit(query, limit, offset)
-        rows = await self.execute(query, params)
+        rows = await self.execute(query, params, raise_if_empty=False)
         return [self.model.from_db(row) for row in rows]
 
     async def _delete(self, id: int):
         query = self.queries.get(CRUD.DELETE) or delete_query(self.model)
-        await self.execute(query, (id,))
+        await self.execute(query, (id,), raise_if_empty=False)
 
 
 def get_fields_without_id(model: BaseModel) -> Tuple[str, ...]:
