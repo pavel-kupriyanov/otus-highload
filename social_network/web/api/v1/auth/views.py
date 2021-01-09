@@ -11,7 +11,6 @@ from fastapi_utils.cbv import cbv
 from social_network.settings import settings
 from social_network.db import (
     AuthUserManager,
-    DatabaseError,
     AccessToken,
     AccessTokenManager,
     AuthUser
@@ -48,14 +47,12 @@ class AuthViewSet:
         400: {'description': 'Invalid email or password'}
     })
     async def login(self, p: LoginPayload):
-        try:
-            user = await self.user_manager.get(email=p.email)
-            if not is_valid_password(user, p.password.get_secret_value()):
-                raise ValueError
-        except (DatabaseError, ValueError):
-            msg = 'Invalid email or password'
-            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
-                                content={'detail': msg})
+        user = await self.user_manager.get(email=p.email)
+        if not is_valid_password(user, p.password.get_secret_value()):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={'detail': 'Invalid email or password'}
+            )
 
         expired_at = datetime.now() + timedelta(
             seconds=settings.TOKEN_EXPIRATION_TIME

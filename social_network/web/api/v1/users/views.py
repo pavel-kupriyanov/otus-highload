@@ -60,7 +60,5 @@ class UserViewSet:
         404: {'description': 'User not found.'}
     })
     async def user(self, user_id: int) -> User:
-        try:
-            return await self.user_manager.get(user_id)
-        except DatabaseError:
-            raise HTTPException(404, detail='User not found')
+        return await self.user_manager.get(user_id)
+

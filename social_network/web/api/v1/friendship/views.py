@@ -9,9 +9,9 @@ from fastapi_utils.cbv import cbv
 from social_network.db import (
     FriendRequestManager,
     FriendRequest,
-    DatabaseError,
     FriendshipManager,
-    Friendship
+    Friendship,
+    DatabaseError
 )
 from social_network.db.operations.managers.friend_requests import \
     FriendRequestStatus
@@ -56,13 +56,12 @@ class FriendshipViewSet:
     async def create(self, p: FriendRequestPostPayload) -> FriendRequest:
         if await self.already_friends(self.user_id, p.user_id):
             raise HTTPException(400, detail='Users already friends.')
-
         try:
             return await self.friend_request_manager.create(self.user_id,
                                                             p.user_id)
         except DatabaseError:
-            raise HTTPException(404, detail='User not found or request'
-                                            ' already created.')
+            raise HTTPException(404, detail='User not found or request '
+                                            'already exists.')
 
     @router.delete('/{request_id}', status_code=204, responses={
         204: {'description': 'Friend request cancelled.'},
@@ -72,10 +71,7 @@ class FriendshipViewSet:
     })
     @authorize_only
     async def cancel(self, request_id: int):
-        try:
-            request = await self.friend_request_manager.get(request_id)
-        except DatabaseError:
-            raise HTTPException(404, detail='request not found')
+        request = await self.friend_request_manager.get(request_id)
         if not is_request_creator(request, self.user_id):
             raise HTTPException(403, detail='You are not allowed to delete'
                                             ' request')
@@ -89,10 +85,7 @@ class FriendshipViewSet:
     })
     @authorize_only
     async def get(self, request_id: int) -> FriendRequest:
-        try:
-            request = await self.friend_request_manager.get(request_id)
-        except DatabaseError:
-            raise HTTPException(404, 'Request not found')
+        request = await self.friend_request_manager.get(request_id)
         if not is_request_participant(request, self.user_id):
             raise HTTPException(403, 'Not allowed')
         return request
@@ -105,10 +98,7 @@ class FriendshipViewSet:
     })
     @authorize_only
     async def decline(self, request_id: int):
-        try:
-            request = await self.friend_request_manager.get(request_id)
-        except DatabaseError:
-            raise HTTPException(404, 'Request not found')
+        request = await self.friend_request_manager.get(request_id)
         if not is_request_target(request, self.user_id):
             raise HTTPException(403, 'Not allowed')
         await self.friend_request_manager.update(request_id,
@@ -124,10 +114,7 @@ class FriendshipViewSet:
                 })
     @authorize_only
     async def accept(self, request_id: int):
-        try:
-            request = await self.friend_request_manager.get(request_id)
-        except DatabaseError:
-            raise HTTPException(404, 'Request not found')
+        request = await self.friend_request_manager.get(request_id)
 
         if not is_request_target(request, self.user_id):
             raise HTTPException(403, 'Not allowed')

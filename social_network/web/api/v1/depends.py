@@ -20,7 +20,7 @@ from social_network.db import (
     get_friend_request_manager,
     get_user_manager,
     get_friendship_manager,
-    DatabaseError
+    RowsNotFoundError
 )
 
 from social_network.settings import settings
@@ -68,7 +68,7 @@ async def get_user_id(x_auth_token: Optional[str] = Header(...),
         return None
     try:
         access_token = await access_token_manager.get_by_value(x_auth_token)
-    except DatabaseError:
+    except RowsNotFoundError:
         raise HTTPException(status_code=401, detail='Invalid token header')
     # TODO: expired check
     return access_token.user_id

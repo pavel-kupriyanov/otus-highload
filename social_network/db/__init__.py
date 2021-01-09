@@ -22,5 +22,6 @@ from .operations import (
     FriendRequest,
     Friendship,
 
-    DatabaseError
+    DatabaseError,
+    RowsNotFoundError
 )

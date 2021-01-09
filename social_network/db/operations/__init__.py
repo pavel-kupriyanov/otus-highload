@@ -3,6 +3,7 @@ from .db import (
     BaseDatabaseConnector,
     DatabaseConnector,
     DatabaseError,
+    RowsNotFoundError
 )
 from .base import BaseManager
 from .managers.users import (

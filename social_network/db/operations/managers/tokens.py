@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import List, Type
 
 from ..base import BaseModel, M
-from ..db import BaseDatabaseConnector, DatabaseError
+from ..db import BaseDatabaseConnector, RowsNotFoundError
 from ..queries import AccessTokenQueries
 
 from .crud import BaseCRUDManager, CRUD
@@ -63,7 +63,7 @@ class AccessTokenManager(BaseCRUDManager):
         tokens = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE_OR_ID,
                                     params)
         if not tokens:
-            raise DatabaseError(f'{type(self)} {value} not found.')
+            raise RowsNotFoundError(f'{type(self)} {value} not found.')
         return AccessToken.from_db(tokens[0])
 
     async def _delete(self, id: int):

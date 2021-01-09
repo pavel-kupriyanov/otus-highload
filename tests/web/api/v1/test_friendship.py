@@ -115,7 +115,7 @@ def test_accept(app: TestClient, token2: AccessToken, friend_request):
 
 def test_accept_not_found(app: TestClient, token1: AccessToken,
                           friend_request):
-    response = app.put(f'{BASE_PATH}accept/100000000',
+    response = app.put(f'{BASE_PATH}accept/10000000',
                        headers={'x-auth-token': token1.value})
     assert response.status_code == 404
 

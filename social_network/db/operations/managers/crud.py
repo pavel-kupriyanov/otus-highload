@@ -4,7 +4,7 @@ from typing import Dict, Tuple, Any, List, Optional
 from social_network.settings import settings
 
 from ..base import BaseManager, BaseModel, M
-from ..db import DatabaseError
+from ..db import RowsNotFoundError
 from .mixins import LimitMixin, OrderMixin
 
 
@@ -34,7 +34,7 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         query = self.queries.get(CRUD.RETRIEVE) or get_query(self.model)
         rows = await self.execute(query, (id,))
         if not rows:
-            raise DatabaseError(f'{type(model)} {id} not found.')
+            raise RowsNotFoundError(f'{type(model)} {id} not found.')
         return model.from_db(rows[0])
 
     async def _list(self,

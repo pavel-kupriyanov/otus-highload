@@ -3,7 +3,7 @@ from typing import List
 from functools import lru_cache
 
 from ..base import BaseModel
-from ..db import BaseDatabaseConnector, DatabaseError
+from ..db import BaseDatabaseConnector, RowsNotFoundError
 from ..queries import FriendRequestQueries
 
 from .crud import BaseCRUDManager, CRUD
@@ -59,7 +59,7 @@ class FriendRequestManager(BaseCRUDManager):
         query = FriendRequestQueries.GET_FRIEND_REQUEST_BY_USERS
         requests = await self.execute(query, (from_user, to_user))
         if not requests:
-            raise DatabaseError(f'{type(self.model)} not found.')
+            raise RowsNotFoundError(f'{type(self.model)} not found.')
         return FriendRequest.from_db(requests[0])
 
 

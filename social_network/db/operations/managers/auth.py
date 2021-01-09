@@ -6,7 +6,7 @@ from pydantic import (
     SecretStr
 )
 
-from ..db import BaseDatabaseConnector, DatabaseError
+from ..db import BaseDatabaseConnector, RowsNotFoundError
 from ..queries import UserQueries
 
 from .crud import BaseCRUDManager
@@ -37,13 +37,13 @@ class AuthUserManager(BaseCRUDManager):
         users = await self.execute(UserQueries.GET_USER_BY_EMAIL_OR_ID,
                                    (email, id))
         if not users:
-            raise DatabaseError(f'User {email or id} not found.')
+            raise RowsNotFoundError(f'User {email or id} not found.')
         return AuthUser.from_db(users[0])
 
     async def is_email_already_used(self, email: EmailStr) -> bool:
         try:
             await self.get(None, email)
-        except DatabaseError:
+        except RowsNotFoundError:
             return False
         return True
 
