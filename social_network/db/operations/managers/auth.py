@@ -15,7 +15,7 @@ from .users import User
 
 class AuthUser(User):
     _table_name = 'users'
-    _fields = ('id', 'email', 'password', 'first_name', 'last_name', 'salt')
+    _fields = ('id', 'email', 'password', 'salt', 'first_name', 'last_name')
 
     email: EmailStr
     password: SecretStr

@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import List, Type
 
 from ..base import BaseModel, M
-from ..db import BaseDatabaseConnector
+from ..db import BaseDatabaseConnector, DatabaseError
 from ..queries import AccessTokenQueries
 
 from .crud import BaseCRUDManager, CRUD
@@ -57,11 +57,14 @@ class AccessTokenManager(BaseCRUDManager):
     async def get(self, id: int) -> AccessToken:
         return await self._get(id)
 
+    # TODO: refactor get error handling
     async def get_by_value(self, value: str) -> AccessToken:
         params = (None, value)
-        token = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE_OR_ID,
-                                   params)
-        return AccessToken.from_db(token)
+        tokens = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE_OR_ID,
+                                    params)
+        if not tokens:
+            raise DatabaseError(f'{type(self)} {value} not found.')
+        return AccessToken.from_db(tokens[0])
 
     async def _delete(self, id: int):
         await self._delete(id)

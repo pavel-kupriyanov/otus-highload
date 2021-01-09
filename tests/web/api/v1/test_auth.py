@@ -3,10 +3,10 @@ from fastapi.testclient import TestClient
 BASE_PATH = '/api/v1/auth/'
 
 
-def test_login(app: TestClient, test_user):
+def test_login(app: TestClient, user1):
     request = {
-        'email': test_user.EMAIL,
-        'password': test_user.PASSWORD
+        'email': user1.email,
+        'password': user1.password
     }
     response = app.post(BASE_PATH + 'login', json=request)
     assert response.status_code == 200
@@ -18,9 +18,9 @@ def test_login_invalid_payload(app: TestClient):
     assert response.status_code == 422
 
 
-def test_login_invalid_password(app: TestClient, test_user):
+def test_login_invalid_password(app: TestClient, user1):
     request = {
-        'email': test_user.EMAIL,
+        'email': user1.email,
         'password': 'foobarfoobar'
     }
     response = app.post(BASE_PATH + 'login', json=request)
@@ -47,7 +47,7 @@ def test_register_invalid_payload(app: TestClient, drop_users_after_test):
     assert response.status_code == 422
 
 
-def test_register_email_already_exists(app: TestClient, test_user,
+def test_register_email_already_exists(app: TestClient, user1,
                                        drop_users_after_test):
     request = {
         "email": 'Harkonnen.v@mail.com',

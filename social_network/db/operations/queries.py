@@ -15,7 +15,7 @@ class UserQueries(str, Enum):
     '''
 
     GET_USER_BY_EMAIL_OR_ID = '''
-        SELECT id, email, password, first_name, last_name, salt FROM users
+        SELECT id, email, password, salt, first_name, last_name FROM users
         WHERE email = %s OR users.id = %s
         LIMIT 1
     '''
@@ -71,7 +71,7 @@ class FriendshipQueries(str, Enum):
     '''
 
     GET_FRIENDSHIP_BY_IDS = '''
-        SELECT (id, user_id1, user_id2) FROM friendships
-        WHERE (user_id1 = %s OR user_id2 = %s)
-        OR (user_id1 = %s OR user_id2 = %s)
+        SELECT id, user_id1, user_id2 FROM friendships
+        WHERE (user_id1 = %s AND user_id2 = %s) OR
+         (user_id1 = %s AND user_id2 = %s);
     '''

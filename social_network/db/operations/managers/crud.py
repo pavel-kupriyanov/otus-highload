@@ -81,4 +81,4 @@ def delete_query(model: BaseModel) -> str:
     return f'''
         DELETE FROM {model._table_name}
         WHERE id = %s
-         '''
+        '''

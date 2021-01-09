@@ -1,4 +1,7 @@
 import asyncio
+from datetime import datetime, timedelta
+from typing import Any
+
 import aiomysql
 import pytest
 import pytest_asyncio
@@ -7,18 +10,48 @@ from pydantic import EmailStr
 
 from social_network.settings import Settings
 from social_network.db.migrations.main import migrate
-from social_network.db import get_connector, BaseDatabaseConnector
+from social_network.db import (
+    get_connector,
+    BaseDatabaseConnector,
+    AccessToken,
+    AuthUser,
+    get_access_token_manager,
+    get_auth_user_manager,
+    FriendRequest,
+    get_friend_request_manager,
+    Friendship,
+    get_friendship_manager
+)
 from social_network.web.main import app
 from social_network.utils.security import hash_password
 
 CONFIG_PATH = 'settings/settings.json'
 
 
-class TestUser:
+class VladimirHarconnen:
+    ID: int
     EMAIL = EmailStr('Harkonnen.v@mail.com')
     FIRST_NAME = 'Vladimir'
     LAST_NAME = 'Harkonnen'
     PASSWORD = 'death_for_atreides!'
+    HASHED_PASSWORD, SALT = hash_password(PASSWORD)
+
+
+class LetoAtreides:
+    ID: int
+    EMAIL = EmailStr('Atreides.L@mail.com')
+    FIRST_NAME = 'Leto'
+    LAST_NAME = 'Atreides'
+    PASSWORD = 'death_for_harconnen!'
+    HASHED_PASSWORD, SALT = hash_password(PASSWORD)
+
+
+class ShaddamIV:
+    ID: int
+    EMAIL = EmailStr('Emperor@mail.com')
+    FIRST_NAME = 'Shaddam'
+    LAST_NAME = 'IV'
+    PASSWORD = 'SpiceMustFlow'
     HASHED_PASSWORD, SALT = hash_password(PASSWORD)
 
 
@@ -83,20 +116,85 @@ async def get_test_client(db_connector) -> TestClient:
     app.dependency_overrides = {}
 
 
-# noinspection SqlResolve
-@pytest.fixture(name='test_user')
-async def add_user_in_db(cursor: aiomysql.Cursor) -> TestUser:
-    u = TestUser()
-    await cursor.execute('''
-    INSERT INTO users(email, password, salt, first_name, last_name)
-    VALUES (%s, %s, %s, %s, %s );
-    ''', (u.EMAIL, u.HASHED_PASSWORD, u.SALT, u.FIRST_NAME, u.LAST_NAME))
-    yield u
+@pytest.fixture(name='user1')
+async def add_user_in_db1(db_connector, cursor: aiomysql.Cursor) -> AuthUser:
+    yield await add_user_in_db(db_connector, VladimirHarconnen)
     await cursor.execute('DELETE FROM users WHERE email = %s;',
-                         (u.EMAIL,))
+                         (VladimirHarconnen.EMAIL,))
+
+
+@pytest.fixture(name='user2')
+async def add_user_in_db2(db_connector, cursor: aiomysql.Cursor) -> AuthUser:
+    yield await add_user_in_db(db_connector, LetoAtreides)
+    await cursor.execute('DELETE FROM users WHERE email = %s;',
+                         (LetoAtreides.EMAIL,))
+
+
+@pytest.fixture(name='user3')
+async def add_user_in_db3(db_connector, cursor: aiomysql.Cursor) -> AuthUser:
+    yield await add_user_in_db(db_connector, ShaddamIV)
+    await cursor.execute('DELETE FROM users WHERE email = %s;',
+                         (ShaddamIV.EMAIL,))
+
+
+@pytest.fixture(name='token1')
+async def get_token_for_user1(user1, db_connector, settings) -> AccessToken:
+    return await add_token_in_db(db_connector, settings, user1.id)
+
+
+@pytest.fixture(name='token2')
+async def get_token_for_user2(user2, db_connector, settings) -> AccessToken:
+    return await add_token_in_db(db_connector, settings, user2.id)
+
+
+@pytest.fixture(name='token3')
+async def get_token_for_user3(user3, db_connector, settings) -> AccessToken:
+    return await add_token_in_db(db_connector, settings, user3.id)
+
+
+@pytest.fixture(name='friend_request')
+async def get_friend_request(db_connector, user1, user2, cursor) \
+        -> FriendRequest:
+    yield await add_friend_request_in_db(db_connector, user1.id, user2.id)
+
+
+@pytest.fixture(name='friendship')
+async def get_friendship(db_connector, user1, user2, cursor) \
+        -> Friendship:
+    yield await add_friendship_in_db(db_connector, user1.id, user2.id)
 
 
 @pytest.fixture(name='drop_users_after_test')
 async def drop_users_after_test(cursor: aiomysql.Cursor):
     yield
     await cursor.execute('DELETE FROM users')
+
+
+async def add_user_in_db(db_connector, user_data: Any) -> AuthUser:
+    manager = get_auth_user_manager(db_connector)
+    user = await manager.create(email=user_data.EMAIL,
+                                hashed_password=user_data.HASHED_PASSWORD,
+                                salt=user_data.SALT,
+                                first_name=user_data.FIRST_NAME,
+                                last_name=user_data.LAST_NAME)
+    user.password = user_data.PASSWORD
+    return user
+
+
+async def add_token_in_db(db_connector, settings, user_id):
+    manager = get_access_token_manager(db_connector)
+    expired_at = datetime.now() + timedelta(
+        seconds=settings.TOKEN_EXPIRATION_TIME
+    )
+    return await manager.create('foobar', user_id, expired_at)
+
+
+async def add_friend_request_in_db(db_connector, from_user_id,
+                                   to_user_id) -> FriendRequest:
+    manager = get_friend_request_manager(db_connector)
+    return await manager.create(from_user_id, to_user_id)
+
+
+async def add_friendship_in_db(db_connector, user_id1, user_id2) -> Friendship:
+    manager = get_friendship_manager(db_connector)
+    return await manager.create(user_id1, user_id2)
