@@ -57,7 +57,6 @@ class AccessTokenManager(BaseCRUDManager):
     async def get(self, id: int) -> AccessToken:
         return await self._get(id)
 
-    # TODO: refactor get error handling
     async def get_by_value(self, value: str) -> AccessToken:
         params = (None, value)
         tokens = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE_OR_ID,

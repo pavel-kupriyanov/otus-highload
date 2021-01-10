@@ -195,6 +195,6 @@ async def add_friend_request_in_db(db_connector, from_user_id,
     return await manager.create(from_user_id, to_user_id)
 
 
-async def add_friendship_in_db(db_connector, user_id1, user_id2) -> Friendship:
+async def add_friendship_in_db(db_connector, user_id, friend_id) -> Friendship:
     manager = get_friendship_manager(db_connector)
-    return await manager.create(user_id1, user_id2)
+    return await manager.create(user_id, friend_id)

@@ -28,7 +28,9 @@ class UserManager(BaseCRUDManager):
 
     # TODO: update
     async def search_list(self,
-                          search='',
+                          first_name='',
+                          last_name='',
+                          friend_id=None,
                           order_by='last_name',
                           order='ASC',
                           limit=settings.BASE_PAGE_LIMIT,

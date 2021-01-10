@@ -27,6 +27,7 @@ class BaseDatabaseConnector:
                          query_template: str,
                          params: Optional[Tuple[Any, ...]] = None,
                          max_rows: Optional[int] = None,
+                         only_count=False,
                          last_row_id=False,
                          raise_if_empty=True) \
             -> DatabaseResponse:
@@ -48,6 +49,7 @@ class DatabaseConnector(BaseDatabaseConnector):
                          query_template: str,
                          params: Optional[Tuple[Any, ...]] = None,
                          max_rows: Optional[int] = None,
+                         only_count=False,
                          last_row_id=False,
                          raise_if_empty=True) \
             -> DatabaseResponse:
@@ -55,6 +57,8 @@ class DatabaseConnector(BaseDatabaseConnector):
         async with pool.acquire() as conn:  # type: aiomysql.Connection
             async with conn.cursor() as cursor:  # type: aiomysql.Cursor
                 rowcount = await cursor.execute(query_template, params)
+                if only_count:
+                    return rowcount
                 if last_row_id:
                     return cursor.lastrowid
                 data = await cursor.fetchmany(max_rows or rowcount)

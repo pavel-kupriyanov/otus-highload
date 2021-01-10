@@ -5,7 +5,16 @@ class UserQueries(str, Enum):
     GET_USERS = '''
         SELECT id, first_name, last_name FROM users
         WHERE 
-        (first_name LIKE CONCAT('%%', %s, '%%')) OR 
+        (first_name LIKE CONCAT('%%', %s, '%%')) AND 
+        (last_name LIKE CONCAT('%%', %s, '%%'))
+    '''
+
+    GET_FRIENDS = '''
+        SELECT DISTINCT users.id, first_name, last_name FROM users
+        JOIN friendships f1 on users.id = f1.user_id1
+        JOIN friendships f2 on users.id = f2.user_id2
+        WHERE 
+        (first_name LIKE CONCAT('%%', %s, '%%')) AND 
         (last_name LIKE CONCAT('%%', %s, '%%'))
     '''
 
@@ -65,13 +74,7 @@ class FriendRequestQueries(str, Enum):
 
 
 class FriendshipQueries(str, Enum):
-    GET_FRIENDSHIPS = '''
-        SELECT (id, user_id1, user_id2) FROM friendships
-        WHERE user_id1 = %s OR user_id2 = %s
-    '''
-
-    GET_FRIENDSHIP_BY_IDS = '''
-        SELECT id, user_id1, user_id2 FROM friendships
-        WHERE (user_id1 = %s AND user_id2 = %s) OR
-         (user_id1 = %s AND user_id2 = %s);
+    GET_FRIENDSHIP = '''
+        SELECT id, user_id, friend_id FROM friendships
+        WHERE user_id = %s AND friend_id = %s
     '''

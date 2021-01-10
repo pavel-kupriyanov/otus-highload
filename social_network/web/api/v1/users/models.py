@@ -1,9 +1,7 @@
 from enum import Enum
+from typing import Optional
 
-from pydantic import (
-    BaseModel,
-    Field
-)
+from pydantic import BaseModel, Field
 
 from social_network.settings import settings
 
@@ -20,7 +18,9 @@ class OrderBy(str, Enum):
 
 
 class UsersPayload(BaseModel):
-    search: str = Field('')
+    first_name: str = ''
+    last_name: str = ''
+    friends_of: Optional[int]
     order_by: OrderBy = Field(OrderBy.LAST_NAME)
     order: Order = Field(Order.ASC)
     page: int = Field(1, ge=1)
