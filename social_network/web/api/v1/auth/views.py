@@ -13,7 +13,8 @@ from social_network.db import (
     AuthUserManager,
     AccessToken,
     AccessTokenManager,
-    AuthUser
+    AuthUser,
+    RowsNotFoundError
 )
 from social_network.utils.security import hash_password
 
@@ -42,13 +43,14 @@ class AuthViewSet:
         get_access_token_manager_depends
     )
 
+    # TODO: return endpoint types
     @router.post('/login', status_code=201, response_model=AccessToken,
                  responses={
                      201: {'description': 'Success login'},
                      400: {'description': 'Invalid email or password'}
                  })
     async def login(self, p: LoginPayload):
-        user = await self.user_manager.get(email=p.email)
+        user = await self.user_manager.get_by_email(email=p.email)
         if not is_valid_password(user, p.password.get_secret_value()):
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -76,7 +78,11 @@ class AuthViewSet:
                      400: {'description': 'Invalid email'}
                  })
     async def register(self, p: RegistrationPayload):
-        if await self.user_manager.is_email_already_used(p.email):
+        try:
+            await self.user_manager.get_by_email(p.email)
+        except RowsNotFoundError:
+            pass
+        else:
             msg = 'User with this email already exists'
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
                                 content={'detail': msg})

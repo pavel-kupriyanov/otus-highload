@@ -3,10 +3,10 @@ from typing import List
 from functools import lru_cache
 
 from ..base import BaseModel
-from ..db import BaseDatabaseConnector, RowsNotFoundError
+from ..db import BaseDatabaseConnector
 from ..queries import FriendRequestQueries
 
-from .crud import BaseCRUDManager, CRUD
+from .crud import CRUDManager, CRUD
 
 
 class FriendRequestStatus(str, Enum):
@@ -23,7 +23,7 @@ class FriendRequest(BaseModel):
     status: FriendRequestStatus
 
 
-class FriendRequestManager(BaseCRUDManager):
+class FriendRequestManager(CRUDManager):
     model = FriendRequest
     queries = {
         CRUD.LIST: FriendRequestQueries.GET_FRIEND_REQUESTS,
@@ -47,18 +47,6 @@ class FriendRequestManager(BaseCRUDManager):
 
     async def list_for_user(self, user_id: int) -> List[FriendRequest]:
         return await self._list((user_id, user_id))
-
-    async def delete(self, id: int):
-        await self._delete(id)
-
-    async def get(self, id: int) -> FriendRequest:
-        return await self._get(id)
-
-    async def get_by_user_ids(self, from_user: int, to_user: int) \
-            -> FriendRequest:
-        query = FriendRequestQueries.GET_FRIEND_REQUEST_BY_USERS
-        requests = await self.execute(query, (from_user, to_user))
-        return FriendRequest.from_db(requests[0])
 
 
 @lru_cache(1)

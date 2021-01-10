@@ -18,15 +18,9 @@ class UserQueries(str, Enum):
         (f.friend_id = %s)
     '''
 
-    GET_USERS_BY_IDS = '''
-        SELECT id, first_name, last_name FROM users
-        WHERE id IN %s
-    '''
-
-    GET_USER_BY_EMAIL_OR_ID = '''
+    GET_USER_BY_EMAIL = '''
         SELECT id, email, password, salt, first_name, last_name FROM users
-        WHERE email = %s OR users.id = %s
-        LIMIT 1
+        WHERE email = %s
     '''
 
 
@@ -42,10 +36,9 @@ class AccessTokenQueries(str, Enum):
         WHERE id = %s
     '''
 
-    GET_TOKEN_BY_VALUE_OR_ID = '''
+    GET_TOKEN_BY_VALUE = '''
         SELECT id, value, user_id, expired_at FROM access_tokens
-        WHERE id = %s OR value = %s
-        LIMIT 1
+        WHERE value = %s
     '''
 
 
@@ -69,7 +62,6 @@ class FriendRequestQueries(str, Enum):
     GET_FRIEND_REQUEST_BY_USERS = '''
     SELECT (id, from_user, to_user, status) FROM friend_requests
     WHERE from_user = %s AND to_user = %s
-    LIMIT 1
     '''
 
 

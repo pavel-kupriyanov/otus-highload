@@ -9,7 +9,7 @@ from pydantic import (
 from ..db import BaseDatabaseConnector, RowsNotFoundError
 from ..queries import UserQueries
 
-from .crud import BaseCRUDManager
+from .crud import CRUDManager
 from .users import User
 
 
@@ -22,7 +22,7 @@ class AuthUser(User):
     salt: SecretStr
 
 
-class AuthUserManager(BaseCRUDManager):
+class AuthUserManager(CRUDManager):
     model = AuthUser
     queries = {}
 
@@ -32,15 +32,13 @@ class AuthUserManager(BaseCRUDManager):
         params = (email, hashed_password, salt, first_name, last_name)
         return await self._create(params)
 
-    async def get(self, id: Optional[int] = None,
-                  email: Optional[EmailStr] = None) -> AuthUser:
-        users = await self.execute(UserQueries.GET_USER_BY_EMAIL_OR_ID,
-                                   (email, id))
+    async def get_by_email(self, email: EmailStr) -> AuthUser:
+        users = await self.execute(UserQueries.GET_USER_BY_EMAIL, (email,))
         return AuthUser.from_db(users[0])
 
     async def is_email_already_used(self, email: EmailStr) -> bool:
         try:
-            await self.get(None, email)
+            await self.get_by_email(email)
         except RowsNotFoundError:
             return False
         return True

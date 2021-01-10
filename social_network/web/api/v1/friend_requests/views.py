@@ -39,14 +39,6 @@ class FriendRequestViewSet:
         get_friendship_manager_depends
     )
 
-    async def already_friends(self, friend_id: int) -> bool:
-        try:
-            await self.friendship_manager.get_by_participants(self.user_id,
-                                                              friend_id)
-        except RowsNotFoundError:
-            return False
-        return True
-
     @router.post('/', response_model=FriendRequest, status_code=201,
                  responses={
                      201: {'description': 'Friend request created.'},
@@ -56,11 +48,17 @@ class FriendRequestViewSet:
                  })
     @authorize_only
     async def create(self, p: FriendRequestPostPayload) -> FriendRequest:
-        if await self.already_friends(p.user_id):
-            raise HTTPException(400, detail='Users already friends.')
         try:
-            return await self.friend_request_manager.create(self.user_id,
-                                                            p.user_id)
+            await self.friendship_manager \
+                .get_by_participants(self.user_id, p.user_id)
+        except RowsNotFoundError:
+            pass
+        else:
+            raise HTTPException(400, detail='Users already friends.')
+
+        try:
+            return await self.friend_request_manager \
+                .create(self.user_id, p.user_id)
         except DatabaseError:
             raise HTTPException(404, detail='User not found or request '
                                             'already exists.')

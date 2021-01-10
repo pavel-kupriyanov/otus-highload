@@ -55,6 +55,16 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         await self.execute(query, (id,), raise_if_empty=False)
 
 
+class CRUDManager(BaseCRUDManager):
+    model: M
+
+    async def get(self, id: int) -> M:
+        return await self._get(id)
+
+    async def delete(self, id: int):
+        return await self._delete(id)
+
+
 def get_fields_without_id(model: BaseModel) -> Tuple[str, ...]:
     return tuple((f for f in model._fields if f != 'id'))
 

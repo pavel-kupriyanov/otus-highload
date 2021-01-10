@@ -7,7 +7,7 @@ from ..base import BaseModel, M
 from ..db import BaseDatabaseConnector
 from ..queries import AccessTokenQueries
 
-from .crud import BaseCRUDManager, CRUD
+from .crud import CRUDManager, CRUD
 
 Timestamp = float  # Alias
 TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -34,7 +34,7 @@ class AccessToken(BaseModel):
         return cls(**raw)
 
 
-class AccessTokenManager(BaseCRUDManager):
+class AccessTokenManager(CRUDManager):
     model = AccessToken
     queries = {
         CRUD.UPDATE: AccessTokenQueries.UPDATE_TOKEN,
@@ -54,17 +54,10 @@ class AccessTokenManager(BaseCRUDManager):
     async def list_user_active(self, user_id: int) -> List[AccessToken]:
         return await self._list((user_id,))
 
-    async def get(self, id: int) -> AccessToken:
-        return await self._get(id)
-
     async def get_by_value(self, value: str) -> AccessToken:
-        params = (None, value)
-        tokens = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE_OR_ID,
-                                    params)
+        tokens = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE,
+                                    (value,))
         return AccessToken.from_db(tokens[0])
-
-    async def _delete(self, id: int):
-        await self._delete(id)
 
 
 @lru_cache(1)

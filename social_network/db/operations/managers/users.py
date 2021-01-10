@@ -7,7 +7,7 @@ from ..base import BaseModel
 from ..db import BaseDatabaseConnector
 from ..queries import UserQueries
 
-from .crud import BaseCRUDManager
+from .crud import CRUDManager
 
 
 # TODO: additional user info
@@ -19,7 +19,7 @@ class User(BaseModel):
     last_name: Optional[str]
 
 
-class UserManager(BaseCRUDManager):
+class UserManager(CRUDManager):
     model = User
     queries = {}
 
@@ -41,20 +41,6 @@ class UserManager(BaseCRUDManager):
                                 query=query,
                                 order_by=order_by, order=order,
                                 limit=limit, offset=offset)
-
-    async def list_by_ids(self,
-                          ids: List[int],
-                          order_by='last_name',
-                          order='ASC',
-                          limit=settings.BASE_PAGE_LIMIT,
-                          offset=0) -> List[User]:
-        query = UserQueries.GET_USERS_BY_IDS
-        return await self._list((ids,), query,
-                                order_by=order_by, order=order,
-                                limit=limit, offset=offset)
-
-    async def get(self, id: int) -> User:
-        return await self._get(id)
 
 
 @lru_cache(1)
