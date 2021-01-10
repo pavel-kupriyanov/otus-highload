@@ -11,11 +11,11 @@ class UserQueries(str, Enum):
 
     GET_FRIENDS = '''
         SELECT DISTINCT users.id, first_name, last_name FROM users
-        JOIN friendships f1 on users.id = f1.user_id1
-        JOIN friendships f2 on users.id = f2.user_id2
+        JOIN friendships f on users.id = f.user_id
         WHERE 
-        (first_name LIKE CONCAT('%%', %s, '%%')) AND 
-        (last_name LIKE CONCAT('%%', %s, '%%'))
+        (UPPER(first_name) LIKE UPPER(CONCAT('%%', %s, '%%'))) AND 
+        (UPPER(last_name) LIKE UPPER(CONCAT('%%', %s, '%%'))) AND
+        (f.friend_id = %s)
     '''
 
     GET_USERS_BY_IDS = '''

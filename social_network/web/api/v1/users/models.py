@@ -1,7 +1,9 @@
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from fastapi import Query
+from pydantic import BaseModel
 
 from social_network.settings import settings
 
@@ -17,12 +19,13 @@ class OrderBy(str, Enum):
     LAST_NAME = 'last_name'
 
 
-class UsersPayload(BaseModel):
-    first_name: str = ''
-    last_name: str = ''
-    friends_of: Optional[int]
-    order_by: OrderBy = Field(OrderBy.LAST_NAME)
-    order: Order = Field(Order.ASC)
-    page: int = Field(1, ge=1)
-    paginate_by: int = Field(settings.BASE_PAGE_LIMIT,
+@dataclass
+class UsersQueryParams:
+    first_name: str = Query('')
+    last_name: str = Query('')
+    friends_of: Optional[int] = Query(None)
+    order_by: OrderBy = Query(OrderBy.FIRST_NAME)
+    order: Order = Query(Order.ASC)
+    page: int = Query(1, ge=1)
+    paginate_by: int = Query(settings.BASE_PAGE_LIMIT,
                              le=settings.BASE_PAGE_LIMIT)
