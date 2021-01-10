@@ -65,48 +65,48 @@ class FriendRequestViewSet:
             raise HTTPException(404, detail='User not found or request '
                                             'already exists.')
 
-    @router.delete('/{request_id}', status_code=204, responses={
+    @router.delete('/{id}', status_code=204, responses={
         204: {'description': 'Friend request cancelled.'},
         401: {'description': 'Unauthorized.'},
         403: {'description': 'Only request owner can cancel it'},
         404: {'description': 'Request not found.'}
     })
     @authorize_only
-    async def cancel(self, request_id: int):
-        request = await self.friend_request_manager.get(request_id)
+    async def cancel(self, id: int):
+        request = await self.friend_request_manager.get(id)
         if not is_request_creator(request, self.user_id):
             raise HTTPException(403, detail='You are not allowed to delete'
                                             ' request')
-        await self.friend_request_manager.delete(request_id)
+        await self.friend_request_manager.delete(id)
 
-    @router.get('/{request_id}', status_code=200, responses={
+    @router.get('/{id}', status_code=200, responses={
         200: {'description': 'Success'},
         401: {'description': 'Unauthorized.'},
         403: {'description': 'Only participants can get it'},
         404: {'description': 'Request not found.'}
     })
     @authorize_only
-    async def get(self, request_id: int) -> FriendRequest:
-        request = await self.friend_request_manager.get(request_id)
+    async def get(self, id: int) -> FriendRequest:
+        request = await self.friend_request_manager.get(id)
         if not is_request_participant(request, self.user_id):
             raise HTTPException(403, 'Not allowed')
         return request
 
-    @router.put('/decline/{request_id}', status_code=204, responses={
+    @router.put('/decline/{id}', status_code=204, responses={
         204: {'description': 'Success'},
         401: {'description': 'Unauthorized.'},
         403: {'description': 'Only request target can decline it'},
         404: {'description': 'Request not found.'}
     })
     @authorize_only
-    async def decline(self, request_id: int):
-        request = await self.friend_request_manager.get(request_id)
+    async def decline(self, id: int):
+        request = await self.friend_request_manager.get(id)
         if not is_request_target(request, self.user_id):
             raise HTTPException(403, 'Not allowed')
-        await self.friend_request_manager.update(request_id,
+        await self.friend_request_manager.update(id,
                                                  FriendRequestStatus.DECLINED)
 
-    @router.put('/accept/{request_id}', response_model=Friendship,
+    @router.put('/accept/{id}', response_model=Friendship,
                 status_code=201,
                 responses={
                     201: {'description': 'Success'},
@@ -115,14 +115,14 @@ class FriendRequestViewSet:
                     404: {'description': 'Request not found.'}
                 })
     @authorize_only
-    async def accept(self, request_id: int):
-        request = await self.friend_request_manager.get(request_id)
+    async def accept(self, id: int):
+        request = await self.friend_request_manager.get(id)
 
         if not is_request_target(request, self.user_id):
             raise HTTPException(403, 'Not allowed')
 
         # TODO: transaction
-        await self.friend_request_manager.delete(request_id)
+        await self.friend_request_manager.delete(id)
         return await self.friendship_manager.create(request.to_user,
                                                     request.from_user)
 

@@ -9,7 +9,7 @@ def test_login(app: TestClient, user1):
         'password': user1.password
     }
     response = app.post(BASE_PATH + 'login', json=request)
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert 'expired_at' in response.json().keys()
 
 

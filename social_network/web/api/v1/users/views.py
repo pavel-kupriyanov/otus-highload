@@ -30,9 +30,9 @@ class UserViewSet:
                                             limit=q.paginate_by,
                                             offset=offset)
 
-    @router.get('/{user_id}', response_model=User, responses={
+    @router.get('/{id}', response_model=User, responses={
         200: {'description': 'User.'},
         404: {'description': 'User not found.'}
     })
-    async def user(self, user_id: int) -> User:
-        return await self.user_manager.get(user_id)
+    async def user(self, id: int) -> User:
+        return await self.user_manager.get(id)

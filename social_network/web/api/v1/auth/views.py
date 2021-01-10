@@ -42,10 +42,11 @@ class AuthViewSet:
         get_access_token_manager_depends
     )
 
-    @router.post('/login', response_model=AccessToken, responses={
-        201: {'description': 'Success login'},
-        400: {'description': 'Invalid email or password'}
-    })
+    @router.post('/login', status_code=201, response_model=AccessToken,
+                 responses={
+                     201: {'description': 'Success login'},
+                     400: {'description': 'Invalid email or password'}
+                 })
     async def login(self, p: LoginPayload):
         user = await self.user_manager.get(email=p.email)
         if not is_valid_password(user, p.password.get_secret_value()):

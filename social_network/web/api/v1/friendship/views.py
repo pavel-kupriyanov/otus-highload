@@ -27,15 +27,15 @@ class FriendshipViewSet:
         get_friendship_manager_depends
     )
 
-    @router.delete('/{friendship_id}', status_code=204, responses={
+    @router.delete('/{id}', status_code=204, responses={
         204: {'description': 'Friendship cancelled.'},
         401: {'description': 'Unauthorized.'},
         403: {'description': 'Only friendship participant can cancel it'},
         404: {'description': 'Request not found.'}
     })
     @authorize_only
-    async def delete(self, friendship_id: int):
-        request = await self.friendship_manager.get(friendship_id)
+    async def delete(self, id: int):
+        request = await self.friendship_manager.get(id)
         if self.user_id not in (request.user_id, request.friend_id):
             raise HTTPException(403, detail='Not allowed')
         try:
@@ -44,17 +44,17 @@ class FriendshipViewSet:
             await self.friendship_manager.delete(reverse_request.id)
         except RowsNotFoundError:
             pass
-        await self.friendship_manager.delete(friendship_id)
+        await self.friendship_manager.delete(id)
 
-    @router.get('/{friendship_id}', status_code=200, responses={
+    @router.get('/{id}', status_code=200, responses={
         200: {'description': 'Success'},
         401: {'description': 'Unauthorized.'},
         403: {'description': 'Only participants can get it'},
         404: {'description': 'Friendship not found.'}
     })
     @authorize_only
-    async def get(self, friendship_id: int) -> Friendship:
-        request = await self.friendship_manager.get(friendship_id)
+    async def get(self, id: int) -> Friendship:
+        request = await self.friendship_manager.get(id)
         if self.user_id not in (request.user_id, request.friend_id):
             raise HTTPException(403, 'Not allowed')
         return request
