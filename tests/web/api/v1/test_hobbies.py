@@ -42,4 +42,15 @@ def test_get_not_found(app: TestClient, hobby: Hobby):
 def test_list(app: TestClient, hobby: Hobby):
     response = app.get(BASE_PATH)
     assert response.status_code == 200
+
+
+def test_list_search(app: TestClient, hobby: Hobby):
+    response = app.get(BASE_PATH, params={'name': hobby.name[0:-2]})
+    assert response.status_code == 200
     assert response.json()[0]['name'] == hobby.name
+
+
+def test_list_not_found(app: TestClient, hobby: Hobby):
+    response = app.get(BASE_PATH, params={'name': 'foobar'})
+    assert response.status_code == 200
+    assert len(response.json()) == 0

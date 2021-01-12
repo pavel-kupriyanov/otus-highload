@@ -22,7 +22,9 @@ from social_network.db import (
     Friendship,
     get_friendship_manager,
     get_hobby_manager,
-    Hobby
+    Hobby,
+    UserHobby,
+    get_user_hobby_manager
 )
 from social_network.web.main import app
 from social_network.utils.security import hash_password
@@ -181,6 +183,13 @@ async def get_hobby(db_connector, cursor: aiomysql.Cursor) -> Hobby:
     await cursor.execute('DELETE FROM hobbies;')
 
 
+@pytest.fixture(name='user_hobby')
+async def get_user_hobby(db_connector, user1, hobby, cursor: aiomysql.Cursor) \
+        -> UserHobby:
+    yield await add_user_hobby_in_db(db_connector, user1.id, hobby.id)
+    await cursor.execute('DELETE FROM users_hobbies_mtm;')
+
+
 @pytest.fixture(name='drop_users_after_test')
 async def drop_users_after_test(cursor: aiomysql.Cursor):
     yield
@@ -223,3 +232,8 @@ async def add_friendship_in_db(db_connector, user_id, friend_id) -> Friendship:
 async def add_hobby_in_db(db_connector, hobby_name: str) -> Hobby:
     manager = get_hobby_manager(db_connector)
     return await manager.create(hobby_name)
+
+
+async def add_user_hobby_in_db(db_connector, user_id, hobby_id) -> UserHobby:
+    manager = get_user_hobby_manager(db_connector)
+    return await manager.create(user_id, hobby_id)

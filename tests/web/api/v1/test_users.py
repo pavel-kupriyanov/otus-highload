@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from social_network.db import AccessToken
+
 BASE_PATH = '/api/v1/users/'
 
 
@@ -49,3 +51,30 @@ def test_list_paginate(app: TestClient, user1, user2, user3):
     assert len(request.json()) == 1
     raw_user_2 = request.json()[0]
     assert raw_user_1['id'] != raw_user_2['id']
+
+
+def test_user_add_hobby(app: TestClient, user1, token1: AccessToken, hobby):
+    response = app.put(BASE_PATH + f'hobbies/{hobby.id}',
+                       headers={'x-auth-token': token1.value})
+    assert response.status_code == 201
+
+
+def test_user_add_hobby_already_added(app: TestClient, user1,
+                                      token1: AccessToken, hobby, user_hobby):
+    response = app.put(BASE_PATH + f'hobbies/{hobby.id}',
+                       headers={'x-auth-token': token1.value})
+    assert response.status_code == 400
+
+
+def test_user_add_hobby_not_found(app: TestClient, user1, token1: AccessToken,
+                                  hobby):
+    response = app.put(BASE_PATH + f'hobbies/1000000',
+                       headers={'x-auth-token': token1.value})
+    assert response.status_code == 400
+
+
+def test_user_delete_hobby(app: TestClient, user1,
+                           token1: AccessToken, hobby, user_hobby):
+    response = app.delete(BASE_PATH + f'hobbies/{hobby.id}',
+                          headers={'x-auth-token': token1.value})
+    assert response.status_code == 204

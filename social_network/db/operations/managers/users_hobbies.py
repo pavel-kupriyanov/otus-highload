@@ -1,13 +1,10 @@
 from functools import lru_cache
-from typing import List
 
 from ..base import BaseModel
 from ..db import BaseDatabaseConnector
-from ..queries import HobbyQueries
+from ..queries import UserHobbyQueries
 
-from social_network.settings import settings
-
-from .crud import CRUDManager, CRUD
+from .crud import CRUDManager
 
 
 class UserHobby(BaseModel):
@@ -18,25 +15,22 @@ class UserHobby(BaseModel):
     hobby_id: int
 
 
-
 class UsersHobbyManager(CRUDManager):
     model = UserHobby
     # TODO: refactor crud
     queries = {}
 
-    async def create(self, name: str) -> UserHobby:
-        return await self._create((name.capitalize(),))
+    async def create(self, user_id: int, hobby_id: int) -> UserHobby:
+        return await self._create((user_id, hobby_id))
 
-    async def list(self,
-                   name='',
-                   order='ASC',
-                   limit=settings.BASE_PAGE_LIMIT,
-                   offset=0) -> List[Hobby]:
-        return await self._list((name,), order=order, limit=limit,
-                                offset=offset)
+    async def delete_by_ids(self, user_id: int, hobby_id: int):
+        params = (user_id, hobby_id)
+        return await self.execute(UserHobbyQueries.DROP_USER_HOBBY, params,
+                                  raise_if_empty=False)
 
 
 # TODO: class method?
 @lru_cache(1)
-def get_hobby_manager(connector: BaseDatabaseConnector) -> HobbyManager:
-    return HobbyManager(connector)
+def get_user_hobby_manager(connector: BaseDatabaseConnector) \
+        -> UsersHobbyManager:
+    return UsersHobbyManager(connector)

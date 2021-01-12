@@ -37,3 +37,9 @@ from .managers.hobbies import (
     HobbyManager,
     get_hobby_manager
 )
+
+from .managers.users_hobbies import (
+    UserHobby,
+    UsersHobbyManager,
+    get_user_hobby_manager
+)

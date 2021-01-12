@@ -28,5 +28,8 @@ from .operations import (
     Hobby,
     HobbyManager,
     get_hobby_manager,
-    Gender
+    Gender,
+    UserHobby,
+    UsersHobbyManager,
+    get_user_hobby_manager
 )

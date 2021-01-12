@@ -1,8 +1,5 @@
-from dataclasses import dataclass
 from enum import Enum
-from fastapi import HTTPException, Query
-
-from social_network.settings import settings
+from fastapi import HTTPException
 
 from functools import wraps
 

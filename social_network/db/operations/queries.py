@@ -78,3 +78,10 @@ class HobbyQueries(str, Enum):
          SELECT id, name FROM hobbies
          WHERE (UPPER(name) LIKE UPPER(CONCAT('%%', %s, '%%')))
     '''
+
+
+class UserHobbyQueries(str, Enum):
+    DROP_USER_HOBBY = '''
+        DELETE FROM users_hobbies_mtm
+        WHERE user_id = %s AND hobby_id = %s;
+    '''

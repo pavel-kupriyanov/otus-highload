@@ -16,7 +16,8 @@ CREATE TABLE users_hobbies_mtm
     user_id  int NOT NULL,
     hobby_id INT NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (user_id) REFERENCES users (id),
-    FOREIGN KEY (hobby_id) REFERENCES hobbies (id)
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (hobby_id) REFERENCES hobbies (id) ON DELETE CASCADE,
+    UNIQUE one_mtm (user_id, hobby_id)
 );
 
