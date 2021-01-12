@@ -1,18 +1,6 @@
-from functools import lru_cache
-
-from ..base import BaseModel
-from ..db import BaseDatabaseConnector
+from ..crud import CRUDManager
 from ..queries import FriendshipQueries
-
-from .crud import CRUDManager
-
-
-class Friendship(BaseModel):
-    _table_name = 'friendships'
-    _fields = ('id', 'user_id', 'friend_id')
-
-    user_id: int
-    friend_id: int
+from ..models import Friendship
 
 
 class FriendshipManager(CRUDManager):

@@ -1,7 +1,7 @@
 from random import choice
 from string import ascii_letters, digits
 
-from social_network.db import AuthUser
+from social_network.db.models import AuthUser
 from social_network.utils.security import check_hash
 
 

@@ -1,37 +1,9 @@
 from datetime import datetime
-from collections import namedtuple
-from functools import lru_cache
-from typing import List, Type
+from typing import List
 
-from ..base import BaseModel, M
-from ..db import BaseDatabaseConnector
+from ..crud import CRUDManager, CRUD
 from ..queries import AccessTokenQueries
-
-from .crud import CRUDManager, CRUD
-
-Timestamp = float  # Alias
-TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
-
-
-class AccessToken(BaseModel):
-    _table_name = 'access_tokens'
-    _fields = ('id', 'value', 'user_id', 'expired_at')
-
-    value: str
-    user_id: int
-    expired_at: Timestamp
-
-    # TODO: refactor it
-    @classmethod
-    def from_db(cls: Type[M], tpl: tuple) -> M:
-        parsing_tuple = namedtuple('_', cls._fields)
-        raw = parsing_tuple(*tpl)._asdict()
-        expired_at = raw['expired_at']
-        if isinstance(expired_at, str):
-            expired_at = datetime.strptime(expired_at, TIMESTAMP_FORMAT)
-        if isinstance(expired_at, datetime):
-            raw['expired_at'] = expired_at.timestamp()
-        return cls(**raw)
+from ..models import AccessToken, TIMESTAMP_FORMAT
 
 
 class AccessTokenManager(CRUDManager):

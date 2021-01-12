@@ -6,11 +6,9 @@ from fastapi import (
 )
 from fastapi_utils.cbv import cbv
 
-from social_network.db import (
-    FriendshipManager,
-    Friendship,
-    RowsNotFoundError
-)
+from social_network.db.models import Friendship
+from social_network.db.managers import FriendshipManager
+from social_network.db.excpetions import RowsNotFoundError
 
 from ..depends import get_user_id
 

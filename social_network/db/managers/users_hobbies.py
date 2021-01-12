@@ -1,22 +1,11 @@
-from functools import lru_cache
 from collections import defaultdict
 from typing import List, Dict
 from itertools import groupby
 
-from ..base import BaseModel
-from ..db import BaseDatabaseConnector
 from ..queries import UserHobbyQueries
 
-from .crud import CRUDManager
-from .hobbies import Hobby
-
-
-class UserHobby(BaseModel):
-    _table_name = 'users_hobbies_mtm'
-    _fields = ('id', 'user_id', 'hobby_id')
-
-    user_id: int
-    hobby_id: int
+from ..crud import CRUDManager
+from ..models import Hobby, UserHobby
 
 
 class UsersHobbyManager(CRUDManager):

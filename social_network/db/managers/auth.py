@@ -1,26 +1,11 @@
 from typing import Optional
-from functools import lru_cache
 
-from pydantic import (
-    EmailStr,
-    SecretStr
-)
+from pydantic import EmailStr
 
-from ..db import BaseDatabaseConnector
 from ..queries import UserQueries
 
-from .crud import CRUDManager
-from .users import User, Gender
-
-
-class AuthUser(User):
-    _table_name = 'users'
-    _fields = ('id', 'email', 'password', 'salt', 'age', 'first_name',
-               'last_name', 'city', 'gender')
-
-    email: EmailStr
-    password: SecretStr
-    salt: SecretStr
+from ..crud import CRUDManager
+from ..models import AuthUser, Gender
 
 
 class AuthUserManager(CRUDManager):

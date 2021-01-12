@@ -7,7 +7,7 @@ from pydantic import (
     Field
 )
 
-from social_network.db import Gender
+from social_network.db.models import Gender
 
 
 class LoginPayload(BaseModel):

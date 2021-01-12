@@ -6,16 +6,19 @@ from fastapi import (
 )
 from fastapi_utils.cbv import cbv
 
-from social_network.db import (
-    FriendRequestManager,
-    FriendRequest,
-    FriendshipManager,
+from social_network.db.models import (
     Friendship,
+    FriendRequestStatus,
+    FriendRequest
+)
+from social_network.db.managers import (
+    FriendRequestManager,
+    FriendshipManager
+)
+from social_network.db.excpetions import (
     DatabaseError,
     RowsNotFoundError
 )
-from social_network.db.operations.managers.friend_requests import \
-    FriendRequestStatus
 
 from ..depends import (
     get_friend_request_manager_depends,

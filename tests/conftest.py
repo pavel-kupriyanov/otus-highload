@@ -10,20 +10,24 @@ from pydantic import EmailStr
 
 from social_network.settings import Settings
 from social_network.db.migrations.main import migrate
-from social_network.db import (
+from social_network.db.db import (
     get_connector,
-    BaseDatabaseConnector,
+    BaseDatabaseConnector
+)
+from social_network.db.models import (
     AccessToken,
     AuthUser,
+    Friendship,
+    FriendRequest,
+    Hobby,
+    UserHobby
+)
+from social_network.db.managers import (
     AccessTokenManager,
     AuthUserManager,
-    FriendRequest,
     FriendRequestManager,
-    Friendship,
     FriendshipManager,
-    HobbyManager,
-    Hobby,
-    UserHobby,
+    HobbiesManager,
     UsersHobbyManager
 )
 from social_network.web.main import app
@@ -237,7 +241,7 @@ async def add_friendship_in_db(db_connector, settings, user_id, friend_id) \
 
 
 async def add_hobby_in_db(db_connector, settings, hobby_name: str) -> Hobby:
-    manager = HobbyManager(db_connector, settings)
+    manager = HobbiesManager(db_connector, settings)
     return await manager.create(hobby_name)
 
 

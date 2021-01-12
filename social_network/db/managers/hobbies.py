@@ -1,23 +1,14 @@
-from functools import lru_cache
 from typing import List
-
-from ..base import BaseModel
-from ..db import BaseDatabaseConnector
-from ..queries import HobbyQueries
 
 from social_network.settings import settings
 
-from .crud import CRUDManager, CRUD
+from ..crud import CRUDManager, CRUD
+
+from ..models import Hobby
+from ..queries import HobbyQueries
 
 
-class Hobby(BaseModel):
-    _table_name = 'hobbies'
-    _fields = ('id', 'name')
-
-    name: str
-
-
-class HobbyManager(CRUDManager):
+class HobbiesManager(CRUDManager):
     model = Hobby
     # TODO: refactor crud
     queries = {

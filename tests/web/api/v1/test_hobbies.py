@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from social_network.db import AccessToken, Hobby
+from social_network.db.models import AccessToken, Hobby
 
 BASE_PATH = '/api/v1/hobbies/'
 

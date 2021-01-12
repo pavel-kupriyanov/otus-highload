@@ -6,13 +6,12 @@ from fastapi import (
 )
 from fastapi_utils.cbv import cbv
 
-from social_network.db import (
+from social_network.db.models import User, UserHobby
+from social_network.db.managers import (
     UserManager,
-    UserHobby,
-    UsersHobbyManager,
-    User,
-    DatabaseError,
+    UsersHobbyManager
 )
+from social_network.db.excpetions import DatabaseError
 
 from .models import UsersQueryParams
 from ..depends import (

@@ -16,9 +16,9 @@ from social_network.settings import Settings, settings
 
 from .db import (
     BaseDatabaseConnector,
-    DatabaseError,
     DatabaseResponse
 )
+from .excpetions import DatabaseError
 
 M = TypeVar('M', covariant=True)
 

@@ -3,7 +3,7 @@ from typing import Dict, Tuple, Any, List, Optional
 
 from social_network.settings import settings
 
-from ..base import BaseManager, BaseModel, M
+from .base import BaseManager, BaseModel, M
 from .mixins import LimitMixin, OrderMixin
 
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from social_network.db import RowsNotFoundError
+from social_network.db.excpetions import RowsNotFoundError
 
 from .api import router as api_router
 

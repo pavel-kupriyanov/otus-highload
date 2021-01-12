@@ -7,21 +7,21 @@ from fastapi import (
     HTTPException
 )
 
-# TODO: split imports from db
-from social_network.db import (
-    get_connector,
-    BaseDatabaseConnector,
+from social_network.db.managers import (
     AuthUserManager,
     AccessTokenManager,
     FriendRequestManager,
     UserManager,
     FriendshipManager,
-    RowsNotFoundError,
-    HobbyManager,
+    HobbiesManager,
     UsersHobbyManager,
-
 )
 
+from social_network.db.db import (
+    get_connector,
+    BaseDatabaseConnector
+)
+from social_network.db.excpetions import RowsNotFoundError
 from social_network.settings import settings, Settings
 
 
@@ -77,8 +77,8 @@ def get_friendship_manager_depends(
 def get_hobby_manager_depends(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
-) -> HobbyManager:
-    return HobbyManager(connector, conf)
+) -> HobbiesManager:
+    return HobbiesManager(connector, conf)
 
 
 @lru_cache(1)

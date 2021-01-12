@@ -1,4 +1,4 @@
-from ..base import M
+from .base import M
 
 
 class LimitMixin:

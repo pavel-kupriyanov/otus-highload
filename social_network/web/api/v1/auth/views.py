@@ -9,13 +9,12 @@ from fastapi.responses import JSONResponse
 from fastapi_utils.cbv import cbv
 
 from social_network.settings import settings
-from social_network.db import (
+from social_network.db.models import AccessToken, AuthUser
+from social_network.db.managers import (
     AuthUserManager,
-    AccessToken,
-    AccessTokenManager,
-    AuthUser,
-    RowsNotFoundError
+    AccessTokenManager
 )
+from social_network.db.excpetions import RowsNotFoundError
 from social_network.utils.security import hash_password
 
 from .utils import (

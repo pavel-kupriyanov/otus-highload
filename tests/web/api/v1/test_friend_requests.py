@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from social_network.db import AccessToken, FriendRequest
+from social_network.db.models import AccessToken, FriendRequest
 
 BASE_PATH = '/api/v1/friend_requests/'
 

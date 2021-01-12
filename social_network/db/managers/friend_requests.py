@@ -1,26 +1,9 @@
-from enum import Enum
 from typing import List
-from functools import lru_cache
 
-from ..base import BaseModel
-from ..db import BaseDatabaseConnector
+from ..crud import CRUDManager, CRUD
+
 from ..queries import FriendRequestQueries
-
-from .crud import CRUDManager, CRUD
-
-
-class FriendRequestStatus(str, Enum):
-    WAITING = 'WAITING'
-    DECLINED = 'DECLINED'
-
-
-class FriendRequest(BaseModel):
-    _table_name = 'friend_requests'
-    _fields = ('id', 'from_user', 'to_user', 'status')
-
-    from_user: int
-    to_user: int
-    status: FriendRequestStatus
+from ..models import FriendRequest, FriendRequestStatus
 
 
 class FriendRequestManager(CRUDManager):
