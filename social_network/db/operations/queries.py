@@ -2,15 +2,16 @@ from enum import Enum
 
 
 class UserQueries(str, Enum):
+    # TODO: find by city
     GET_USERS = '''
-        SELECT id, first_name, last_name FROM users
+        SELECT id, first_name, last_name, age, city, gender FROM users
         WHERE 
         (first_name LIKE CONCAT('%%', %s, '%%')) AND 
         (last_name LIKE CONCAT('%%', %s, '%%'))
     '''
 
     GET_FRIENDS = '''
-        SELECT DISTINCT users.id, first_name, last_name FROM users
+        SELECT DISTINCT users.id, first_name, last_name, age, city, gender FROM users
         JOIN friendships f on users.id = f.user_id
         WHERE 
         (UPPER(first_name) LIKE UPPER(CONCAT('%%', %s, '%%'))) AND 
@@ -19,8 +20,8 @@ class UserQueries(str, Enum):
     '''
 
     GET_USER_BY_EMAIL = '''
-        SELECT id, email, password, salt, first_name, last_name FROM users
-        WHERE email = %s
+        SELECT id, email, password, salt, age, first_name, last_name, city, gender
+        FROM users WHERE email = %s
     '''
 
 
@@ -69,4 +70,11 @@ class FriendshipQueries(str, Enum):
     GET_FRIENDSHIP = '''
         SELECT id, user_id, friend_id FROM friendships
         WHERE user_id = %s AND friend_id = %s
+    '''
+
+
+class HobbyQueries(str, Enum):
+    GET_HOBBIES = '''
+         SELECT id, name FROM hobbies
+         WHERE (UPPER(name) LIKE UPPER(CONCAT('%%', %s, '%%')))
     '''

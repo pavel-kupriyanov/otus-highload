@@ -20,7 +20,9 @@ from social_network.db import (
     get_friend_request_manager,
     get_user_manager,
     get_friendship_manager,
-    RowsNotFoundError
+    RowsNotFoundError,
+    get_hobby_manager,
+    HobbyManager
 )
 
 from social_network.settings import settings
@@ -60,7 +62,13 @@ def get_friendship_manager_depends(
     return get_friendship_manager(connector)
 
 
-async def get_user_id(x_auth_token: Optional[str] = Header(...),
+def get_hobby_manager_depends(
+        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+) -> HobbyManager:
+    return get_hobby_manager(connector)
+
+
+async def get_user_id(x_auth_token: Optional[str] = Header(None),
                       access_token_manager: AccessTokenManager = Depends(
                           get_access_token_manager_depends),
                       ) -> Optional[int]:

@@ -20,7 +20,9 @@ from social_network.db import (
     FriendRequest,
     get_friend_request_manager,
     Friendship,
-    get_friendship_manager
+    get_friendship_manager,
+    get_hobby_manager,
+    Hobby
 )
 from social_network.web.main import app
 from social_network.utils.security import hash_password
@@ -35,6 +37,9 @@ class VladimirHarconnen:
     LAST_NAME = 'Harkonnen'
     PASSWORD = 'death_for_atreides!'
     HASHED_PASSWORD, SALT = hash_password(PASSWORD)
+    AGE = 83
+    CITY = 'Arrakis'
+    GENDER = 'MALE'
 
 
 class LetoAtreides:
@@ -44,6 +49,9 @@ class LetoAtreides:
     LAST_NAME = 'Atreides'
     PASSWORD = 'death_for_harconnen!'
     HASHED_PASSWORD, SALT = hash_password(PASSWORD)
+    AGE = 51
+    CITY = 'Arrakis'
+    GENDER = 'MALE'
 
 
 class ShaddamIV:
@@ -53,6 +61,9 @@ class ShaddamIV:
     LAST_NAME = 'IV'
     PASSWORD = 'SpiceMustFlow'
     HASHED_PASSWORD, SALT = hash_password(PASSWORD)
+    AGE = 68
+    CITY = None
+    GENDER = None
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -155,13 +166,19 @@ async def get_token_for_user3(user3, db_connector, settings) -> AccessToken:
 @pytest.fixture(name='friend_request')
 async def get_friend_request(db_connector, user1, user2, cursor) \
         -> FriendRequest:
-    yield await add_friend_request_in_db(db_connector, user1.id, user2.id)
+    return await add_friend_request_in_db(db_connector, user1.id, user2.id)
 
 
 @pytest.fixture(name='friendship')
 async def get_friendship(db_connector, user1, user2, cursor) \
         -> Friendship:
-    yield await add_friendship_in_db(db_connector, user1.id, user2.id)
+    return await add_friendship_in_db(db_connector, user1.id, user2.id)
+
+
+@pytest.fixture(name='hobby')
+async def get_hobby(db_connector, cursor: aiomysql.Cursor) -> Hobby:
+    yield await add_hobby_in_db(db_connector, 'War')
+    await cursor.execute('DELETE FROM hobbies;')
 
 
 @pytest.fixture(name='drop_users_after_test')
@@ -173,10 +190,13 @@ async def drop_users_after_test(cursor: aiomysql.Cursor):
 async def add_user_in_db(db_connector, user_data: Any) -> AuthUser:
     manager = get_auth_user_manager(db_connector)
     user = await manager.create(email=user_data.EMAIL,
+                                age=user_data.AGE,
                                 hashed_password=user_data.HASHED_PASSWORD,
                                 salt=user_data.SALT,
                                 first_name=user_data.FIRST_NAME,
-                                last_name=user_data.LAST_NAME)
+                                last_name=user_data.LAST_NAME,
+                                city=user_data.CITY,
+                                gender=user_data.GENDER)
     user.password = user_data.PASSWORD
     return user
 
@@ -198,3 +218,8 @@ async def add_friend_request_in_db(db_connector, from_user_id,
 async def add_friendship_in_db(db_connector, user_id, friend_id) -> Friendship:
     manager = get_friendship_manager(db_connector)
     return await manager.create(user_id, friend_id)
+
+
+async def add_hobby_in_db(db_connector, hobby_name: str) -> Hobby:
+    manager = get_hobby_manager(db_connector)
+    return await manager.create(hobby_name)

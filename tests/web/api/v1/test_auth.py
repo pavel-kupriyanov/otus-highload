@@ -29,10 +29,13 @@ def test_login_invalid_password(app: TestClient, user1):
 
 def test_register(app: TestClient, drop_users_after_test):
     request = {
-        "email": 'Harkonnen.v@mail.com',
+        "email": 'KwisatzHaderach@mail.com',
         "password": 'death_for_atreides!',
-        "first_name": 'Vladimir',
-        "last_name": 'Harkonnen'
+        "first_name": 'Paul',
+        "last_name": 'Atreides',
+        "age": 16,
+        "city": "Tabr"
+
     }
     response = app.post(BASE_PATH + 'register', json=request)
     assert response.status_code == 201

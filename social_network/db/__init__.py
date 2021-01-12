@@ -23,5 +23,10 @@ from .operations import (
     Friendship,
 
     DatabaseError,
-    RowsNotFoundError
+    RowsNotFoundError,
+
+    Hobby,
+    HobbyManager,
+    get_hobby_manager,
+    Gender
 )

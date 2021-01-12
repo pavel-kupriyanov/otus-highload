@@ -72,6 +72,7 @@ class AuthViewSet:
             new_expired_at=expired_at
         )
 
+    # TODO: add hobbies to user
     @router.post('/register', status_code=201, response_model=AuthUser,
                  responses={
                      201: {'description': 'User created'},
@@ -88,5 +89,11 @@ class AuthViewSet:
                                 content={'detail': msg})
 
         hashed_password, salt = hash_password(p.password.get_secret_value())
-        return await self.user_manager.create(p.email, hashed_password, salt,
-                                              p.first_name, p.last_name)
+        return await self.user_manager.create(email=p.email,
+                                              hashed_password=hashed_password,
+                                              salt=salt,
+                                              age=p.age,
+                                              first_name=p.first_name,
+                                              last_name=p.last_name,
+                                              city=p.city,
+                                              gender=p.gender)

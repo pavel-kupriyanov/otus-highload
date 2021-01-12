@@ -6,16 +6,17 @@ from pydantic import (
     SecretStr
 )
 
-from ..db import BaseDatabaseConnector, RowsNotFoundError
+from ..db import BaseDatabaseConnector
 from ..queries import UserQueries
 
 from .crud import CRUDManager
-from .users import User
+from .users import User, Gender
 
 
 class AuthUser(User):
     _table_name = 'users'
-    _fields = ('id', 'email', 'password', 'salt', 'first_name', 'last_name')
+    _fields = ('id', 'email', 'password', 'salt', 'age', 'first_name',
+               'last_name', 'city', 'gender')
 
     email: EmailStr
     password: SecretStr
@@ -26,22 +27,23 @@ class AuthUserManager(CRUDManager):
     model = AuthUser
     queries = {}
 
-    async def create(self, email: EmailStr, hashed_password: str, salt: str,
-                     first_name: str, last_name: Optional[str] = None) \
-            -> AuthUser:
-        params = (email, hashed_password, salt, first_name, last_name)
+    async def create(self,
+                     email: EmailStr,
+                     hashed_password: str,
+                     salt: str,
+                     age: int,
+                     first_name: str,
+                     last_name: Optional[str] = None,
+                     city: Optional[str] = None,
+                     gender: Optional[Gender] = None,
+                     ) -> AuthUser:
+        params = (email, hashed_password, salt, age, first_name,
+                  last_name, city, gender)
         return await self._create(params)
 
     async def get_by_email(self, email: EmailStr) -> AuthUser:
         users = await self.execute(UserQueries.GET_USER_BY_EMAIL, (email,))
         return AuthUser.from_db(users[0])
-
-    async def is_email_already_used(self, email: EmailStr) -> bool:
-        try:
-            await self.get_by_email(email)
-        except RowsNotFoundError:
-            return False
-        return True
 
 
 @lru_cache(1)

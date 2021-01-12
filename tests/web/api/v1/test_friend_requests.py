@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from social_network.db import AccessToken
+from social_network.db import AccessToken, FriendRequest
 
 BASE_PATH = '/api/v1/friend_requests/'
 
@@ -12,8 +12,7 @@ def test_create_non_authorized(app: TestClient):
     assert response.status_code == 401
 
 
-def test_create(app: TestClient, user1, user2, db_connector,
-                token1: AccessToken):
+def test_create(app: TestClient, user1, user2, token1: AccessToken):
     response = app.post(BASE_PATH,
                         json={'user_id': user2.id},
                         headers={'x-auth-token': token1.value})
@@ -46,7 +45,8 @@ def test_create_already_friends(app: TestClient, user1, user2,
     assert 'already' in response.json()['detail']
 
 
-def test_cancel(app: TestClient, token1: AccessToken, friend_request):
+def test_cancel(app: TestClient, token1: AccessToken,
+                friend_request: FriendRequest):
     response = app.delete(BASE_PATH + str(friend_request.id),
                           headers={'x-auth-token': token1.value})
     assert response.status_code == 204
@@ -58,13 +58,15 @@ def test_cancel_not_found(app: TestClient, token1: AccessToken, friend_request):
     assert response.status_code == 404
 
 
-def test_cancel_forbidden(app: TestClient, token2: AccessToken, friend_request):
+def test_cancel_forbidden(app: TestClient, token2: AccessToken,
+                          friend_request: FriendRequest):
     response = app.delete(BASE_PATH + str(friend_request.id),
                           headers={'x-auth-token': token2.value})
     assert response.status_code == 403
 
 
-def test_get(app: TestClient, token1: AccessToken, friend_request):
+def test_get(app: TestClient, token1: AccessToken,
+             friend_request: FriendRequest):
     response = app.get(BASE_PATH + str(friend_request.id),
                        headers={'x-auth-token': token1.value})
     assert response.status_code == 200
@@ -76,13 +78,15 @@ def test_get_not_found(app: TestClient, token1: AccessToken, friend_request):
     assert response.status_code == 404
 
 
-def test_get_forbidden(app: TestClient, token3: AccessToken, friend_request):
+def test_get_forbidden(app: TestClient, token3: AccessToken,
+                       friend_request: FriendRequest):
     response = app.get(BASE_PATH + str(friend_request.id),
                        headers={'x-auth-token': token3.value})
     assert response.status_code == 403
 
 
-def test_decline(app: TestClient, token2: AccessToken, friend_request):
+def test_decline(app: TestClient, token2: AccessToken,
+                 friend_request: FriendRequest):
     response = app.put(f'{BASE_PATH}decline/{friend_request.id}',
                        headers={'x-auth-token': token2.value})
     assert response.status_code == 204
@@ -99,13 +103,14 @@ def test_decline_not_found(app: TestClient, token1: AccessToken,
 
 
 def test_decline_forbidden(app: TestClient, token3: AccessToken,
-                           friend_request):
+                           friend_request: FriendRequest):
     response = app.put(f'{BASE_PATH}decline/{friend_request.id}',
                        headers={'x-auth-token': token3.value})
     assert response.status_code == 403
 
 
-def test_accept(app: TestClient, token2: AccessToken, friend_request):
+def test_accept(app: TestClient, token2: AccessToken,
+                friend_request: FriendRequest):
     response = app.put(f'{BASE_PATH}accept/{friend_request.id}',
                        headers={'x-auth-token': token2.value})
     assert response.status_code == 201
@@ -121,7 +126,7 @@ def test_accept_not_found(app: TestClient, token1: AccessToken,
 
 
 def test_accept_forbidden(app: TestClient, token3: AccessToken,
-                          friend_request):
+                          friend_request: FriendRequest):
     response = app.put(f'{BASE_PATH}accept/{friend_request.id}',
                        headers={'x-auth-token': token3.value})
     assert response.status_code == 403

@@ -10,6 +10,7 @@ from .managers.users import (
     UserManager,
     User,
     get_user_manager,
+    Gender
 )
 from .managers.auth import (
     AuthUserManager,
@@ -30,4 +31,9 @@ from .managers.friendships import (
     FriendshipManager,
     Friendship,
     get_friendship_manager
+)
+from .managers.hobbies import (
+    Hobby,
+    HobbyManager,
+    get_hobby_manager
 )
