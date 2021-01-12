@@ -28,8 +28,8 @@ from .models import (
 )
 
 from ..depends import (
-    get_access_token_manager_depends,
-    get_auth_user_manager_depends
+    get_access_token_manager,
+    get_auth_user_manager
 )
 
 router = APIRouter()
@@ -37,9 +37,9 @@ router = APIRouter()
 
 @cbv(router)
 class AuthViewSet:
-    user_manager: AuthUserManager = Depends(get_auth_user_manager_depends)
+    user_manager: AuthUserManager = Depends(get_auth_user_manager)
     access_token_manager: AccessTokenManager = Depends(
-        get_access_token_manager_depends
+        get_access_token_manager
     )
 
     # TODO: return endpoint types

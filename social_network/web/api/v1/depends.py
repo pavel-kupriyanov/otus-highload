@@ -25,16 +25,18 @@ from social_network.db.excpetions import RowsNotFoundError
 from social_network.settings import settings, Settings
 
 
+@lru_cache(1)
 def get_connector_depends():
     return get_connector(settings)
 
 
+@lru_cache(1)
 def get_settings_depends():
     return settings
 
 
 @lru_cache(1)
-def get_user_manager_depends(
+def get_user_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
 ) -> UserManager:
@@ -42,7 +44,7 @@ def get_user_manager_depends(
 
 
 @lru_cache(1)
-def get_auth_user_manager_depends(
+def get_auth_user_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
 ) -> AuthUserManager:
@@ -50,7 +52,7 @@ def get_auth_user_manager_depends(
 
 
 @lru_cache(1)
-def get_access_token_manager_depends(
+def get_access_token_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
 ) -> AccessTokenManager:
@@ -58,7 +60,7 @@ def get_access_token_manager_depends(
 
 
 @lru_cache(1)
-def get_friend_request_manager_depends(
+def get_friend_request_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
 ) -> FriendRequestManager:
@@ -66,7 +68,7 @@ def get_friend_request_manager_depends(
 
 
 @lru_cache(1)
-def get_friendship_manager_depends(
+def get_friendship_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
 ) -> FriendshipManager:
@@ -74,7 +76,7 @@ def get_friendship_manager_depends(
 
 
 @lru_cache(1)
-def get_hobby_manager_depends(
+def get_hobby_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
 ) -> HobbiesManager:
@@ -82,7 +84,7 @@ def get_hobby_manager_depends(
 
 
 @lru_cache(1)
-def get_user_hobby_manager_depends(
+def get_user_hobby_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
         conf: Settings = Depends(get_settings_depends)
 ) -> UsersHobbyManager:
@@ -91,7 +93,7 @@ def get_user_hobby_manager_depends(
 
 async def get_user_id(x_auth_token: Optional[str] = Header(None),
                       access_token_manager: AccessTokenManager = Depends(
-                          get_access_token_manager_depends),
+                          get_access_token_manager),
                       ) -> Optional[int]:
     if x_auth_token is None:
         return None

@@ -21,12 +21,12 @@ from social_network.db.excpetions import (
 )
 
 from ..depends import (
-    get_friend_request_manager_depends,
+    get_friend_request_manager,
     get_user_id
 )
 from .models import FriendRequestPostPayload
 
-from ..depends import get_friendship_manager_depends
+from ..depends import get_friendship_manager
 from ..utils import authorize_only
 
 router = APIRouter()
@@ -36,10 +36,10 @@ router = APIRouter()
 class FriendRequestViewSet:
     user_id: Optional[int] = Depends(get_user_id)
     friend_request_manager: FriendRequestManager = Depends(
-        get_friend_request_manager_depends
+        get_friend_request_manager
     )
     friendship_manager: FriendshipManager = Depends(
-        get_friendship_manager_depends
+        get_friendship_manager
     )
 
     @router.post('/', response_model=FriendRequest, status_code=201,

@@ -15,8 +15,8 @@ from social_network.db.excpetions import DatabaseError
 
 from .models import UsersQueryParams
 from ..depends import (
-    get_user_manager_depends,
-    get_user_hobby_manager_depends,
+    get_user_manager,
+    get_user_hobby_manager,
     get_user_id,
 )
 from ..utils import authorize_only
@@ -27,9 +27,9 @@ router = APIRouter()
 @cbv(router)
 class UserViewSet:
     user_id: int = Depends(get_user_id)
-    user_manager: UserManager = Depends(get_user_manager_depends)
+    user_manager: UserManager = Depends(get_user_manager)
     user_hobby_manager: UsersHobbyManager = Depends(
-        get_user_hobby_manager_depends
+        get_user_hobby_manager
     )
 
     @router.get('/', response_model=List[User], responses={

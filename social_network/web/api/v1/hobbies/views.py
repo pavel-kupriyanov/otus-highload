@@ -12,7 +12,7 @@ from social_network.db.excpetions import DatabaseError
 
 from ..depends import (
     get_user_id,
-    get_hobby_manager_depends
+    get_hobby_manager
 )
 from .models import HobbyCreatePayload, HobbyQueryParams
 
@@ -24,7 +24,7 @@ router = APIRouter()
 @cbv(router)
 class HobbiesViewSet:
     user_id: Optional[int] = Depends(get_user_id)
-    hobby_manager: HobbiesManager = Depends(get_hobby_manager_depends)
+    hobby_manager: HobbiesManager = Depends(get_hobby_manager)
 
     @router.post('/', response_model=Hobby, status_code=201,
                  responses={

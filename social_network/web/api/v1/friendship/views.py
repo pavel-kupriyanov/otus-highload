@@ -12,7 +12,7 @@ from social_network.db.excpetions import RowsNotFoundError
 
 from ..depends import get_user_id
 
-from ..depends import get_friendship_manager_depends
+from ..depends import get_friendship_manager
 from ..utils import authorize_only
 
 router = APIRouter()
@@ -22,7 +22,7 @@ router = APIRouter()
 class FriendshipViewSet:
     user_id: Optional[int] = Depends(get_user_id)
     friendship_manager: FriendshipManager = Depends(
-        get_friendship_manager_depends
+        get_friendship_manager
     )
 
     @router.delete('/{id}', status_code=204, responses={
