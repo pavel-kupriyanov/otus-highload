@@ -1,10 +1,14 @@
 from functools import lru_cache
+from collections import defaultdict
+from typing import List, Dict
+from itertools import groupby
 
 from ..base import BaseModel
 from ..db import BaseDatabaseConnector
 from ..queries import UserHobbyQueries
 
 from .crud import CRUDManager
+from .hobbies import Hobby
 
 
 class UserHobby(BaseModel):
@@ -27,6 +31,17 @@ class UsersHobbyManager(CRUDManager):
         params = (user_id, hobby_id)
         return await self.execute(UserHobbyQueries.DROP_USER_HOBBY, params,
                                   raise_if_empty=False)
+
+    async def get_hobby_for_users(self, user_ids: List[int]) \
+            -> Dict[int, List[Hobby]]:
+        params = (user_ids,)
+        results = await self.execute(UserHobbyQueries.GET_HOBBIES_FOR_USERS,
+                                     params, raise_if_empty=False)
+        parsed_result: Dict[int, List[Hobby]] = defaultdict(list)
+        for key, group in groupby(results, lambda x: x[0]):
+            for item in group:
+                parsed_result[key].append(Hobby(id=item[1], name=item[2]))
+        return parsed_result
 
 
 # TODO: class method?

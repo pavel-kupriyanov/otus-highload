@@ -85,3 +85,10 @@ class UserHobbyQueries(str, Enum):
         DELETE FROM users_hobbies_mtm
         WHERE user_id = %s AND hobby_id = %s;
     '''
+
+    GET_HOBBIES_FOR_USERS = '''
+        SELECT user_id, h.id, h.name from users_hobbies_mtm
+        JOIN hobbies h on h.id = users_hobbies_mtm.hobby_id
+        WHERE user_id IN %s
+        ORDER BY user_id;
+    '''

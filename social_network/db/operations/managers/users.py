@@ -11,6 +11,7 @@ from ..db import BaseDatabaseConnector
 from ..queries import UserQueries
 
 from .crud import CRUDManager
+from .hobbies import Hobby
 
 
 class Gender(str, Enum):
@@ -28,13 +29,13 @@ class User(BaseModel):
     city: Optional[str]
     gender: Optional[Gender]
     age: int = Field(..., ge=1, le=200)
+    hobbies: List[Hobby] = Field(default_factory=list)
 
 
 class UserManager(CRUDManager):
     model = User
     queries = {}
 
-    # TODO: update
     # TODO: settings as param
     async def list(self,
                    first_name='',
