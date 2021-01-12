@@ -42,10 +42,3 @@ class UsersHobbyManager(CRUDManager):
             for item in group:
                 parsed_result[key].append(Hobby(id=item[1], name=item[2]))
         return parsed_result
-
-
-# TODO: class method?
-@lru_cache(1)
-def get_user_hobby_manager(connector: BaseDatabaseConnector) \
-        -> UsersHobbyManager:
-    return UsersHobbyManager(connector)

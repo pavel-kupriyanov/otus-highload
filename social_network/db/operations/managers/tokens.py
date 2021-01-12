@@ -58,9 +58,3 @@ class AccessTokenManager(CRUDManager):
         tokens = await self.execute(AccessTokenQueries.GET_TOKEN_BY_VALUE,
                                     (value,))
         return AccessToken.from_db(tokens[0])
-
-
-@lru_cache(1)
-def get_access_token_manager(connector: BaseDatabaseConnector) \
-        -> AccessTokenManager:
-    return AccessTokenManager(connector)

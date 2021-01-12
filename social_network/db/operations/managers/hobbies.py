@@ -34,9 +34,3 @@ class HobbyManager(CRUDManager):
                    offset=0) -> List[Hobby]:
         return await self._list((name,), order=order, limit=limit,
                                 offset=offset)
-
-
-# TODO: class method?
-@lru_cache(1)
-def get_hobby_manager(connector: BaseDatabaseConnector) -> HobbyManager:
-    return HobbyManager(connector)

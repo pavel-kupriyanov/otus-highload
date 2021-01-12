@@ -47,9 +47,3 @@ class FriendRequestManager(CRUDManager):
 
     async def list_for_user(self, user_id: int) -> List[FriendRequest]:
         return await self._list((user_id, user_id))
-
-
-@lru_cache(1)
-def get_friend_request_manager(
-        connector: BaseDatabaseConnector) -> FriendRequestManager:
-    return FriendRequestManager(connector)

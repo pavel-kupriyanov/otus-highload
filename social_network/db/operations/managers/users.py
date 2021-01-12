@@ -54,8 +54,3 @@ class UserManager(CRUDManager):
                                 query=query,
                                 order_by=order_by, order=order,
                                 limit=limit, offset=offset)
-
-
-@lru_cache(1)
-def get_user_manager(connector: BaseDatabaseConnector) -> UserManager:
-    return UserManager(connector)

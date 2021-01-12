@@ -1,10 +1,5 @@
 from .operations import (
     get_connector,
-    get_user_manager,
-    get_access_token_manager,
-    get_auth_user_manager,
-    get_friend_request_manager,
-    get_friendship_manager,
 
     BaseDatabaseConnector,
     DatabaseConnector,
@@ -27,9 +22,7 @@ from .operations import (
 
     Hobby,
     HobbyManager,
-    get_hobby_manager,
     Gender,
     UserHobby,
     UsersHobbyManager,
-    get_user_hobby_manager
 )

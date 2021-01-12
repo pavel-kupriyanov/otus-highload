@@ -1,4 +1,5 @@
 from typing import Optional
+from functools import lru_cache
 
 from fastapi import (
     Header,
@@ -9,72 +10,83 @@ from fastapi import (
 # TODO: split imports from db
 from social_network.db import (
     get_connector,
-    get_auth_user_manager,
     BaseDatabaseConnector,
     AuthUserManager,
     AccessTokenManager,
     FriendRequestManager,
     UserManager,
     FriendshipManager,
-    get_access_token_manager,
-    get_friend_request_manager,
-    get_user_manager,
-    get_friendship_manager,
     RowsNotFoundError,
-    get_hobby_manager,
     HobbyManager,
     UsersHobbyManager,
-    UserHobby,
-    get_user_hobby_manager
+
 )
 
-from social_network.settings import settings
+from social_network.settings import settings, Settings
 
 
 def get_connector_depends():
     return get_connector(settings)
 
 
+def get_settings_depends():
+    return settings
+
+
+@lru_cache(1)
 def get_user_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+        connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        conf: Settings = Depends(get_settings_depends)
 ) -> UserManager:
-    return get_user_manager(connector)
+    return UserManager(connector, conf)
 
 
+@lru_cache(1)
 def get_auth_user_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+        connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        conf: Settings = Depends(get_settings_depends)
 ) -> AuthUserManager:
-    return get_auth_user_manager(connector)
+    return AuthUserManager(connector, conf)
 
 
+@lru_cache(1)
 def get_access_token_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+        connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        conf: Settings = Depends(get_settings_depends)
 ) -> AccessTokenManager:
-    return get_access_token_manager(connector)
+    return AccessTokenManager(connector, conf)
 
 
+@lru_cache(1)
 def get_friend_request_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+        connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        conf: Settings = Depends(get_settings_depends)
 ) -> FriendRequestManager:
-    return get_friend_request_manager(connector)
+    return FriendRequestManager(connector, conf)
 
 
+@lru_cache(1)
 def get_friendship_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+        connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        conf: Settings = Depends(get_settings_depends)
 ) -> FriendshipManager:
-    return get_friendship_manager(connector)
+    return FriendshipManager(connector, conf)
 
 
+@lru_cache(1)
 def get_hobby_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+        connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        conf: Settings = Depends(get_settings_depends)
 ) -> HobbyManager:
-    return get_hobby_manager(connector)
+    return HobbyManager(connector, conf)
 
 
+@lru_cache(1)
 def get_user_hobby_manager_depends(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends)
+        connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        conf: Settings = Depends(get_settings_depends)
 ) -> UsersHobbyManager:
-    return get_user_hobby_manager(connector)
+    return UsersHobbyManager(connector, conf)
 
 
 async def get_user_id(x_auth_token: Optional[str] = Header(None),

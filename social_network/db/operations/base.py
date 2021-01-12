@@ -12,6 +12,8 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from aiomysql import DatabaseError as RawDatabaseError
 
+from social_network.settings import Settings, settings
+
 from .db import (
     BaseDatabaseConnector,
     DatabaseError,
@@ -36,8 +38,10 @@ class BaseModel(PydanticBaseModel):
 
 class BaseManager:
 
-    def __init__(self, db: BaseDatabaseConnector):
+    def __init__(self, db: BaseDatabaseConnector,
+                 conf: Settings = settings):
         self.db = db
+        self.conf = conf
 
     async def execute(self,
                       query: str,

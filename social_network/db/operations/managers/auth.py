@@ -44,8 +44,3 @@ class AuthUserManager(CRUDManager):
     async def get_by_email(self, email: EmailStr) -> AuthUser:
         users = await self.execute(UserQueries.GET_USER_BY_EMAIL, (email,))
         return AuthUser.from_db(users[0])
-
-
-@lru_cache(1)
-def get_auth_user_manager(connector: BaseDatabaseConnector) -> AuthUserManager:
-    return AuthUserManager(connector)

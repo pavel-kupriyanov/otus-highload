@@ -28,9 +28,3 @@ class FriendshipManager(CRUDManager):
         query = FriendshipQueries.GET_FRIENDSHIP
         friendships = await self.execute(query, (user_id, friend_id))
         return Friendship.from_db(friendships[0])
-
-
-@lru_cache(1)
-def get_friendship_manager(
-        connector: BaseDatabaseConnector) -> FriendshipManager:
-    return FriendshipManager(connector)
