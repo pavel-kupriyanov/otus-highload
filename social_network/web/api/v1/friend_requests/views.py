@@ -90,7 +90,7 @@ class FriendRequestViewSet:
     async def get(self, id: int) -> FriendRequest:
         request = await self.friend_request_manager.get(id)
         if not is_request_participant(request, self.user_id):
-            raise HTTPException(403, 'Not allowed')
+            raise HTTPException(403, detail='Not allowed')
         return request
 
     @router.put('/decline/{id}', status_code=204, responses={
@@ -116,11 +116,11 @@ class FriendRequestViewSet:
                     404: {'description': 'Request not found.'}
                 })
     @authorize_only
-    async def accept(self, id: int):
+    async def accept(self, id: int) -> Friendship:
         request = await self.friend_request_manager.get(id)
 
         if not is_request_target(request, self.user_id):
-            raise HTTPException(403, 'Not allowed')
+            raise HTTPException(403, detail='Not allowed')
 
         await self.friend_request_manager.delete(id)
         return await self.friendship_manager.create(request.to_user,

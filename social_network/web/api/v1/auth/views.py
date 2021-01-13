@@ -4,8 +4,8 @@ from fastapi import (
     APIRouter,
     Depends,
     status,
+    HTTPException
 )
-from fastapi.responses import JSONResponse
 from fastapi_utils.cbv import cbv
 
 from social_network.settings import settings
@@ -42,18 +42,17 @@ class AuthViewSet:
         get_access_token_manager
     )
 
-    # TODO: return endpoint types
     @router.post('/login', status_code=201, response_model=AccessToken,
                  responses={
                      201: {'description': 'Success login'},
                      400: {'description': 'Invalid email or password'}
                  })
-    async def login(self, p: LoginPayload):
+    async def login(self, p: LoginPayload) -> AccessToken:
         user = await self.user_manager.get_by_email(email=p.email)
         if not is_valid_password(user, p.password.get_secret_value()):
-            return JSONResponse(
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                content={'detail': 'Invalid email or password'}
+                detail='Invalid email or password'
             )
 
         expired_at = datetime.now() + timedelta(
@@ -77,15 +76,16 @@ class AuthViewSet:
                      201: {'description': 'User created'},
                      400: {'description': 'Invalid email'}
                  })
-    async def register(self, p: RegistrationPayload):
+    async def register(self, p: RegistrationPayload) -> AuthUser:
         try:
             await self.user_manager.get_by_email(p.email)
         except RowsNotFoundError:
             pass
         else:
-            msg = 'User with this email already exists'
-            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
-                                content={'detail': msg})
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='User with this email already exists'
+            )
 
         hashed_password, salt = hash_password(p.password.get_secret_value())
         return await self.user_manager.create(email=p.email,

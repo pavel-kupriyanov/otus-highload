@@ -35,7 +35,8 @@ class UserViewSet:
     @router.get('/', response_model=List[User], responses={
         200: {'description': 'List of users.'},
     })
-    async def users(self, q: UsersQueryParams = Depends(UsersQueryParams)):
+    async def users(self, q: UsersQueryParams = Depends(UsersQueryParams)) \
+            -> List[User]:
         offset = (q.page - 1) * q.paginate_by
         users = await self.user_manager.list(first_name=q.first_name,
                                              last_name=q.last_name,

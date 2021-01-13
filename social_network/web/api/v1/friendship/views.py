@@ -54,5 +54,5 @@ class FriendshipViewSet:
     async def get(self, id: int) -> Friendship:
         request = await self.friendship_manager.get(id)
         if self.user_id not in (request.user_id, request.friend_id):
-            raise HTTPException(403, 'Not allowed')
+            raise HTTPException(403, detail='Not allowed')
         return request

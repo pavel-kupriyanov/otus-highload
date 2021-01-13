@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Type, Optional, List
 from collections import namedtuple
-from datetime import datetime
 
 from pydantic import (
     Field,
@@ -53,16 +52,11 @@ class AccessToken(BaseModel):
     user_id: int
     expired_at: Timestamp
 
-    # TODO: refactor it
     @classmethod
     def from_db(cls: Type[M], tpl: tuple) -> M:
         parsing_tuple = namedtuple('_', cls._fields)
         raw = parsing_tuple(*tpl)._asdict()
-        expired_at = raw['expired_at']
-        if isinstance(expired_at, str):
-            expired_at = datetime.strptime(expired_at, TIMESTAMP_FORMAT)
-        if isinstance(expired_at, datetime):
-            raw['expired_at'] = expired_at.timestamp()
+        raw['expired_at'] = raw['expired_at'].timestamp()
         return cls(**raw)
 
 
