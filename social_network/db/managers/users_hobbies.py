@@ -10,7 +10,6 @@ from ..models import Hobby, UserHobby
 
 class UsersHobbyManager(CRUDManager):
     model = UserHobby
-    # TODO: refactor crud
     queries = {}
 
     async def create(self, user_id: int, hobby_id: int) -> UserHobby:

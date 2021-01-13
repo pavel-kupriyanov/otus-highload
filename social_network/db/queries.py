@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class UserQueries(str, Enum):
-    # TODO: find by city
     GET_USERS = '''
         SELECT id, first_name, last_name, age, city, gender FROM users
         WHERE 

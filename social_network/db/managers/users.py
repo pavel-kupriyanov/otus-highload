@@ -12,7 +12,6 @@ class UserManager(CRUDManager):
     model = User
     queries = {}
 
-    # TODO: settings as param
     async def list(self,
                    first_name='',
                    last_name='',

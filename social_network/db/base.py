@@ -37,6 +37,7 @@ class BaseModel(PydanticBaseModel):
 
 
 class BaseManager:
+    model: M
 
     def __init__(self, db: BaseDatabaseConnector,
                  conf: Settings = settings):
@@ -52,12 +53,5 @@ class BaseManager:
             return await self.db.make_query(query, params,
                                             last_row_id=last_row_id,
                                             raise_if_empty=raise_if_empty)
-        except RawDatabaseError as e:
-            raise DatabaseError(e.args) from e
-
-    async def count(self, query: str,
-                    params: Optional[Iterable[Any]] = None) -> int:
-        try:
-            return await self.db.make_query(query, params, only_count=True)
         except RawDatabaseError as e:
             raise DatabaseError(e.args) from e

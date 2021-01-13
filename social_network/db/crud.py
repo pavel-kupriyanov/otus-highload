@@ -1,49 +1,50 @@
-from enum import Enum
-from typing import Dict, Tuple, Any, List, Optional
+from typing import  Tuple, Any, List
 
 from social_network.settings import settings
 
-from .base import BaseManager, BaseModel, M
+from .base import BaseManager, M
 from .mixins import LimitMixin, OrderMixin
 
-
-class CRUD(str, Enum):
-    CREATE = 'CREATE'
-    RETRIEVE = 'RETRIEVE'
-    UPDATE = 'UPDATE'
-    DELETE = 'DELETE'
-    LIST = 'LIST'
+CREATE = '''
+    INSERT INTO {table_name} ({fields}) VALUES ({values});
+    SELECT LAST_INSERT_ID();
+'''
+GET = 'SELECT {fields} FROM {table_name} WHERE id = %s;'
+DELETE = 'DELETE FROM {table_name} WHERE id = %s;'
 
 
 class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
-    model: M
-    queries: Dict[CRUD, str]
+    # TODO: link M with base model
 
     async def _create(self, params: Tuple[Any, ...]) -> M:
-        query = self.queries.get(CRUD.CREATE) or create_query(self.model)
+        fields = [f for f in self.model._fields if f != 'id']
+        query = CREATE.format(
+            table_name=self.model._table_name,
+            fields=", ".join(fields),
+            values=", ".join('%s' for _ in fields)
+        )
         id = await self.execute(query, params, last_row_id=True)
         return await self._get(id)
 
-    async def _update(self, id: int, params: Tuple[Any, ...]) -> M:
-        await self.execute(self.queries[CRUD.UPDATE], params,
-                           raise_if_empty=False)
+    async def _update(self, id: int, params: Tuple[Any, ...], query: str) -> M:
+        await self.execute(query, params, raise_if_empty=False)
         return await self._get(id)
 
     async def _get(self, id: int) -> M:
-        model: BaseModel = self.model
-        query = self.queries.get(CRUD.RETRIEVE) or get_query(model)
+        query = GET.format(
+            fields=", ".join(self.model._fields),
+            table_name=self.model._table_name
+        )
         rows = await self.execute(query, (id,))
-        return model.from_db(rows[0])
+        return self.model.from_db(rows[0])
 
     async def _list(self,
                     params: Tuple[Any, ...],
-                    query: Optional[str] = None,
+                    query: str,
                     order_by: str = None,
                     order: str = None,
                     limit: int = settings.BASE_PAGE_LIMIT,
                     offset: int = 0) -> List[M]:
-        if query is None:
-            query = self.queries[CRUD.LIST]
         if order_by and order:
             query = self.add_order(query, order_by, order)
         query = self.add_limit(query, limit, offset)
@@ -51,7 +52,7 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         return [self.model.from_db(row) for row in rows]
 
     async def _delete(self, id: int):
-        query = self.queries.get(CRUD.DELETE) or delete_query(self.model)
+        query = DELETE.format(table_name=self.model._table_name)
         await self.execute(query, (id,), raise_if_empty=False)
 
 
@@ -63,30 +64,3 @@ class CRUDManager(BaseCRUDManager):
 
     async def delete(self, id: int):
         return await self._delete(id)
-
-
-def get_fields_without_id(model: BaseModel) -> Tuple[str, ...]:
-    return tuple((f for f in model._fields if f != 'id'))
-
-
-def get_query(model: BaseModel) -> str:
-    return f'''
-        SELECT {", ".join(model._fields)} FROM {model._table_name}
-        WHERE id = %s;
-        '''
-
-
-def create_query(model: BaseModel) -> str:
-    fields = get_fields_without_id(model)
-    return f'''
-        INSERT INTO {model._table_name}({", ".join(fields)})
-        VALUES ({", ".join('%s' for _ in fields)});
-        SELECT LAST_INSERT_ID();
-        '''
-
-
-def delete_query(model: BaseModel) -> str:
-    return f'''
-        DELETE FROM {model._table_name}
-        WHERE id = %s
-        '''

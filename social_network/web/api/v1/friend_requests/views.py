@@ -122,7 +122,6 @@ class FriendRequestViewSet:
         if not is_request_target(request, self.user_id):
             raise HTTPException(403, 'Not allowed')
 
-        # TODO: transaction
         await self.friend_request_manager.delete(id)
         return await self.friendship_manager.create(request.to_user,
                                                     request.from_user)
