@@ -70,7 +70,6 @@ class AuthViewSet:
             new_expired_at=expired_at
         )
 
-    # TODO: add hobbies to user
     @router.post('/register', status_code=201, response_model=AuthUser,
                  responses={
                      201: {'description': 'User created'},

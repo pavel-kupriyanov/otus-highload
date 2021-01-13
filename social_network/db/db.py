@@ -32,8 +32,6 @@ class BaseDatabaseConnector:
 
 class DatabaseConnector(BaseDatabaseConnector):
 
-    # TODO: gracefully shutdown
-
     def __init__(self, conf: DatabaseSettings):
         self.conf = conf
         self.pool = None

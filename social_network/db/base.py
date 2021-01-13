@@ -20,7 +20,7 @@ from .db import (
 )
 from .excpetions import DatabaseError
 
-M = TypeVar('M', covariant=True)
+M = TypeVar('M', bound='BaseModel', covariant=True)
 
 
 class BaseModel(PydanticBaseModel):

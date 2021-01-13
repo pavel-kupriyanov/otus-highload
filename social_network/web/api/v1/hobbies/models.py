@@ -19,3 +19,7 @@ class HobbyQueryParams:
     page: int = Query(1, ge=1)
     paginate_by: int = Query(settings.BASE_PAGE_LIMIT,
                              le=settings.BASE_PAGE_LIMIT)
+
+    @property
+    def offset(self) -> int:
+        return (self.page - 1) * self.paginate_by

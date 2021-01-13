@@ -51,9 +51,7 @@ class HobbiesViewSet:
     })
     async def list(self, q: HobbyQueryParams = Depends(HobbyQueryParams)) \
             -> List[Hobby]:
-        # TODO: offset as payload method
-        offset = (q.page - 1) * q.paginate_by
         return await self.hobby_manager.list(name=q.name,
                                              order=q.order,
                                              limit=q.paginate_by,
-                                             offset=offset)
+                                             offset=q.offset)

@@ -1,5 +1,6 @@
 from typing import Optional
 from functools import lru_cache
+from datetime import datetime
 
 from fastapi import (
     Header,
@@ -101,5 +102,7 @@ async def get_user_id(x_auth_token: Optional[str] = Header(None),
         access_token = await access_token_manager.get_by_value(x_auth_token)
     except RowsNotFoundError:
         raise HTTPException(status_code=401, detail='Invalid token header')
-    # TODO: expired check
+    if datetime.fromtimestamp(access_token.expired_at) < datetime.now():
+        raise HTTPException(status_code=400,
+                            detail='Expired token, please re-login')
     return access_token.user_id

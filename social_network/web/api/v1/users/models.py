@@ -24,3 +24,7 @@ class UsersQueryParams:
     last_name: str = Query('')
     friends_of: Optional[int] = Query(None)
     order_by: OrderBy = Query(OrderBy.FIRST_NAME)
+
+    @property
+    def offset(self) -> int:
+        return (self.page - 1) * self.paginate_by

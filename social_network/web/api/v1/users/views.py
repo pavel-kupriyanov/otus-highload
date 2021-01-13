@@ -37,14 +37,13 @@ class UserViewSet:
     })
     async def users(self, q: UsersQueryParams = Depends(UsersQueryParams)) \
             -> List[User]:
-        offset = (q.page - 1) * q.paginate_by
         users = await self.user_manager.list(first_name=q.first_name,
                                              last_name=q.last_name,
                                              friend_id=q.friends_of,
                                              order=q.order,
                                              order_by=q.order_by,
                                              limit=q.paginate_by,
-                                             offset=offset)
+                                             offset=q.offset)
         if not users:
             return []
         hobbies = await self.user_hobby_manager.get_hobby_for_users(
