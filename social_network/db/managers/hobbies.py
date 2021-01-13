@@ -5,7 +5,11 @@ from social_network.settings import settings
 from ..crud import CRUDManager
 
 from ..models import Hobby
-from ..queries import HobbyQueries
+
+GET_HOBBIES = '''
+         SELECT id, name FROM hobbies
+         WHERE (UPPER(name) LIKE UPPER(CONCAT('%%', %s, '%%')))
+    '''
 
 
 class HobbiesManager(CRUDManager):
@@ -20,4 +24,4 @@ class HobbiesManager(CRUDManager):
                    limit=settings.BASE_PAGE_LIMIT,
                    offset=0) -> List[Hobby]:
         return await self._list((name,), order=order, limit=limit,
-                                offset=offset, query=HobbyQueries.GET_HOBBIES)
+                                offset=offset, query=GET_HOBBIES)

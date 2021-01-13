@@ -2,10 +2,13 @@ from typing import Optional
 
 from pydantic import EmailStr
 
-from ..queries import UserQueries
-
 from ..crud import CRUDManager
 from ..models import AuthUser, Gender
+
+GET_USER_BY_EMAIL = '''
+    SELECT id, email, password, salt, age, first_name, last_name, city, gender
+    FROM users WHERE email = %s
+'''
 
 
 class AuthUserManager(CRUDManager):
@@ -27,5 +30,5 @@ class AuthUserManager(CRUDManager):
         return await self._create(params)
 
     async def get_by_email(self, email: EmailStr) -> AuthUser:
-        users = await self.execute(UserQueries.GET_USER_BY_EMAIL, (email,))
+        users = await self.execute(GET_USER_BY_EMAIL, (email,))
         return AuthUser.from_db(users[0])

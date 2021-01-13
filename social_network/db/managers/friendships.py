@@ -1,6 +1,10 @@
 from ..crud import CRUDManager
-from ..queries import FriendshipQueries
 from ..models import Friendship
+
+GET_FRIENDSHIP = '''
+       SELECT id, user_id, friend_id FROM friendships
+       WHERE user_id = %s AND friend_id = %s
+   '''
 
 
 class FriendshipManager(CRUDManager):
@@ -13,6 +17,5 @@ class FriendshipManager(CRUDManager):
 
     async def get_by_participants(self, user_id: int, friend_id: int) \
             -> Friendship:
-        query = FriendshipQueries.GET_FRIENDSHIP
-        friendships = await self.execute(query, (user_id, friend_id))
+        friendships = await self.execute(GET_FRIENDSHIP, (user_id, friend_id))
         return Friendship.from_db(friendships[0])

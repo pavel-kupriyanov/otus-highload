@@ -2,10 +2,20 @@ from collections import defaultdict
 from typing import List, Dict
 from itertools import groupby
 
-from ..queries import UserHobbyQueries
-
 from ..crud import CRUDManager
 from ..models import Hobby, UserHobby
+
+DROP_USER_HOBBY = '''
+        DELETE FROM users_hobbies_mtm
+        WHERE user_id = %s AND hobby_id = %s;
+    '''
+
+GET_HOBBIES_FOR_USERS = '''
+        SELECT user_id, h.id, h.name from users_hobbies_mtm
+        JOIN hobbies h on h.id = users_hobbies_mtm.hobby_id
+        WHERE user_id IN %s
+        ORDER BY user_id;
+    '''
 
 
 class UsersHobbyManager(CRUDManager):
@@ -17,13 +27,13 @@ class UsersHobbyManager(CRUDManager):
 
     async def delete_by_ids(self, user_id: int, hobby_id: int):
         params = (user_id, hobby_id)
-        return await self.execute(UserHobbyQueries.DROP_USER_HOBBY, params,
+        return await self.execute(DROP_USER_HOBBY, params,
                                   raise_if_empty=False)
 
     async def get_hobby_for_users(self, user_ids: List[int]) \
             -> Dict[int, List[Hobby]]:
         params = (user_ids,)
-        results = await self.execute(UserHobbyQueries.GET_HOBBIES_FOR_USERS,
+        results = await self.execute(GET_HOBBIES_FOR_USERS,
                                      params, raise_if_empty=False)
         parsed_result: Dict[int, List[Hobby]] = defaultdict(list)
         for key, group in groupby(results, lambda x: x[0]):
