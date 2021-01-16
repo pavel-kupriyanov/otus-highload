@@ -18,7 +18,8 @@ def test_create_already_exists(app: TestClient, token1: AccessToken,
     response = app.post(BASE_PATH,
                         json={'name': hobby.name},
                         headers={'x-auth-token': token1.value})
-    assert response.status_code == 400
+    assert response.status_code == 201
+    assert response.json()['name'] == hobby.name
 
 
 def test_hobbies_not_authorized(app: TestClient):

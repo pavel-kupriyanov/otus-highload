@@ -9,18 +9,34 @@ import {
   REGISTER_FAILED,
   REGISTER_SUCCESS,
   GET_USER_SUCCESS,
-  GET_USER_FAILED
+  GET_USER_FAILED, ADD_HOBBY_SUCCESS, DELETE_HOBBY_SUCCESS
 } from "./actions";
+
+import {store} from './store';
 
 export const API_BASE = "http://localhost:8000/api/v1";
 
-const axios = axiosBase.create({
+const AXIOS_CONFIG = {
   timeout: 20000,
   headers: {
     "X-Requested-With": "XMLHttpRequest",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   },
-});
+}
+
+const axios = axiosBase.create(AXIOS_CONFIG);
+
+const getAuthorizedAxios = () => {
+  const state = store.getState();
+  const config = {
+    ...AXIOS_CONFIG,
+    headers: {
+      ...AXIOS_CONFIG.headers,
+      "X-Auth-Token": state.accessToken && state.accessToken.value
+    }
+  }
+  return axiosBase.create(config)
+}
 
 const messageTimeout = 3;
 
@@ -171,5 +187,36 @@ export const getUser = userId => {
     }
     dispatch(hideLoader());
     return isSuccess;
+  }
+}
+
+
+export const addHobby = name => {
+  return async dispatch => {
+    dispatch(showLoader());
+    const axios = getAuthorizedAxios();
+    try {
+      // todo: optimize it
+      const createResponse = await axios.post(`${API_BASE}/hobbies/`, {name});
+      await axios.put(`${API_BASE}/users/hobbies/${createResponse.data.id}`);
+      dispatch({type: ADD_HOBBY_SUCCESS, payload: createResponse.data});
+    } catch (e) {
+      dispatch(showMessage('Failed'))
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const deleteHobby = id => {
+  return async dispatch => {
+    dispatch(showLoader());
+    const axios = getAuthorizedAxios();
+    try {
+      await axios.delete(`${API_BASE}/users/hobbies/${id}`);
+      dispatch({type: DELETE_HOBBY_SUCCESS, payload: id});
+    } catch (e) {
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
   }
 }

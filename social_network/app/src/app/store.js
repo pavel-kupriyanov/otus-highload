@@ -12,13 +12,24 @@ import {
   REGISTER_SUCCESS,
   REGISTER_FAILED,
   GET_USER_FAILED,
-  GET_USER_SUCCESS
+  GET_USER_SUCCESS,
+  ADD_HOBBY_SUCCESS,
+  DELETE_HOBBY_SUCCESS,
 } from "./actions";
 
 
 const initialState = {
-  user: {},
+  user: {
+    id: 0,
+    first_name: '',
+    last_name: '',
+    age: 0,
+    gender: null,
+    city: '',
+    hobbies: []
+  },
   accessToken: {
+    id: 0,
     value: '',
     user_id: 0,
     expired_at: '',
@@ -81,6 +92,23 @@ export default function reducer(state = initialState, action) {
     case GET_USER_FAILED: {
       return {...state, error: action.payload}
     }
+    case ADD_HOBBY_SUCCESS: {
+      return {
+        ...state, user: {
+          ...state.user,
+          hobbies: [...state.user.hobbies, action.payload]
+        }
+      }
+    }
+    case DELETE_HOBBY_SUCCESS: {
+      return {
+        ...state, user: {
+          ...state.user,
+          hobbies: state.user.hobbies.filter(h => h.id !== action.payload)
+        }
+      }
+    }
+
     default:
       return state
   }

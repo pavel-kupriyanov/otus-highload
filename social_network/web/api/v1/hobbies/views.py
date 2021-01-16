@@ -6,7 +6,7 @@ from fastapi import (
 )
 from fastapi_utils.cbv import cbv
 
-from social_network.db.models import FriendRequest, Hobby
+from social_network.db.models import Hobby
 from social_network.db.managers import HobbiesManager
 from social_network.db.excpetions import DatabaseError
 
@@ -29,7 +29,6 @@ class HobbiesViewSet:
     @router.post('/', response_model=Hobby, status_code=201,
                  responses={
                      201: {'description': 'Hobby created.'},
-                     400: {'description': 'Already created.'},
                      401: {'description': 'Unauthorized.'},
                  })
     @authorize_only
@@ -37,13 +36,13 @@ class HobbiesViewSet:
         try:
             return await self.hobby_manager.create(p.name)
         except DatabaseError:
-            raise HTTPException(400, detail='Hobby already exists.')
+            return await self.hobby_manager.get_by_name(p.name)
 
     @router.get('/{id}', responses={
         200: {'description': 'Success'},
         404: {'description': 'Hobby not found.'}
     })
-    async def get(self, id: int) -> FriendRequest:
+    async def get(self, id: int) -> Hobby:
         return await self.hobby_manager.get(id)
 
     @router.get('/', response_model=List[Hobby], responses={

@@ -25,7 +25,7 @@ class UsersHobbyManager(CRUDManager):
     async def create(self, user_id: int, hobby_id: int) -> UserHobby:
         return await self._create((user_id, hobby_id))
 
-    async def delete_by_ids(self, user_id: int, hobby_id: int):
+    async def delete_by_id(self, user_id: int, hobby_id: int):
         params = (user_id, hobby_id)
         return await self.execute(DROP_USER_HOBBY, params,
                                   raise_if_empty=False)

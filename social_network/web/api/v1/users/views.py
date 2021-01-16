@@ -82,4 +82,4 @@ class UserViewSet:
     })
     @authorize_only
     async def remove_hobby(self, id: int):
-        await self.user_hobby_manager.delete_by_ids(self.user_id, id)
+        await self.user_hobby_manager.delete_by_id(self.user_id, id)
