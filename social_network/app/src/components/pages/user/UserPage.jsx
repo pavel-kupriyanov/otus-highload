@@ -2,54 +2,50 @@ import React from 'react';
 import {connect} from "react-redux";
 import PropTypes from "prop-types";
 import {bindActionCreators} from "redux";
-import {getUser} from "../../../app/actionCreators";
-import {Hobbies} from "../../common";
+import {getUser, getFriends, clearUser, clearUsers} from "../../../app/actionCreators";
+import {Hobbies, UserList} from "../../common";
 import EditableHobbies from "./EditableHobbies";
 
 
 class UserPage extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {loading: true};
-  }
-
-// todo: is ready flag?
 // TODO: check move on same page with other user
 
-  // todo: clear data in store on unmount
-  async componentDidMount() {
-    await this.props.getUser(this.props.id);
-    this.setState({loading: false});
+  componentDidMount() {
+    const {id, getUser, getFriends} = this.props;
+    getUser(id);
+    getFriends(id);
+  }
+
+  componentWillUnmount() {
+    const {clearUser, clearUsers} = this.props;
+    clearUser();
+    clearUsers();
   }
 
   isMyPage() {
-    const {accessToken, user} = this.props;
-    const tokenUserId = accessToken && accessToken.user_id;
-    const userId = user && user.id;
-    return (tokenUserId && userId && (tokenUserId === userId));
+    const {id, currentUser} = this.props;
+    return Number(id) === currentUser.authentication.id;
   }
 
 
   render() {
-    const {user} = this.props;
+    const {user, users, currentUser} = this.props;
 
     return (
       <div>
-        {(this.state.loading || !(user && user.id))
-          ? <div>Loading...</div> :
-          <div>
-            <h1>User</h1>
-            <p>{user.first_name} {user.last_name}</p>
-            <p>Age: {user.age}</p>
-            {user.city && <p>City: {user.city}</p>}
-            {user.gender && <p>Gender: {user.gender}</p>}
-          </div>}
+        {user && user.id && <div>
+          <h1>{user.first_name} {user.last_name}</h1>
+          <p>Age: {user.age}</p>
+          {user.city && <p>City: {user.city}</p>}
+          {user.gender && <p>Gender: {user.gender}</p>}
+        </div>}
         <h2>Hobbies</h2>
         {this.isMyPage() ?
-          <EditableHobbies hobbies={user.hobbies}/> :
+          <EditableHobbies hobbies={currentUser.user.hobbies}/> :
           <Hobbies hobbies={user.hobbies}/>}
         <h2>Friends</h2>
+        <UserList users={users}/>
       </div>
     );
   }
@@ -60,16 +56,20 @@ UserPage.propTypes = {
   user: PropTypes.object,
   accessToken: PropTypes.object,
   getUser: PropTypes.func.isRequired,
+  getFriends: PropTypes.func.isRequired,
+  clearUser: PropTypes.func.isRequired,
+  clearUsers: PropTypes.func.isRequired,
 }
 
 const mapStateToProps = state => ({
   user: state.user,
-  accessToken: state.accessToken
+  currentUser: state.currentUser,
+  users: state.users,
 });
 
 const mapDispatchToProps = dispatch => {
   return bindActionCreators({
-    getUser,
+    getUser, getFriends, clearUser, clearUsers
   }, dispatch)
 }
 

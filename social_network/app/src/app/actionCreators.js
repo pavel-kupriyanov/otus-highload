@@ -9,12 +9,25 @@ import {
   REGISTER_FAILED,
   REGISTER_SUCCESS,
   GET_USER_SUCCESS,
-  GET_USER_FAILED, ADD_HOBBY_SUCCESS, DELETE_HOBBY_SUCCESS
+  GET_USER_FAILED,
+  ADD_HOBBY_SUCCESS,
+  DELETE_HOBBY_SUCCESS,
+  LOGOUT,
+  GET_USERS,
+  CLEAR_USER,
+  CLEAR_USERS
 } from "./actions";
-
+import {
+  deleteTokenFromStorage,
+  storeTokenIntoStorage,
+  parsePayloadError,
+  toQueryString
+} from "./utils";
 import {store} from './store';
 
 export const API_BASE = "http://localhost:8000/api/v1";
+
+// TODO: show loader on all actions
 
 const AXIOS_CONFIG = {
   timeout: 20000,
@@ -39,15 +52,6 @@ const getAuthorizedAxios = () => {
 }
 
 const messageTimeout = 3;
-
-const parsePayloadError = response => {
-  const errors = {};
-  response.data.detail.forEach(item => {
-    const name = item.loc[item.loc.length - 1];
-    errors[name] = item.msg;
-  });
-  return errors;
-}
 
 
 export const showMessage = message => {
@@ -76,6 +80,7 @@ export const login = (email, password) => {
     try {
       const response = await axios.post(`${API_BASE}/auth/login/`, {email, password});
       isSuccess = true;
+      storeTokenIntoStorage(response.data);
       dispatch({type: LOGIN_SUCCESS, payload: response.data});
     } catch (e) {
       switch (e.response.status) {
@@ -104,6 +109,13 @@ export const login = (email, password) => {
     }
     dispatch(hideLoader());
     return isSuccess;
+  }
+}
+
+export const logout = () => {
+  return dispatch => {
+    deleteTokenFromStorage();
+    dispatch({type: LOGOUT})
   }
 }
 
@@ -220,3 +232,44 @@ export const deleteHobby = id => {
     dispatch(hideLoader());
   }
 }
+
+// TODO: fix loader many requests
+export const getFriends = id => {
+  return async dispatch => {
+    dispatch(showLoader());
+    try {
+      const response = await axios.get(`${API_BASE}/users/?friends_of=${id}`,);
+      dispatch({type: GET_USERS, payload: response.data});
+    } catch (e) {
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const clearUser = () => {
+  return dispatch => {
+    dispatch({type: CLEAR_USER});
+  }
+}
+
+export const clearUsers = () => {
+  return dispatch => {
+    dispatch({type: CLEAR_USERS});
+  }
+}
+
+export const getUsers = (first_name, last_name) => {
+  return async dispatch => {
+    dispatch(showLoader());
+    const query = toQueryString({first_name, last_name});
+    try {
+      const response = await axios.get(`${API_BASE}/users/?${query}`,);
+      dispatch({type: GET_USERS, payload: response.data});
+    } catch (e) {
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+

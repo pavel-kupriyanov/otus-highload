@@ -8,16 +8,19 @@ from ..models import User
 GET_USERS = '''
     SELECT id, first_name, last_name, age, city, gender FROM users
     WHERE 
-    (first_name LIKE CONCAT('%%', %s, '%%')) AND 
-    (last_name LIKE CONCAT('%%', %s, '%%'))
+    (UPPER(first_name) LIKE UPPER(CONCAT('%%', %s, '%%')))
+     AND 
+    (UPPER(last_name) LIKE UPPER(CONCAT('%%', %s, '%%')) OR ISNULL(last_name))
 '''
 
 GET_FRIENDS = '''
     SELECT DISTINCT users.id, first_name, last_name, age, city, gender FROM users
     JOIN friendships f on users.id = f.user_id
     WHERE 
-    (UPPER(first_name) LIKE UPPER(CONCAT('%%', %s, '%%'))) AND 
-    (UPPER(last_name) LIKE UPPER(CONCAT('%%', %s, '%%'))) AND
+    (UPPER(first_name) LIKE UPPER(CONCAT('%%', %s, '%%')))
+     AND 
+    (UPPER(last_name) LIKE UPPER(CONCAT('%%', %s, '%%')) OR ISNULL(last_name))
+     AND
     (f.friend_id = %s)
 '''
 

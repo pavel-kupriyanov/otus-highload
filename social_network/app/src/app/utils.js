@@ -1,0 +1,44 @@
+const TOKEN_FIELD_NAME = 'ACCESS_TOKEN';
+
+// TODO: ADD PAGINATE LATER
+
+export const parsePayloadError = response => {
+  const errors = {};
+  response.data.detail.forEach(item => {
+    const name = item.loc[item.loc.length - 1];
+    errors[name] = item.msg;
+  });
+  return errors;
+}
+
+
+export const storeTokenIntoStorage = token => {
+  localStorage.setItem(TOKEN_FIELD_NAME, JSON.stringify(token));
+}
+
+export const loadTokenFromStorage = () => {
+  const token = localStorage.getItem(TOKEN_FIELD_NAME);
+  if (!token) {
+    return null;
+  }
+  const parsedToken = JSON.parse(token);
+  if (parsedToken.expired_at < new Date().getTime() / 1000) {
+    return null;
+  }
+  return parsedToken;
+};
+
+export const deleteTokenFromStorage = () => {
+  localStorage.removeItem(TOKEN_FIELD_NAME);
+}
+
+
+export const toQueryString = obj => {
+  const str = Object.keys(obj).map(key => {
+    return encodeURIComponent(key) + "=" + encodeURIComponent(obj[key])
+  })
+
+  return str.join("&");
+}
+
+

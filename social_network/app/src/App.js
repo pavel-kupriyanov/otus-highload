@@ -1,38 +1,45 @@
 import React from 'react';
-import {connect} from "react-redux";
-import PropTypes from "prop-types";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link
 } from "react-router-dom";
 
-import {LoginPage, RegisterPage, UserPage} from "./components/pages";
+import AuthRedirect from "./components/common/components/AuthRedirect";
+import {LoginPage, RegisterPage, UserPage, UsersPage} from "./components/pages";
+import Header from "./components/common/components/Header";
 
 
-class App extends React.Component {
+export default class App extends React.Component {
 
   render() {
-    const {message, isLoading} = this.props;
 
     return (
       <Router>
         <div className="App">
-          <p><Link to="/login">Login</Link></p>
-          <p><Link to="/register">Register</Link></p>
-          {message && <p>Message: {message}</p>}
-          {isLoading && <p>Loading...</p>}
+          <Header/>
           <Switch>
-            <Route path="/login">
-              <LoginPage/>
+            <Route path="/login" render={() =>
+              <React.Fragment>
+                <AuthRedirect/>
+                <LoginPage/>
+              </React.Fragment>
+            }>
             </Route>
-            <Route path="/register">
-              <RegisterPage/>
+            <Route path="/register" render={() =>
+              <React.Fragment>
+                <AuthRedirect/>
+                <RegisterPage/>
+              </React.Fragment>
+            }>
             </Route>
-            <Route path="/:id" render={({match}) => {
-              return <UserPage id={match.params.id}/>
-            }}>
+            <Route path="/:id" render={({match}) =>
+              <UserPage
+                key={match.params.id}
+                id={match.params.id}/>
+            }>
+            </Route>
+            <Route path="/" render={() => <UsersPage/>}>
             </Route>
           </Switch>
         </div>
@@ -41,17 +48,5 @@ class App extends React.Component {
   }
 }
 
-App.propTypes = {
-  isLoading: PropTypes.bool.isRequired,
-  message: PropTypes.string.isRequired,
-}
 
-
-const mapStateToProps = state => ({
-  isLoading: state.isLoading,
-  message: state.message,
-});
-
-
-export default connect(mapStateToProps, null)(App);
 

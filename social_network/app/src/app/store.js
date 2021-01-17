@@ -2,6 +2,8 @@ import {createStore, applyMiddleware} from "redux";
 import thunk from 'redux-thunk';
 import {composeWithDevTools} from 'redux-devtools-extension';
 
+import {loadTokenFromStorage} from "./utils";
+
 import {
   LOGIN_SUCCESS,
   LOGIN_FAILED,
@@ -15,25 +17,38 @@ import {
   GET_USER_SUCCESS,
   ADD_HOBBY_SUCCESS,
   DELETE_HOBBY_SUCCESS,
+  LOGOUT,
+  GET_USERS, CLEAR_USERS, CLEAR_USER,
 } from "./actions";
 
 
+const DEFAULT_TOKEN = {
+  id: 0,
+  value: '',
+  user_id: 0,
+  expired_at: '',
+}
+
+const DEFAULT_USER = {
+  id: 0,
+  first_name: '',
+  last_name: '',
+  age: 0,
+  gender: null,
+  city: '',
+  hobbies: []
+}
+
 const initialState = {
-  user: {
-    id: 0,
-    first_name: '',
-    last_name: '',
-    age: 0,
-    gender: null,
-    city: '',
-    hobbies: []
+  currentUser: {
+    isAuthenticated: Boolean(loadTokenFromStorage()),
+    authentication: loadTokenFromStorage() || DEFAULT_TOKEN,
+    user: DEFAULT_USER,
+    friends: [],
+    friendRequests: [],
   },
-  accessToken: {
-    id: 0,
-    value: '',
-    user_id: 0,
-    expired_at: '',
-  },
+  user: DEFAULT_USER,
+  users: [],
   isLoading: false,
   message: '',
   registerErrors: {
@@ -61,9 +76,11 @@ export const store = createStore(
 );
 
 export default function reducer(state = initialState, action) {
+  const payload = action.payload;
+
   switch (action.type) {
     case SHOW_MESSAGE: {
-      return {...state, message: action.payload}
+      return {...state, message: payload}
     }
     case HIDE_MESSAGE: {
       return {...state, message: ""}
@@ -78,35 +95,65 @@ export default function reducer(state = initialState, action) {
       return {...state, registerErrors: {}}
     }
     case REGISTER_FAILED: {
-      return {...state, registerErrors: action.payload}
+      return {...state, registerErrors: payload}
     }
     case LOGIN_SUCCESS: {
-      return {...state, accessToken: action.payload, loginErrors: {}}
+      // TODO: load friends and friendRequests
+      return {
+        ...state,
+        currentUser: {
+          ...state.currentUser,
+          authentication: payload,
+          isAuthenticated: true,
+        },
+        loginErrors: {}
+      }
     }
     case LOGIN_FAILED: {
-      return {...state, loginErrors: action.payload}
+      return {...state, loginErrors: payload}
+    }
+    case LOGOUT: {
+      return {
+        ...state,
+        currentUser: {
+          ...state.currentUser,
+          authentication: DEFAULT_TOKEN,
+          isAuthenticated: false,
+        },
+      }
     }
     case GET_USER_SUCCESS: {
-      return {...state, user: action.payload}
+      return {...state, user: payload}
     }
     case GET_USER_FAILED: {
-      return {...state, error: action.payload}
+      return {...state, error: payload}
+    }
+    case CLEAR_USER: {
+      return {...state, user: DEFAULT_USER}
     }
     case ADD_HOBBY_SUCCESS: {
       return {
-        ...state, user: {
-          ...state.user,
-          hobbies: [...state.user.hobbies, action.payload]
+        ...state,
+        currentUser: {
+          ...state.currentUser,
+          hobbies: [...state.currentUser.hobbies, payload]
         }
       }
     }
     case DELETE_HOBBY_SUCCESS: {
       return {
-        ...state, user: {
-          ...state.user,
-          hobbies: state.user.hobbies.filter(h => h.id !== action.payload)
+        ...state,
+        currentUser: {
+          ...state.currentUser,
+          hobbies: state.currentUser.hobbies.filter(h => h.id !== payload)
         }
       }
+    }
+    case GET_USERS: {
+      return {...state, users: payload}
+    }
+    case CLEAR_USERS: {
+      return {...state, users: []}
     }
 
     default:

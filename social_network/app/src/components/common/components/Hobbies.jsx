@@ -2,8 +2,7 @@ import React from 'react';
 import PropTypes from "prop-types";
 
 
-export class Hobbies extends React.Component {
-
+export default class Hobbies extends React.Component {
 
   render() {
     const {hobbies} = this.props;
