@@ -15,13 +15,19 @@ import {
   LOGOUT,
   GET_USERS,
   CLEAR_USER,
-  CLEAR_USERS
+  CLEAR_USERS,
+  DELETE_FRIENDSHIP,
+  ADD_FRIEND_REQUEST,
+  DELETE_FRIEND_REQUEST,
+  ACCEPT_FRIEND_REQUEST,
+  DECLINE_FRIEND_REQUEST, GET_USER_DATA, GET_FRIEND_REQUEST_USERS
 } from "./actions";
 import {
   deleteTokenFromStorage,
   storeTokenIntoStorage,
   parsePayloadError,
-  toQueryString
+  toQueryString,
+  arrayToQueryString
 } from "./utils";
 import {store} from './store';
 
@@ -45,7 +51,7 @@ const getAuthorizedAxios = () => {
     ...AXIOS_CONFIG,
     headers: {
       ...AXIOS_CONFIG.headers,
-      "X-Auth-Token": state.accessToken && state.accessToken.value
+      "X-Auth-Token": state.currentUser.authentication && state.currentUser.authentication.value
     }
   }
   return axiosBase.create(config)
@@ -119,6 +125,30 @@ export const logout = () => {
   }
 }
 
+export const getUserData = id => {
+  return async dispatch => {
+    const axios = getAuthorizedAxios();
+    try {
+      const userPromise = axios.get(`${API_BASE}/users/${id}`);
+      const friendsPromise = axios.get(`${API_BASE}/users/?friends_of=${id}`);
+      const friendRequestsPromise = axios.get(`${API_BASE}/friendships`);
+      const [user, friends, friendRequests] = await Promise.all(
+        [userPromise, friendsPromise, friendRequestsPromise]
+      );
+      dispatch({
+        type: GET_USER_DATA, payload: {
+          user: user.data,
+          friends: friends.data,
+          friendRequests: friendRequests.data
+        }
+      });
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage("Auth data failed. Please reload page."));
+    }
+  }
+}
+
 
 export const register = (
   {
@@ -176,6 +206,7 @@ export const getUser = userId => {
     let isSuccess = false;
     dispatch(showLoader());
     try {
+      // TODO: remove error handling
       const response = await axios.get(`${API_BASE}/users/${userId}/`);
       isSuccess = true;
       dispatch({type: GET_USER_SUCCESS, payload: response.data});
@@ -259,10 +290,10 @@ export const clearUsers = () => {
   }
 }
 
-export const getUsers = (first_name, last_name) => {
+export const getUsers = (first_name, last_name, page = 1, paginate_by = 100) => {
   return async dispatch => {
     dispatch(showLoader());
-    const query = toQueryString({first_name, last_name});
+    const query = toQueryString({first_name, last_name, page, paginate_by});
     try {
       const response = await axios.get(`${API_BASE}/users/?${query}`,);
       dispatch({type: GET_USERS, payload: response.data});
@@ -273,3 +304,90 @@ export const getUsers = (first_name, last_name) => {
   }
 }
 
+export const deleteFriendship = id => {
+  return async dispatch => {
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      await axios.delete(`${API_BASE}/friendships/friendship/${id}`,);
+      dispatch({type: DELETE_FRIENDSHIP, payload: id});
+    } catch (e) {
+      // TODO: rename all failed
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const addFriendRequest = userId => {
+  return async dispatch => {
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      const response = await axios.post(`${API_BASE}/friendships/${userId}`);
+      dispatch({type: ADD_FRIEND_REQUEST, payload: response.data});
+    } catch (e) {
+      // TODO: different variants of errors
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const deleteFriendRequest = id => {
+  return async dispatch => {
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      await axios.delete(`${API_BASE}/friendships/${id}`);
+      dispatch({type: DELETE_FRIEND_REQUEST, payload: id});
+    } catch (e) {
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const acceptFriendRequest = id => {
+  return async dispatch => {
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      const response = await axios.put(`${API_BASE}/friendships/accept/${id}`);
+      const userResponse = await axios.get(`${API_BASE}/users/${response.data.friend_id}/`);
+      dispatch({type: ACCEPT_FRIEND_REQUEST, payload: {requestId: id, friend: userResponse.data}});
+    } catch (e) {
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+
+export const declineFriendRequest = id => {
+  return async dispatch => {
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      await axios.put(`${API_BASE}/friendships/decline/${id}`);
+      dispatch({type: DECLINE_FRIEND_REQUEST, payload: id});
+    } catch (e) {
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+
+export const getFriendRequestUsers = ids => {
+  return async dispatch => {
+    dispatch(showLoader());
+    try {
+      const response = await axios.get(`${API_BASE}/users/?${arrayToQueryString('ids', ids)}`);
+      dispatch({type: GET_FRIEND_REQUEST_USERS, payload: response.data});
+    } catch (e) {
+      dispatch(showMessage('Failed'));
+    }
+    dispatch(hideLoader());
+  }
+}

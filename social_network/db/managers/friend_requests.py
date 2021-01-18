@@ -11,7 +11,7 @@ UPDATE_FRIEND_REQUEST = '''
     '''
 
 GET_FRIEND_REQUESTS = '''
-        SELECT (id, from_user, to_user, status) FROM friend_requests
+        SELECT id, from_user, to_user, status FROM friend_requests
         WHERE from_user = %s OR to_user = %s
     '''
 

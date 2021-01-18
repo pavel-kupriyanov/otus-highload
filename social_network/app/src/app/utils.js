@@ -1,4 +1,8 @@
 const TOKEN_FIELD_NAME = 'ACCESS_TOKEN';
+export const REQUEST_STATUSES = {
+  WAITING: 'WAITING',
+  DECLINED: 'DECLINED',
+}
 
 // TODO: ADD PAGINATE LATER
 
@@ -32,6 +36,12 @@ export const deleteTokenFromStorage = () => {
   localStorage.removeItem(TOKEN_FIELD_NAME);
 }
 
+
+export const arrayToQueryString = (name, arr) => {
+  const encodedName = encodeURIComponent(name);
+  const str = arr.map(item => `${encodedName}=${encodeURIComponent(item)}`);
+  return str.join("&");
+}
 
 export const toQueryString = obj => {
   const str = Object.keys(obj).map(key => {

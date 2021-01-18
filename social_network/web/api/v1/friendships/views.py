@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import (
     APIRouter,
     Depends,
@@ -24,7 +24,6 @@ from ..depends import (
     get_friend_request_manager,
     get_user_id
 )
-from .models import FriendRequestPostPayload
 
 from ..depends import get_friendship_manager
 from ..utils import authorize_only
@@ -42,7 +41,7 @@ class FriendRequestViewSet:
         get_friendship_manager
     )
 
-    @router.post('/', response_model=FriendRequest, status_code=201,
+    @router.post('/{user_id}', response_model=FriendRequest, status_code=201,
                  responses={
                      201: {'description': 'Friend request created.'},
                      400: {'description': 'Already friends.'},
@@ -50,10 +49,10 @@ class FriendRequestViewSet:
                      404: {'description': 'User not found.'}
                  })
     @authorize_only
-    async def create(self, p: FriendRequestPostPayload) -> FriendRequest:
+    async def create(self, user_id: int) -> FriendRequest:
         try:
             await self.friendship_manager \
-                .get_by_participants(self.user_id, p.user_id)
+                .get_by_participants(self.user_id, user_id)
         except RowsNotFoundError:
             pass
         else:
@@ -61,7 +60,7 @@ class FriendRequestViewSet:
 
         try:
             return await self.friend_request_manager \
-                .create(self.user_id, p.user_id)
+                .create(self.user_id, user_id)
         except DatabaseError:
             raise HTTPException(404, detail='User not found or request '
                                             'already exists.')
@@ -125,6 +124,29 @@ class FriendRequestViewSet:
         await self.friend_request_manager.delete(id)
         return await self.friendship_manager.create(request.to_user,
                                                     request.from_user)
+
+    @router.delete('/friendship/{friend_id}', status_code=204, responses={
+        204: {'description': 'Friendship cancelled.'},
+        401: {'description': 'Unauthorized.'},
+    })
+    @authorize_only
+    async def delete_friendship(self, friend_id: int):
+        friendship = await self.friendship_manager.get_by_participants(
+            self.user_id, friend_id)
+        try:
+            reverse_friendship = await self.friendship_manager \
+                .get_by_participants(friend_id, self.user_id)
+            await self.friendship_manager.delete(reverse_friendship.id)
+        except RowsNotFoundError:
+            pass
+        await self.friendship_manager.delete(friendship.id)
+
+    @router.get('/', status_code=200, responses={
+        200: {'description': 'List of friend requests'},
+    })
+    @authorize_only
+    async def list(self) -> List[FriendRequest]:
+        return await self.friend_request_manager.list_for_user(self.user_id)
 
 
 def is_request_creator(request: FriendRequest, user_id: int) -> bool:

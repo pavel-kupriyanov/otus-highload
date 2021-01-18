@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import Query
 
@@ -23,6 +23,7 @@ class UsersQueryParams:
     first_name: str = Query('')
     last_name: str = Query('')
     friends_of: Optional[int] = Query(None)
+    ids: Optional[List[int]] = Query(None)
     order_by: OrderBy = Query(OrderBy.FIRST_NAME)
 
     @property

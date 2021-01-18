@@ -42,6 +42,13 @@ def test_list_friend_id(app: TestClient, user1, user2, user3, friendship):
     assert response.json()[0]['first_name'] == user2.first_name
 
 
+def test_list_ids(app: TestClient, user1, user2, user3):
+    response = app.get(BASE_PATH, params={'ids': [user1.id]})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]['first_name'] == user1.first_name
+
+
 def test_list_paginate(app: TestClient, user1, user2, user3):
     response = app.get(BASE_PATH, params={'paginate_by': 1, 'page': 1})
     assert response.status_code == 200

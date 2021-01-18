@@ -40,6 +40,7 @@ class UserViewSet:
         users = await self.user_manager.list(first_name=q.first_name,
                                              last_name=q.last_name,
                                              friend_id=q.friends_of,
+                                             ids=q.ids,
                                              order=q.order,
                                              order_by=q.order_by,
                                              limit=q.paginate_by,

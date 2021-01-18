@@ -1,27 +1,24 @@
 from fastapi.testclient import TestClient
 
-from social_network.db.models import AccessToken, FriendRequest
+from social_network.db.models import AccessToken, FriendRequest, Friendship
 
-BASE_PATH = '/api/v1/friend_requests/'
+BASE_PATH = '/api/v1/friendships/'
 
 
 def test_create_non_authorized(app: TestClient):
-    response = app.post(BASE_PATH,
-                        json={'user_id': 1},
+    response = app.post(BASE_PATH + str(1),
                         headers={'x-auth-token': 'foobar'})
     assert response.status_code == 401
 
 
 def test_create(app: TestClient, user1, user2, token1: AccessToken):
-    response = app.post(BASE_PATH,
-                        json={'user_id': user2.id},
+    response = app.post(BASE_PATH + str(user2.id),
                         headers={'x-auth-token': token1.value})
     assert response.status_code == 201
 
 
 def test_create_not_found(app: TestClient, user1, token1: AccessToken):
-    response = app.post(BASE_PATH,
-                        json={'user_id': 1000000},
+    response = app.post(BASE_PATH + '100000',
                         headers={'x-auth-token': token1.value})
     assert response.status_code == 404
     assert 'not found' in response.json()['detail']
@@ -29,8 +26,7 @@ def test_create_not_found(app: TestClient, user1, token1: AccessToken):
 
 def test_create_already_request(app: TestClient, user1, user2,
                                 token1: AccessToken, friend_request):
-    response = app.post(BASE_PATH,
-                        json={'user_id': user2.id},
+    response = app.post(BASE_PATH + str(user2.id),
                         headers={'x-auth-token': token1.value})
     assert response.status_code == 404
     assert 'already' in response.json()['detail']
@@ -38,8 +34,7 @@ def test_create_already_request(app: TestClient, user1, user2,
 
 def test_create_already_friends(app: TestClient, user1, user2,
                                 token1: AccessToken, friendship):
-    response = app.post(BASE_PATH,
-                        json={'user_id': user2.id},
+    response = app.post(BASE_PATH + str(user2.id),
                         headers={'x-auth-token': token1.value})
     assert response.status_code == 400
     assert 'already' in response.json()['detail']
@@ -130,3 +125,22 @@ def test_accept_forbidden(app: TestClient, token3: AccessToken,
     response = app.put(f'{BASE_PATH}accept/{friend_request.id}',
                        headers={'x-auth-token': token3.value})
     assert response.status_code == 403
+
+
+def test_list(app: TestClient, token1: AccessToken,
+              friend_request: FriendRequest):
+    response = app.get(f'{BASE_PATH}', headers={'x-auth-token': token1.value})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+def test_delete(app: TestClient, token1: AccessToken, friendship: Friendship):
+    response = app.delete(BASE_PATH + 'friendship/' + str(friendship.friend_id),
+                          headers={'x-auth-token': token1.value})
+    assert response.status_code == 204
+
+
+def test_delete_not_authorized(app: TestClient, friendship: Friendship):
+    response = app.delete(BASE_PATH + 'friendship/' + str(friendship.friend_id),
+                          headers={'x-auth-token': 'foobar'})
+    assert response.status_code == 401

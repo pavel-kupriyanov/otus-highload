@@ -5,11 +5,11 @@ import {bindActionCreators} from "redux";
 import {getUser, getFriends, clearUser, clearUsers} from "../../../app/actionCreators";
 import {Hobbies, UserList} from "../../common";
 import EditableHobbies from "./EditableHobbies";
+import FriendRequests from "./FriendRequests";
 
 
 class UserPage extends React.Component {
 
-// TODO: check move on same page with other user
 
   componentDidMount() {
     const {id, getUser, getFriends} = this.props;
@@ -23,17 +23,12 @@ class UserPage extends React.Component {
     clearUsers();
   }
 
-  isMyPage() {
-    const {id, currentUser} = this.props;
-    return Number(id) === currentUser.authentication.id;
-  }
-
 
   render() {
-    const {user, users, currentUser} = this.props;
+    const {id, user, users, currentUser} = this.props;
+    const isMyPage = Number(id) === currentUser.user.id;
 
-    return (
-      <div>
+    return <div>
         {user && user.id && <div>
           <h1>{user.first_name} {user.last_name}</h1>
           <p>Age: {user.age}</p>
@@ -41,13 +36,15 @@ class UserPage extends React.Component {
           {user.gender && <p>Gender: {user.gender}</p>}
         </div>}
         <h2>Hobbies</h2>
-        {this.isMyPage() ?
-          <EditableHobbies hobbies={currentUser.user.hobbies}/> :
-          <Hobbies hobbies={user.hobbies}/>}
+        {isMyPage ? <EditableHobbies hobbies={currentUser.user.hobbies}/> :
+          <Hobbies hobbies={user ? user.hobbies: []}/>}
+        {isMyPage && <React.Fragment>
+          <h2>Friend requests</h2>
+          <FriendRequests/>
+        </React.Fragment>}
         <h2>Friends</h2>
         <UserList users={users}/>
       </div>
-    );
   }
 }
 
