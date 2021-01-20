@@ -6,8 +6,14 @@ import {required, SimpleField} from "../../common";
 import {bindActionCreators} from "redux";
 import {addHobby, deleteHobby} from "../../../app/actionCreators";
 import {connect} from "react-redux";
+import {Button, Chip} from "@material-ui/core";
 
+const chipStyle = {
+  marginTop: '5px',
+  marginRight: '5px',
+}
 
+// TODO: fix add hobby bug
 class EditableHobbies extends React.Component {
 
   constructor(props) {
@@ -26,7 +32,7 @@ class EditableHobbies extends React.Component {
 
   render() {
     const {hobbies} = this.props;
-    const alreadyAdded = value => hobbies.find(hobby => hobby.name === value) ? 'Already added': null;
+    const alreadyAdded = value => hobbies.find(hobby => hobby.name === value) ? 'Already added' : null;
     const composeValidators = (...validators) => value =>
       validators.reduce((error, validator) => error || validator(value), undefined)
 
@@ -34,25 +40,32 @@ class EditableHobbies extends React.Component {
     return (
       <div>
         {hobbies.map(hobby => {
-          return <p key={'hobby_' + hobby.id}>
-            <span>{hobby.name}</span>
-            <button onClick={() => this.deleteHobby(hobby.id)}>Delete</button>
-          </p>
+          return <Chip
+            key={'hobby_' + hobby.id}
+            label={hobby.name}
+            onDelete={() => this.deleteHobby(hobby.id)}
+            style={chipStyle}/>
         })}
         <Form onSubmit={this.addHobby}>
           {props => (
-            <form onSubmit={props.handleSubmit}>
+            <form onSubmit={props.handleSubmit} style={{marginTop: '10px'}}>
               <Field name="hobby" validate={composeValidators(alreadyAdded, required)} type="text">
                 {({input, meta}) => {
                   return <SimpleField
                     input={input}
                     meta={meta}
                     label={"Hobby"}
-                    placeholder={"Hobby"}
                   />
                 }}
               </Field>
-              <button type="submit">Add</button>
+              <Button
+                style={{marginTop: '15px'}}
+                variant="contained"
+                color="primary"
+                type="submit"
+                size="large">
+                Submit
+              </Button>
             </form>
           )}
         </Form>

@@ -4,6 +4,7 @@ import {Field} from 'react-final-form';
 import {connect} from "react-redux";
 
 import {SimpleField, required} from "../../common";
+import {Button} from "@material-ui/core";
 
 
 class LoginForm extends React.Component {
@@ -19,7 +20,6 @@ class LoginForm extends React.Component {
               input={input}
               meta={meta}
               label={"Email"}
-              placeholder={"Email"}
               submitError={errors.email}
             />
           }}
@@ -30,13 +30,16 @@ class LoginForm extends React.Component {
               input={input}
               meta={meta}
               label={"Password"}
-              placeholder={"Password"}
               submitError={errors.password}
             />
           }}
         </Field>
         {errors.general && <div>{errors.general}</div>}
-        <button type="submit">Submit</button>
+        <div>
+          <Button variant="contained" color="primary" type="submit" size="large">
+            Submit
+          </Button>
+        </div>
       </form>
     )
   }

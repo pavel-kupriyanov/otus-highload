@@ -1,42 +1,68 @@
 import React from 'react';
-import {Link} from "react-router-dom";
-import PropTypes from "prop-types";
+import {withRouter} from "react-router-dom";
+import {AppBar, Toolbar, Button} from "@material-ui/core";
 import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
 import {logout} from "../../../app/actionCreators";
+import {Loader} from "../index";
 
 
 class Header extends React.Component {
 
+  constructor(props) {
+    super(props);
+    this.toPath = this.toPath.bind(this);
+  }
+
+
+  toPath(path) {
+    this.props.history.push(path);
+  }
+
 
   render() {
-    const {message, isLoading, isAuthenticated, logout} = this.props;
+    const {isAuthenticated, logout, user} = this.props;
+
 
     return (
-      <div>
-        <p><Link to="/login">Login</Link></p>
-        <p><Link to="/register">Register</Link></p>
-        {message && <p>Message: {message}</p>}
-        {isLoading && <p>Loading...</p>}
-        {isAuthenticated && <button onClick={logout}>Logout</button>}
-      </div>
+      <AppBar position="static">
+        <Toolbar>
+          <Button
+            color="inherit"
+            onClick={() => this.toPath('/')}>
+            Social Network
+          </Button>
+          {isAuthenticated && <Button
+            color="inherit"
+            onClick={() => this.toPath('/login')}>
+            {user.first_name} {user.last_name}
+          </Button>}
+          {isAuthenticated && <Button
+            color="inherit"
+            onClick={logout}>
+            Logout
+          </Button>}
+          {!isAuthenticated && <Button
+            color="inherit"
+            onClick={() => this.toPath('/login')}>
+            Login
+          </Button>}
+          {!isAuthenticated && <Button
+            color="inherit"
+            onClick={() => this.toPath('/register')}>
+            Register
+          </Button>}
+          <Loader/>
+        </Toolbar>
+      </AppBar>
     );
   }
 }
 
 
-Header.propTypes = {
-  isLoading: PropTypes.bool.isRequired,
-  message: PropTypes.string.isRequired,
-  isAuthenticated: PropTypes.bool.isRequired,
-  logout: PropTypes.func
-}
-
-
 const mapStateToProps = state => ({
-  isLoading: state.isLoading,
-  message: state.message,
-  isAuthenticated: state.currentUser.isAuthenticated
+  isAuthenticated: state.currentUser.isAuthenticated,
+  user: state.currentUser.user
 });
 
 const mapDispatchToProps = dispatch => {
@@ -46,4 +72,4 @@ const mapDispatchToProps = dispatch => {
 }
 
 
-export default connect(mapStateToProps, mapDispatchToProps)(Header);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Header));

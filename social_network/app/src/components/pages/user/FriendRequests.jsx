@@ -1,18 +1,16 @@
 import React from 'react';
 
-import {UserList} from "../../common";
 import {bindActionCreators} from "redux";
 import {getFriendRequestUsers} from "../../../app/actionCreators";
 import {connect} from "react-redux";
 import {REQUEST_STATUSES} from "../../../app/utils";
+import UserCard from "../../common/components/UserCard";
+import PropTypes from "prop-types";
+import {Grid} from "@material-ui/core";
 
 
 class FriendRequests extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {showDeclined: false}
-  }
 
   componentDidMount() {
     const {currentUser} = this.props;
@@ -25,26 +23,25 @@ class FriendRequests extends React.Component {
 
   render() {
     const {friendRequestUsers, friendRequests, user} = this.props.currentUser;
-    const {showDeclined} = this.state;
     let users = friendRequestUsers;
-    if (!showDeclined) {
+    if (!this.props.showDeclined) {
       const declinedIds = friendRequests
         .filter(req => req.status !== REQUEST_STATUSES.DECLINED)
         .map(req => req.from_user === user.id ? req.to_user : req.from_user)
       users = users.filter(user => declinedIds.find(id => id === user.id))
     }
 
-    console.log(friendRequestUsers);
-    return <div>
-      Show declined:
-      <input
-        type='checkbox'
-        value={showDeclined}
-        onChange={() => this.setState({showDeclined: !showDeclined})}
-      />
-      <UserList users={users}/>
-    </div>
+    return <Grid item container spacing={2} justify="space-between" direction="row">
+      {users.map(user => <Grid item xs={6} key={'friend_request_user_' + user.id}>
+          <UserCard user={user}/>
+        </Grid>
+      )}
+    </Grid>
   }
+}
+
+FriendRequests.propTypes = {
+  showDeclined: PropTypes.bool.isRequired
 }
 
 const mapStateToProps = state => ({

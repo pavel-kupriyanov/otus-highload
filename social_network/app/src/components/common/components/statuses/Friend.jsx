@@ -3,6 +3,7 @@ import {bindActionCreators} from "redux";
 import {deleteFriendship} from "../../../../app/actionCreators";
 import {connect} from "react-redux";
 import PropTypes from "prop-types";
+import {Chip} from "@material-ui/core";
 
 
 class Friend extends React.Component {
@@ -18,10 +19,7 @@ class Friend extends React.Component {
   }
 
   render() {
-    return <div>
-      <h4>Friend</h4>
-      <button onClick={this.handleDelete}>Delete</button>
-    </div>
+    return <Chip label="Friend" onDelete={this.handleDelete} color="primary"/>
   }
 }
 

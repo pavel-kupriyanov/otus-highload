@@ -9,11 +9,11 @@ class AuthRedirect extends React.Component {
 
   render() {
     const {currentUser} = this.props;
-
+    const redirect = currentUser && currentUser.isAuthenticated;
     return (
       <React.Fragment>
-        {currentUser && currentUser.isAuthenticated ?
-          <Redirect to={{pathname: `/${currentUser.authentication.user_id}`}}/> : ''}
+        {redirect ? <Redirect to={{pathname: `/${currentUser.authentication.user_id}`}}/> :
+          this.props.children}
       </React.Fragment>
     );
   }

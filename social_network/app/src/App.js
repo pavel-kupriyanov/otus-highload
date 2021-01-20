@@ -1,18 +1,16 @@
 import React from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-} from "react-router-dom";
+import {BrowserRouter as Router, Switch, Route,} from "react-router-dom";
 import {bindActionCreators} from "redux";
 import {getUserData} from "./app/actionCreators";
 import {connect} from "react-redux";
-
+import {Container, Grid} from "@material-ui/core";
 
 import AuthRedirect from "./components/common/components/AuthRedirect";
 import {LoginPage, RegisterPage, UserPage, UsersPage} from "./components/pages";
 import Header from "./components/common/components/Header";
+import {Loader, Notification} from "./components/common";
 
+import './style.css'
 
 class App extends React.Component {
 
@@ -22,11 +20,11 @@ class App extends React.Component {
     if (currentUser.isAuthenticated && currentUser.user.id === 0) {
       getUserData(currentUser.authentication.user_id);
     }
-      this.interval = setInterval(() => {
-        if (currentUser.isAuthenticated){
-          getUserData(currentUser.authentication.user_id);
-        }
-      }, 60 * 1000);
+    this.interval = setInterval(() => {
+      if (currentUser.isAuthenticated) {
+        getUserData(currentUser.authentication.user_id);
+      }
+    }, 60 * 1000);
 
   }
 
@@ -46,33 +44,35 @@ class App extends React.Component {
 
     return (
       <Router>
-        <div className="App">
-          <Header/>
-          <Switch>
-            <Route path="/login" render={() =>
-              <React.Fragment>
-                <AuthRedirect/>
-                <LoginPage/>
-              </React.Fragment>
-            }>
-            </Route>
-            <Route path="/register" render={() =>
-              <React.Fragment>
-                <AuthRedirect/>
-                <RegisterPage/>
-              </React.Fragment>
-            }>
-            </Route>
-            <Route path="/:id" render={({match}) =>
-              <UserPage
-                key={match.params.id}
-                id={match.params.id}/>
-            }>
-            </Route>
-            <Route path="/" render={() => <UsersPage/>}>
-            </Route>
-          </Switch>
-        </div>
+        <Header/>
+        <Notification/>
+        <Container>
+          <Grid>
+            <Grid container justify='center'>
+              <Switch>
+                <Route path="/login">
+                  <AuthRedirect>
+                    <LoginPage/>
+                  </AuthRedirect>
+                </Route>
+                <Route path="/register">
+                  <AuthRedirect>
+                    <RegisterPage/>
+                  </AuthRedirect>
+                </Route>
+                <Route path="/:id" render={({match}) =>
+                  <UserPage
+                    key={match.params.id}
+                    id={match.params.id}/>
+                }>
+                </Route>
+                <Route path="/">
+                  <UsersPage/>
+                </Route>
+              </Switch>
+            </Grid>
+          </Grid>
+        </Container>
       </Router>
     );
   }

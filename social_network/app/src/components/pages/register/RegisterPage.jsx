@@ -4,9 +4,21 @@ import {bindActionCreators} from "redux";
 import {Redirect} from "react-router-dom";
 import {Form} from "react-final-form";
 import PropTypes from "prop-types";
+import {Card, Typography} from "@material-ui/core";
+
 
 import {register} from "../../../app/actionCreators";
 import RegisterForm from "./Form";
+
+
+const style = {
+  minWidth: '50%',
+  minHeight: '200px',
+  padding: '20px',
+  margin: '40px',
+  textAlign: 'center',
+  justifyContent: 'center'
+}
 
 
 const validateForm = values => {
@@ -36,18 +48,21 @@ class RegisterPage extends React.Component {
   render() {
 
     return (
-      <div>
+      <>
         {this.state.redirect ?
           <Redirect to={{pathname: "/login"}}/> :
-          <div>
-            <h1>Register</h1>
+          <Card style={style}>
+            <Typography variant="h4" component="h2">
+              Register
+            </Typography>
             <Form
               component={RegisterForm}
               onSubmit={this.handleSubmit}
               validate={validateForm}
             />
-          </div>}
-      </div>);
+          </Card>
+        }
+      </>);
   }
 }
 

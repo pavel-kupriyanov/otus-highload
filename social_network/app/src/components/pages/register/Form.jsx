@@ -4,7 +4,7 @@ import {Field} from 'react-final-form';
 
 import {SimpleField, SimpleSelect, required} from "../../common";
 import {connect} from "react-redux";
-
+import {Button} from "@material-ui/core";
 
 
 class RegisterForm extends React.Component {
@@ -86,13 +86,13 @@ class RegisterForm extends React.Component {
             return <SimpleSelect
               input={input}
               meta={meta}
-              label={"Gender"}
+              label="Gender"
               submitError={errors.gender}
               options={genderOptions}
             />
           }}
         </Field>
-        <Field name="age" type="number">
+        <Field name="age" type="number" validate={required}>
           {({input, meta}) => {
             return <SimpleField
               input={input}
@@ -104,7 +104,11 @@ class RegisterForm extends React.Component {
           }}
         </Field>
         {errors.general && <div>{errors.general}</div>}
-        <button type="submit">Submit</button>
+        <div>
+          <Button variant="contained" color="primary" type="submit" size="large">
+            Submit
+          </Button>
+        </div>
       </form>
     )
   }

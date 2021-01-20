@@ -1,16 +1,24 @@
 import React from 'react';
 import PropTypes from "prop-types";
 
+import {Chip} from "@material-ui/core";
+
+const chipStyle = {
+  marginTop: '3px',
+  marginRight: '5px',
+}
 
 export default class Hobbies extends React.Component {
 
   render() {
     const {hobbies} = this.props;
-
+    // TODO: not unique key, add user
     return (
-      <div>
-        {hobbies.map(hobby => <p key={'hobby_' + hobby.id}>{hobby.name}</p>)}
-      </div>
+      <>
+        {hobbies.map(hobby =>
+          <Chip key={'hobby_' + hobby.id} label={hobby.name} style={chipStyle}/>
+        )}
+      </>
     );
   }
 }

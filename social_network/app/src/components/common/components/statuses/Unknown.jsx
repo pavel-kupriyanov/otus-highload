@@ -3,9 +3,9 @@ import {bindActionCreators} from "redux";
 import {addFriendRequest} from "../../../../app/actionCreators";
 import {connect} from "react-redux";
 import PropTypes from "prop-types";
+import {Chip} from "@material-ui/core";
 
 
-// TODO: check that UserCard will re-render after it
 class Unknown extends React.Component {
 
   constructor(props) {
@@ -19,9 +19,7 @@ class Unknown extends React.Component {
   }
 
   render() {
-    return <div>
-      <button onClick={this.handleAdd}>Add friend</button>
-    </div>
+    return <Chip label="Add Friend" onClick={this.handleAdd}/>
   }
 }
 

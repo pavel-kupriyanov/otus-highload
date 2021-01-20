@@ -1,22 +1,50 @@
-export function SimpleField({input, meta, label, placeholder, submitError}) {
-  return <div>
-    <label>{label}</label>
-    <input {...input} placeholder={placeholder}/>
-    {meta.error && meta.touched && <span>{meta.error}</span>}
-    {submitError && <span>{submitError}</span>}
-  </div>
+import {TextField, FormControl, InputLabel, Select, MenuItem} from "@material-ui/core";
+
+
+export function SimpleField(
+  {
+    input: {name, onChange, value, ...restInput},
+    meta, submitError, ...rest
+  }) {
+  return <TextField
+    {...rest}
+    name={name}
+    helperText={meta.touched ? meta.error || submitError : undefined}
+    error={(meta.error || submitError) && meta.touched}
+    inputProps={restInput}
+    onChange={onChange}
+    value={value}
+    style={{margin: 10, minWidth: '60%'}}
+    id="outlined-basic"
+    variant="outlined"
+  />
 }
 
 
-export function SimpleSelect({input, meta, label, options, submitError}) {
-  return <div>
-    <label>{label}</label>
-    <select  {...input}>
-      {Object.keys(options).map(option => <option key={"select" + option} value={option}>
-        {options[option]}
-      </option>)}
-    </select>
-    {meta.error && meta.touched && <span>{meta.error}</span>}
-    {submitError && <span>{submitError}</span>}
-  </div>
+export function SimpleSelect(
+  {
+    input: {name, onChange, value, ...restInput},
+    meta, submitError, label, options, ...rest
+  }) {
+  return <FormControl variant="outlined" style={{margin: 10, minWidth: '60%'}}>
+    <InputLabel id="demo-simple-select-outlined-label">{label}</InputLabel>
+    <Select
+      {...rest}
+      name={name}
+      helperText={meta.touched ? meta.error || submitError : undefined}
+      error={(meta.error || submitError) && meta.touched}
+      inputProps={restInput}
+      labelId="demo-simple-select-outlined-label"
+      id="demo-simple-select-outlined"
+      value={value}
+      onChange={onChange}
+      label={label}
+    >
+      {Object.keys(options).map(option =>
+        <MenuItem key={"select" + option} value={option}>
+          {options[option]}
+        </MenuItem>)}
+    </Select>
+  </FormControl>
+
 }

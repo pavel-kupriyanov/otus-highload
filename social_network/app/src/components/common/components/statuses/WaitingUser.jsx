@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 // TODO: remove ../../ ...
 import {deleteFriendRequest} from "../../../../app/actionCreators";
 import {REQUEST_STATUSES} from "../../../../app/utils";
+import {Chip} from "@material-ui/core";
 
 
 class WaitingUser extends React.Component {
@@ -31,11 +32,12 @@ class WaitingUser extends React.Component {
   render() {
     const friendRequest = this.getFriendRequest();
     const isWaiting = friendRequest.status === REQUEST_STATUSES.WAITING;
-
-    return <div>
-      {isWaiting ? <h4>Waiting user response</h4> : <h4>User decline your request</h4>}
-      <button onClick={() => this.handleDelete(friendRequest)}>Delete</button>
-    </div>
+    const text = isWaiting ? 'Waiting user response' : 'User decline your request';
+    return <Chip
+      label={text}
+      onDelete={() => this.handleDelete(friendRequest)}
+      color='secondary'
+    />
   }
 }
 

@@ -1,9 +1,8 @@
 import React from "react";
+import {Chip} from "@material-ui/core";
 
 export default class You extends React.Component{
   render() {
-    return <div>
-      <h4>You</h4>
-    </div>
+    return <Chip label="You" color="primary"/>
   }
 }

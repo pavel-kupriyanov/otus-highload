@@ -5,7 +5,17 @@ import {Form} from "react-final-form";
 
 import {login} from "../../../app/actionCreators";
 import LoginForm from "./Form";
+import {Card, Typography} from "@material-ui/core";
 
+
+const style = {
+  minWidth: '50%',
+  minHeight: '200px',
+  padding: '20px',
+  margin: '40px',
+  textAlign: 'center',
+  justifyContent: 'center'
+}
 
 class LoginPage extends React.Component {
 
@@ -20,13 +30,15 @@ class LoginPage extends React.Component {
 
   render() {
     return (
-      <div>
-        <h1>Login</h1>
+      <Card style={style}>
+         <Typography variant="h4" component="h2">
+          Login
+        </Typography>
         <Form
           component={LoginForm}
           onSubmit={this.handleSubmit}
         />
-      </div>
+      </Card>
     );
   }
 }
