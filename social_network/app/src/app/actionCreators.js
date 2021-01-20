@@ -30,7 +30,7 @@ import {
 } from "./utils";
 import {store} from './store';
 
-export const API_BASE = "http://localhost:8000/api/v1";
+export const API_BASE = '/api/v1';
 
 const AXIOS_CONFIG = {
   timeout: 20000,
@@ -127,17 +127,17 @@ export const getUserData = id => {
   return async dispatch => {
     const axios = getAuthorizedAxios();
     try {
-      const userPromise = axios.get(`${API_BASE}/users/${id}`);
+      const userPromise = axios.get(`${API_BASE}/users/${id}/`);
       const friendsPromise = axios.get(`${API_BASE}/users/?friends_of=${id}`);
-      const friendRequestsPromise = axios.get(`${API_BASE}/friendships`);
+      const friendRequestsPromise = axios.get(`${API_BASE}/friendships/`);
       const [user, friends, friendRequests] = await Promise.all(
         [userPromise, friendsPromise, friendRequestsPromise]
       );
       dispatch({
         type: GET_USER_DATA, payload: {
           user: user.data,
-          friends: friends.data,
-          friendRequests: friendRequests.data
+          friends: friends.data || [],
+          friendRequests: friendRequests.data || []
         }
       });
     } catch (e) {
@@ -224,7 +224,7 @@ export const addHobby = name => {
     const axios = getAuthorizedAxios();
     try {
       const createResponse = await axios.post(`${API_BASE}/hobbies/`, {name});
-      await axios.put(`${API_BASE}/users/hobbies/${createResponse.data.id}`);
+      await axios.put(`${API_BASE}/users/hobbies/${createResponse.data.id}/`);
       dispatch({type: ADD_HOBBY_SUCCESS, payload: createResponse.data});
     } catch (e) {
       console.log(e);
@@ -239,7 +239,7 @@ export const deleteHobby = id => {
     dispatch(showLoader());
     const axios = getAuthorizedAxios();
     try {
-      await axios.delete(`${API_BASE}/users/hobbies/${id}`);
+      await axios.delete(`${API_BASE}/users/hobbies/${id}/`);
       dispatch({type: DELETE_HOBBY_SUCCESS, payload: id});
     } catch (e) {
       console.log(e);
@@ -295,7 +295,7 @@ export const deleteFriendship = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      await axios.delete(`${API_BASE}/friendships/friendship/${id}`,);
+      await axios.delete(`${API_BASE}/friendships/friendship/${id}/`,);
       dispatch({type: DELETE_FRIENDSHIP, payload: id});
     } catch (e) {
       console.log(e);
@@ -310,7 +310,7 @@ export const addFriendRequest = userId => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      const response = await axios.post(`${API_BASE}/friendships/${userId}`);
+      const response = await axios.post(`${API_BASE}/friendships/${userId}/`);
       dispatch({type: ADD_FRIEND_REQUEST, payload: response.data});
     } catch (e) {
       console.log(e);
@@ -325,7 +325,7 @@ export const deleteFriendRequest = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      await axios.delete(`${API_BASE}/friendships/${id}`);
+      await axios.delete(`${API_BASE}/friendships/${id}/`);
       dispatch({type: DELETE_FRIEND_REQUEST, payload: id});
     } catch (e) {
       console.log(e);
@@ -340,7 +340,7 @@ export const acceptFriendRequest = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      const response = await axios.put(`${API_BASE}/friendships/accept/${id}`);
+      const response = await axios.put(`${API_BASE}/friendships/accept/${id}/`);
       const userResponse = await axios.get(`${API_BASE}/users/${response.data.friend_id}/`);
       dispatch({type: ACCEPT_FRIEND_REQUEST, payload: {requestId: id, friend: userResponse.data}});
     } catch (e) {
@@ -357,7 +357,7 @@ export const declineFriendRequest = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      await axios.put(`${API_BASE}/friendships/decline/${id}`);
+      await axios.put(`${API_BASE}/friendships/decline/${id}/`);
       dispatch({type: DECLINE_FRIEND_REQUEST, payload: id});
     } catch (e) {
       console.log(e);

@@ -38,7 +38,7 @@ class HobbiesViewSet:
         except DatabaseError:
             return await self.hobby_manager.get_by_name(p.name)
 
-    @router.get('/{id}', responses={
+    @router.get('/{id}/', responses={
         200: {'description': 'Success'},
         404: {'description': 'Hobby not found.'}
     })

@@ -1,10 +1,12 @@
+import os.path
 from social_network.settings.base import (
     BaseSettings,
     UvicornSettings,
     DatabaseSettings,
 )
 
-CONFIG_PATH = 'settings/settings.json'
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_PATH = os.path.join(ROOT_DIR, 'settings/settings.json')
 
 
 class Settings(BaseSettings):

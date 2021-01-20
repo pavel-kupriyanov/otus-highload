@@ -221,14 +221,14 @@ export default function reducer(state = initialState, action) {
 
     case DECLINE_FRIEND_REQUEST: {
       const friendRequests = state.userData.friendRequests;
-      const requestsWithoutChanged = friendRequests.filter(req => req.id !== payload);
+      const requestsWithoutChanges = friendRequests.filter(req => req.id !== payload);
       const changedRequest = friendRequests.find(req => req.id === payload);
       changedRequest.status = REQUEST_STATUSES.DECLINED;
       return {
         ...state,
         userData: {
           ...state.userData,
-          friendRequests: [...requestsWithoutChanged, changedRequest],
+          friendRequests: [...requestsWithoutChanges, changedRequest],
         }
       }
     }

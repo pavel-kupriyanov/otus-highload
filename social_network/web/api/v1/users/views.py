@@ -54,7 +54,7 @@ class UserViewSet:
             user.hobbies = hobbies[user.id]
         return users
 
-    @router.get('/{id}', response_model=User, responses={
+    @router.get('/{id}/', response_model=User, responses={
         200: {'description': 'User.'},
         404: {'description': 'User not found.'}
     })
@@ -66,7 +66,7 @@ class UserViewSet:
         user.hobbies = hobbies[user.id]
         return user
 
-    @router.put('/hobbies/{id}', status_code=201, response_model=UserHobby,
+    @router.put('/hobbies/{id}/', status_code=201, response_model=UserHobby,
                 responses={
                     200: {'description': 'Hobby added.'},
                     400: {'description': 'Already added.'},
@@ -78,7 +78,7 @@ class UserViewSet:
         except DatabaseError:
             raise HTTPException(400, detail='Hobby not found or already added')
 
-    @router.delete('/hobbies/{id}', status_code=204, responses={
+    @router.delete('/hobbies/{id}/', status_code=204, responses={
         204: {'description': 'Hobby removed.'},
     })
     @authorize_only

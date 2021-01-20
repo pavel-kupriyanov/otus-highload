@@ -115,7 +115,6 @@ class UsersPage extends React.Component {
 }
 
 UsersPage.propTypes = {
-  users: PropTypes.array,
   getUsers: PropTypes.func.isRequired,
   clearUsers: PropTypes.func.isRequired,
 }
