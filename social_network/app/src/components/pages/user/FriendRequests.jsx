@@ -13,16 +13,16 @@ class FriendRequests extends React.Component {
 
 
   componentDidMount() {
-    const {currentUser} = this.props;
-    const friendRequests = currentUser.friendRequests;
+    const {userData} = this.props;
+    const friendRequests = userData.friendRequests;
     const ids = friendRequests.map(req =>
-      req.from_user === currentUser.user.id ? req.to_user : req.from_user
+      req.from_user === userData.user.id ? req.to_user : req.from_user
     )
     this.props.getFriendRequestUsers(ids);
   }
 
   render() {
-    const {friendRequestUsers, friendRequests, user} = this.props.currentUser;
+    const {friendRequestUsers, friendRequests, user} = this.props.userData;
     let users = friendRequestUsers;
     if (!this.props.showDeclined) {
       const declinedIds = friendRequests
@@ -45,7 +45,7 @@ FriendRequests.propTypes = {
 }
 
 const mapStateToProps = state => ({
-  currentUser: state.currentUser,
+  userData: state.userData,
 });
 
 const mapDispatchToProps = dispatch => {

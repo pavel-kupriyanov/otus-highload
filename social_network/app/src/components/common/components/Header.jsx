@@ -61,8 +61,8 @@ class Header extends React.Component {
 
 
 const mapStateToProps = state => ({
-  isAuthenticated: state.currentUser.isAuthenticated,
-  user: state.currentUser.user
+  isAuthenticated: state.userData.isAuthenticated,
+  user: state.userData.user
 });
 
 const mapDispatchToProps = dispatch => {

@@ -9,7 +9,6 @@ import {
   REGISTER_FAILED,
   REGISTER_SUCCESS,
   GET_USER_SUCCESS,
-  GET_USER_FAILED,
   ADD_HOBBY_SUCCESS,
   DELETE_HOBBY_SUCCESS,
   LOGOUT,
@@ -33,8 +32,6 @@ import {store} from './store';
 
 export const API_BASE = "http://localhost:8000/api/v1";
 
-// TODO: show loader on all actions
-
 const AXIOS_CONFIG = {
   timeout: 20000,
   headers: {
@@ -51,7 +48,7 @@ const getAuthorizedAxios = () => {
     ...AXIOS_CONFIG,
     headers: {
       ...AXIOS_CONFIG.headers,
-      "X-Auth-Token": state.currentUser.authentication && state.currentUser.authentication.value
+      "X-Auth-Token": state.userData.authentication && state.userData.authentication.value
     }
   }
   return axiosBase.create(config)
@@ -89,6 +86,7 @@ export const login = (email, password) => {
       storeTokenIntoStorage(response.data);
       dispatch({type: LOGIN_SUCCESS, payload: response.data});
     } catch (e) {
+      console.log(e);
       switch (e.response.status) {
         case 422: {
           dispatch({
@@ -171,7 +169,8 @@ export const register = (
       dispatch(showMessage("Success!"));
       dispatch({type: REGISTER_SUCCESS});
     } catch (e) {
-      dispatch(showMessage("Failed!"));
+      console.log(e);
+      dispatch(showMessage("Registration failed"));
       switch (e.response.status) {
         case 422: {
           dispatch({
@@ -206,27 +205,12 @@ export const getUser = userId => {
     let isSuccess = false;
     dispatch(showLoader());
     try {
-      // TODO: remove error handling
       const response = await axios.get(`${API_BASE}/users/${userId}/`);
       isSuccess = true;
       dispatch({type: GET_USER_SUCCESS, payload: response.data});
     } catch (e) {
-      switch (e.response.status) {
-        case 404: {
-          dispatch({
-            type: GET_USER_FAILED,
-            payload: e.response.data.detail
-          });
-          break;
-        }
-        default: {
-          dispatch({
-            type: GET_USER_FAILED,
-            payload: {general: "Unexpected error"}
-          });
-        }
-      }
-      dispatch(showMessage('Failed'))
+      console.log(e);
+      dispatch(showMessage('Get user failed'))
     }
     dispatch(hideLoader());
     return isSuccess;
@@ -239,12 +223,12 @@ export const addHobby = name => {
     dispatch(showLoader());
     const axios = getAuthorizedAxios();
     try {
-      // todo: optimize it
       const createResponse = await axios.post(`${API_BASE}/hobbies/`, {name});
       await axios.put(`${API_BASE}/users/hobbies/${createResponse.data.id}`);
       dispatch({type: ADD_HOBBY_SUCCESS, payload: createResponse.data});
     } catch (e) {
-      dispatch(showMessage('Failed'))
+      console.log(e);
+      dispatch(showMessage('Add hobby failed'))
     }
     dispatch(hideLoader());
   }
@@ -258,13 +242,13 @@ export const deleteHobby = id => {
       await axios.delete(`${API_BASE}/users/hobbies/${id}`);
       dispatch({type: DELETE_HOBBY_SUCCESS, payload: id});
     } catch (e) {
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Delete hobby failed'));
     }
     dispatch(hideLoader());
   }
 }
 
-// TODO: fix loader many requests
 export const getFriends = id => {
   return async dispatch => {
     dispatch(showLoader());
@@ -272,7 +256,8 @@ export const getFriends = id => {
       const response = await axios.get(`${API_BASE}/users/?friends_of=${id}`,);
       dispatch({type: GET_USERS, payload: response.data});
     } catch (e) {
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Get friends failed'));
     }
     dispatch(hideLoader());
   }
@@ -298,7 +283,8 @@ export const getUsers = (first_name, last_name, page = 1, paginate_by = 100) => 
       const response = await axios.get(`${API_BASE}/users/?${query}`,);
       dispatch({type: GET_USERS, payload: response.data});
     } catch (e) {
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Get users failed'));
     }
     dispatch(hideLoader());
   }
@@ -312,8 +298,8 @@ export const deleteFriendship = id => {
       await axios.delete(`${API_BASE}/friendships/friendship/${id}`,);
       dispatch({type: DELETE_FRIENDSHIP, payload: id});
     } catch (e) {
-      // TODO: rename all failed
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Friendship deleting failed'));
     }
     dispatch(hideLoader());
   }
@@ -327,8 +313,8 @@ export const addFriendRequest = userId => {
       const response = await axios.post(`${API_BASE}/friendships/${userId}`);
       dispatch({type: ADD_FRIEND_REQUEST, payload: response.data});
     } catch (e) {
-      // TODO: different variants of errors
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Add friend failed'));
     }
     dispatch(hideLoader());
   }
@@ -342,7 +328,8 @@ export const deleteFriendRequest = id => {
       await axios.delete(`${API_BASE}/friendships/${id}`);
       dispatch({type: DELETE_FRIEND_REQUEST, payload: id});
     } catch (e) {
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Friend request deleting failed'));
     }
     dispatch(hideLoader());
   }
@@ -357,7 +344,8 @@ export const acceptFriendRequest = id => {
       const userResponse = await axios.get(`${API_BASE}/users/${response.data.friend_id}/`);
       dispatch({type: ACCEPT_FRIEND_REQUEST, payload: {requestId: id, friend: userResponse.data}});
     } catch (e) {
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Friend request accepting failed.'));
     }
     dispatch(hideLoader());
   }
@@ -372,7 +360,8 @@ export const declineFriendRequest = id => {
       await axios.put(`${API_BASE}/friendships/decline/${id}`);
       dispatch({type: DECLINE_FRIEND_REQUEST, payload: id});
     } catch (e) {
-      dispatch(showMessage('Failed'));
+      console.log(e);
+      dispatch(showMessage('Friend request declining failed.'));
     }
     dispatch(hideLoader());
   }
@@ -386,7 +375,7 @@ export const getFriendRequestUsers = ids => {
       const response = await axios.get(`${API_BASE}/users/?${arrayToQueryString('ids', ids)}`);
       dispatch({type: GET_FRIEND_REQUEST_USERS, payload: response.data});
     } catch (e) {
-      dispatch(showMessage('Failed'));
+      console.log(e);
     }
     dispatch(hideLoader());
   }

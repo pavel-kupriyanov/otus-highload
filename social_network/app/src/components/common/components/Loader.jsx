@@ -11,7 +11,7 @@ class Loader extends React.Component {
 
     return (
       <>
-        {this.props.isLoading && <CircularProgress color="white"/>}
+        {!!this.props.requestCount && <CircularProgress color="inherit"/>}
       </>
     );
   }
@@ -19,7 +19,7 @@ class Loader extends React.Component {
 
 
 const mapStateToProps = state => ({
-  isLoading: state.isLoading,
+  requestCount: state.requestCount,
 });
 
 

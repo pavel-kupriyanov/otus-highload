@@ -12,11 +12,11 @@ export default class Hobbies extends React.Component {
 
   render() {
     const {hobbies} = this.props;
-    // TODO: not unique key, add user
+    const key = Math.random().toString(36).substring(7);
     return (
       <>
         {hobbies.map(hobby =>
-          <Chip key={'hobby_' + hobby.id} label={hobby.name} style={chipStyle}/>
+          <Chip key={key + hobby.id} label={hobby.name} style={chipStyle}/>
         )}
       </>
     );

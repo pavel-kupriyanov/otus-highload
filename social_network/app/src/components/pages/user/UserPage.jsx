@@ -42,9 +42,9 @@ class UserPage extends React.Component {
 
 
   render() {
-    const {id, user, users, currentUser} = this.props;
+    const {id, user, users, userData} = this.props;
     const {showDeclinedFriendRequests} = this.state;
-    const isMyPage = Number(id) === currentUser.user.id;
+    const isMyPage = Number(id) === userData.user.id;
 
     return <Grid item container spacing={2} justify='space-between' direction='row'>
       <Grid item xs={6}>
@@ -60,11 +60,11 @@ class UserPage extends React.Component {
           <Typography variant='h5' component='h2'>
             Hobbies
           </Typography>
-          {isMyPage ? <EditableHobbies hobbies={currentUser.user.hobbies}/> :
+          {isMyPage ? <EditableHobbies hobbies={userData.user.hobbies}/> :
             <Hobbies hobbies={user ? user.hobbies : []}/>}
         </Card>
       </Grid>
-      {(isMyPage && !!currentUser.friendRequests.length) && <>
+      {(isMyPage && !!userData.friendRequests.length) && <>
         <Grid item xs={12} style={gridStyle}>
           <Typography variant='h5' component='h2' style={
             {justifyContent: 'space-between', display: 'flex'}}
@@ -118,7 +118,7 @@ UserPage.propTypes = {
 
 const mapStateToProps = state => ({
   user: state.user,
-  currentUser: state.currentUser,
+  userData: state.userData,
   users: state.users,
 });
 

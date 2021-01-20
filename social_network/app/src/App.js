@@ -8,7 +8,7 @@ import {Container, Grid} from "@material-ui/core";
 import AuthRedirect from "./components/common/components/AuthRedirect";
 import {LoginPage, RegisterPage, UserPage, UsersPage} from "./components/pages";
 import Header from "./components/common/components/Header";
-import {Loader, Notification} from "./components/common";
+import {Notification} from "./components/common";
 
 import './style.css'
 
@@ -16,23 +16,23 @@ class App extends React.Component {
 
 
   componentDidMount() {
-    const {currentUser, getUserData} = this.props;
-    if (currentUser.isAuthenticated && currentUser.user.id === 0) {
-      getUserData(currentUser.authentication.user_id);
+    const {userData, getUserData} = this.props;
+    if (userData.isAuthenticated && userData.user.id === 0) {
+      getUserData(userData.authentication.user_id);
     }
     this.interval = setInterval(() => {
-      if (currentUser.isAuthenticated) {
-        getUserData(currentUser.authentication.user_id);
+      if (userData.isAuthenticated) {
+        getUserData(userData.authentication.user_id);
       }
     }, 60 * 1000);
 
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const {currentUser, getUserData} = this.props;
-    const stateChanged = prevProps.currentUser.isAuthenticated !== currentUser.isAuthenticated;
-    if (stateChanged && currentUser.isAuthenticated) {
-      getUserData(currentUser.authentication.user_id);
+    const {userData, getUserData} = this.props;
+    const stateChanged = prevProps.userData.isAuthenticated !== userData.isAuthenticated;
+    if (stateChanged && userData.isAuthenticated) {
+      getUserData(userData.authentication.user_id);
     }
   }
 
@@ -80,7 +80,7 @@ class App extends React.Component {
 
 
 const mapStateToProps = state => ({
-  currentUser: state.currentUser,
+  userData: state.userData,
 });
 
 const mapDispatchToProps = dispatch => {

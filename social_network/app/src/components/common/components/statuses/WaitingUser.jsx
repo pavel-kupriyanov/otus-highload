@@ -3,7 +3,6 @@ import {bindActionCreators} from "redux";
 import {connect} from "react-redux";
 import PropTypes from "prop-types";
 
-// TODO: remove ../../ ...
 import {deleteFriendRequest} from "../../../../app/actionCreators";
 import {REQUEST_STATUSES} from "../../../../app/utils";
 import {Chip} from "@material-ui/core";
@@ -18,9 +17,9 @@ class WaitingUser extends React.Component {
   }
 
   getFriendRequest() {
-    const {currentUser, user} = this.props;
-    return currentUser.friendRequests.find(req => {
-      return req.from_user === currentUser.user.id && req.to_user === user.id;
+    const {userData, user} = this.props;
+    return userData.friendRequests.find(req => {
+      return req.from_user === userData.user.id && req.to_user === user.id;
     })
   }
 
@@ -46,7 +45,7 @@ WaitingUser.propTypes = {
 }
 
 const mapStateToProps = state => ({
-  currentUser: state.currentUser
+  userData: state.userData
 });
 
 

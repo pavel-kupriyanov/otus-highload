@@ -13,7 +13,6 @@ const chipStyle = {
   marginRight: '5px',
 }
 
-// TODO: fix add hobby bug
 class EditableHobbies extends React.Component {
 
   constructor(props) {
@@ -74,7 +73,6 @@ class EditableHobbies extends React.Component {
   }
 }
 
-// TODO: autocomplete
 EditableHobbies.propTypes = {
   hobbies: PropTypes.array.isRequired,
   addHobby: PropTypes.func,

@@ -36,7 +36,7 @@ UserInfo.propTypes = {
 
 
 const mapStateToProps = state => ({
-  isAuthenticated: state.currentUser.isAuthenticated,
+  isAuthenticated: state.userData.isAuthenticated,
 });
 
 

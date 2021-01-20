@@ -17,27 +17,26 @@ const statusComponents = {
 class UserStatus extends React.Component {
 
   getComponent() {
-    // TODO: rename currentUser in props
-    const {user, currentUser} = this.props;
-    const current = currentUser.user;
+    const {user, userData} = this.props;
+    const current = userData.user;
 
-    if (!currentUser.isAuthenticated) {
+    if (!userData.isAuthenticated) {
       return statusComponents.UNKNOWN;
     }
 
-    if (user.id === currentUser.authentication.user_id) {
+    if (user.id === userData.authentication.user_id) {
       return statusComponents.YOU;
     }
-    if (currentUser.friends.find(friend => friend.id === user.id)) {
+    if (userData.friends.find(friend => friend.id === user.id)) {
       return statusComponents.FRIEND;
     }
-    const friendRequestFrom = currentUser.friendRequests.find(req => {
+    const friendRequestFrom = userData.friendRequests.find(req => {
       return req.from_user === current.id && req.to_user === user.id;
     })
     if (friendRequestFrom) {
       return statusComponents.WAITING_USER_RESPONSE
     }
-    const friendRequestTo = currentUser.friendRequests.find(req => {
+    const friendRequestTo = userData.friendRequests.find(req => {
       return req.to_user === current.id && req.from_user === user.id;
     })
     if (friendRequestTo) {
@@ -57,7 +56,7 @@ UserStatus.propTypes = {
 }
 
 const mapStateToProps = state => ({
-  currentUser: state.currentUser,
+  userData: state.userData,
 });
 
 

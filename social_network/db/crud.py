@@ -14,7 +14,6 @@ DELETE = 'DELETE FROM {table_name} WHERE id = %s;'
 
 
 class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
-    # TODO: link M with base model
 
     async def _create(self, params: Tuple[Any, ...]) -> M:
         fields = [f for f in self.model._fields if f != 'id']

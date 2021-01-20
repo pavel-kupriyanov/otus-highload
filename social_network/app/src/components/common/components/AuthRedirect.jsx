@@ -8,11 +8,11 @@ class AuthRedirect extends React.Component {
 
 
   render() {
-    const {currentUser} = this.props;
-    const redirect = currentUser && currentUser.isAuthenticated;
+    const {userData} = this.props;
+    const redirect = userData && userData.isAuthenticated;
     return (
       <React.Fragment>
-        {redirect ? <Redirect to={{pathname: `/${currentUser.authentication.user_id}`}}/> :
+        {redirect ? <Redirect to={{pathname: `/${userData.authentication.user_id}`}}/> :
           this.props.children}
       </React.Fragment>
     );
@@ -21,12 +21,12 @@ class AuthRedirect extends React.Component {
 
 
 AuthRedirect.propTypes = {
-  currentUser: PropTypes.object.isRequired,
+  userData: PropTypes.object.isRequired,
 }
 
 
 const mapStateToProps = state => ({
-  currentUser: state.currentUser,
+  userData: state.userData,
 });
 
 

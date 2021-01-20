@@ -1,8 +1,8 @@
-import {createStore, applyMiddleware} from "redux";
+import {createStore, applyMiddleware} from 'redux';
 import thunk from 'redux-thunk';
 import {composeWithDevTools} from 'redux-devtools-extension';
 
-import {loadTokenFromStorage, REQUEST_STATUSES} from "./utils";
+import {loadTokenFromStorage, REQUEST_STATUSES} from './utils';
 
 import {
   LOGIN_SUCCESS,
@@ -13,7 +13,6 @@ import {
   HIDE_MESSAGE,
   REGISTER_SUCCESS,
   REGISTER_FAILED,
-  GET_USER_FAILED,
   GET_USER_SUCCESS,
   ADD_HOBBY_SUCCESS,
   DELETE_HOBBY_SUCCESS,
@@ -25,8 +24,10 @@ import {
   ADD_FRIEND_REQUEST,
   DELETE_FRIEND_REQUEST,
   ACCEPT_FRIEND_REQUEST,
-  DECLINE_FRIEND_REQUEST, GET_USER_DATA, GET_FRIEND_REQUEST_USERS,
-} from "./actions";
+  DECLINE_FRIEND_REQUEST,
+  GET_USER_DATA,
+  GET_FRIEND_REQUEST_USERS,
+} from './actions';
 
 
 const DEFAULT_TOKEN = {
@@ -47,7 +48,7 @@ const DEFAULT_USER = {
 }
 
 const initialState = {
-  currentUser: {
+  userData: {
     isAuthenticated: !!loadTokenFromStorage(),
     authentication: loadTokenFromStorage() || DEFAULT_TOKEN,
     user: DEFAULT_USER,
@@ -57,7 +58,7 @@ const initialState = {
   },
   user: DEFAULT_USER,
   users: [],
-  isLoading: false,
+  requestCount: 0,
   message: '',
   registerErrors: {
     email: null,
@@ -91,13 +92,13 @@ export default function reducer(state = initialState, action) {
       return {...state, message: payload}
     }
     case HIDE_MESSAGE: {
-      return {...state, message: ""}
+      return {...state, message: ''}
     }
     case SHOW_LOADER: {
-      return {...state, isLoading: true}
+      return {...state, requestCount: state.requestCount + 1}
     }
     case HIDE_LOADER: {
-      return {...state, isLoading: false}
+      return {...state, requestCount: state.requestCount - 1}
     }
     case REGISTER_SUCCESS: {
       return {...state, registerErrors: {}}
@@ -108,8 +109,8 @@ export default function reducer(state = initialState, action) {
     case LOGIN_SUCCESS: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
+        userData: {
+          ...state.userData,
           authentication: payload,
           isAuthenticated: true,
         },
@@ -122,8 +123,8 @@ export default function reducer(state = initialState, action) {
     case LOGOUT: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
+        userData: {
+          ...state.userData,
           authentication: DEFAULT_TOKEN,
           isAuthenticated: false,
         },
@@ -132,8 +133,8 @@ export default function reducer(state = initialState, action) {
     case GET_USER_DATA: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
+        userData: {
+          ...state.userData,
           user: payload.user,
           friends: payload.friends,
           friendRequests: payload.friendRequests
@@ -143,27 +144,30 @@ export default function reducer(state = initialState, action) {
     case GET_USER_SUCCESS: {
       return {...state, user: payload}
     }
-    case GET_USER_FAILED: {
-      return {...state, error: payload}
-    }
     case CLEAR_USER: {
       return {...state, user: DEFAULT_USER}
     }
     case ADD_HOBBY_SUCCESS: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          hobbies: [...state.currentUser.hobbies, payload]
+        userData: {
+          ...state.userData,
+          user: {
+            ...state.userData.user,
+            hobbies: [...state.userData.user.hobbies, payload]
+          }
         }
       }
     }
     case DELETE_HOBBY_SUCCESS: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          hobbies: state.currentUser.hobbies.filter(h => h.id !== payload)
+        userData: {
+          ...state.userData,
+          user: {
+            ...state.userData.user,
+            hobbies: state.userData.user.hobbies.filter(h => h.id !== payload)
+          }
         }
       }
     }
@@ -177,9 +181,9 @@ export default function reducer(state = initialState, action) {
     case DELETE_FRIENDSHIP: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          friends: state.currentUser.friends.filter(user => user.id !== payload)
+        userData: {
+          ...state.userData,
+          friends: state.userData.friends.filter(user => user.id !== payload)
         }
       }
     }
@@ -187,9 +191,9 @@ export default function reducer(state = initialState, action) {
     case ADD_FRIEND_REQUEST: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          friendRequests: [...state.currentUser.friendRequests, payload]
+        userData: {
+          ...state.userData,
+          friendRequests: [...state.userData.friendRequests, payload]
         }
       }
     }
@@ -197,9 +201,9 @@ export default function reducer(state = initialState, action) {
     case DELETE_FRIEND_REQUEST: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          friendRequests: state.currentUser.friendRequests.filter(req => req.id !== payload)
+        userData: {
+          ...state.userData,
+          friendRequests: state.userData.friendRequests.filter(req => req.id !== payload)
         }
       }
     }
@@ -207,23 +211,23 @@ export default function reducer(state = initialState, action) {
     case ACCEPT_FRIEND_REQUEST: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          friendRequests: state.currentUser.friendRequests.filter(req => req.id !== payload.requestId),
-          friends: [...state.currentUser.friends, payload.friend]
+        userData: {
+          ...state.userData,
+          friendRequests: state.userData.friendRequests.filter(req => req.id !== payload.requestId),
+          friends: [...state.userData.friends, payload.friend]
         }
       }
     }
 
     case DECLINE_FRIEND_REQUEST: {
-      const friendRequests = state.currentUser.friendRequests;
+      const friendRequests = state.userData.friendRequests;
       const requestsWithoutChanged = friendRequests.filter(req => req.id !== payload);
       const changedRequest = friendRequests.find(req => req.id === payload);
       changedRequest.status = REQUEST_STATUSES.DECLINED;
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
+        userData: {
+          ...state.userData,
           friendRequests: [...requestsWithoutChanged, changedRequest],
         }
       }
@@ -231,8 +235,8 @@ export default function reducer(state = initialState, action) {
     case GET_FRIEND_REQUEST_USERS: {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
+        userData: {
+          ...state.userData,
           friendRequestUsers: payload,
         }
       }
