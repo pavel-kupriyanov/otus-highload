@@ -24,7 +24,7 @@ class App extends React.Component {
       if (this.props.userData.isAuthenticated) {
         getUserData(userData.authentication.user_id);
       }
-    }, 60 * 1000);
+    }, 20 * 1000);
 
   }
 

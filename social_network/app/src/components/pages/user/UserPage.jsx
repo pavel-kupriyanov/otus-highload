@@ -45,6 +45,7 @@ class UserPage extends React.Component {
     const {id, user, users, userData} = this.props;
     const {showDeclinedFriendRequests} = this.state;
     const isMyPage = Number(id) === userData.user.id;
+    const friends = isMyPage ? userData.friends : users;
 
     return <Grid item container spacing={2} justify='space-between' direction='row'>
       <Grid item xs={6}>
@@ -96,7 +97,7 @@ class UserPage extends React.Component {
       </Grid>
       <Grid item xs={12}>
         <Grid item container spacing={2} justify='space-between' direction='row' xs={12}>
-          {users.map(user => <Grid item xs={6} key={'friend_' + user.id}>
+          {friends.map(user => <Grid item xs={6} key={'friend_' + user.id}>
               <UserCard user={user}/>
             </Grid>
           )}

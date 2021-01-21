@@ -1,5 +1,9 @@
 # Otus Highload Architect 2020
 ![Image alt](https://www.meme-arsenal.com/memes/cf1d0bb264f7aadff88c12dcc22abf37.jpg)
 
-## Migrations
+## Схема данных:
 
+![Image alt](https://github.com/pavel-kupriyanov/otus-highload/scheme.png)
+
+Приложение: https://limitless-tor-46576.herokuapp.com
+Сваггер: https://limitless-tor-46576.herokuapp.com/docs
