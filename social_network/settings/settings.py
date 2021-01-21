@@ -12,7 +12,7 @@ CONFIG_PATH = os.path.join(ROOT_DIR, 'settings/settings.json')
 
 class Settings(BaseSettings):
     DEBUG = True
-    UVICORN = UvicornSettings()
+    UVICORN = UvicornSettings(PORT=80)
     DATABASE = DatabaseSettings(PASSWORD='password', NAME='otus_highload')
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
     BASE_PAGE_LIMIT = 10000
