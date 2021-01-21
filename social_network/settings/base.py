@@ -1,3 +1,4 @@
+import os
 import json
 from copy import deepcopy
 
@@ -11,7 +12,7 @@ from pydantic import (
 class UvicornSettings(BaseModel):
     ASGI_PATH: str = 'social_network:app'
     HOST: str = '0.0.0.0'
-    PORT: int = 8000
+    PORT: int = os.getenv('PORT') or 8000
 
 
 class DatabaseSettings(BaseModel):
