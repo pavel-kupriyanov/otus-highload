@@ -9,7 +9,7 @@ from pydantic import (
 
 
 class UvicornSettings(BaseModel):
-    ASGI_PATH: str = 'web:app'
+    ASGI_PATH: str = 'social_network:app'
     HOST: str = '0.0.0.0'
     PORT: int = 8000
 

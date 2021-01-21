@@ -1,4 +1,5 @@
 import os.path
+
 from social_network.settings.base import (
     BaseSettings,
     UvicornSettings,
@@ -16,5 +17,14 @@ class Settings(BaseSettings):
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
     BASE_PAGE_LIMIT = 10000
 
+    class Config:
+        fields = {
+            'DATABASE': {
+                'env': 'DB_SETTINGS',
+            },
+        }
 
-settings = Settings.from_json(CONFIG_PATH)
+# Heroku needs ENV VARS for application
+# settings = Settings.from_json(CONFIG_PATH)
+
+settings = Settings()

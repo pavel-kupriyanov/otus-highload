@@ -87,7 +87,7 @@ class UsersPage extends React.Component {
                 <UserCard user={user}/>
               </Grid>
             )}
-            {!users.length && <Typography variant="h5" component="h2">
+            {!users.length && <Typography variant="h5" component="h2" style={{marginBottom: "10px"}}>
               Users not found
             </Typography>}
           </Grid>

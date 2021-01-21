@@ -21,7 +21,7 @@ class App extends React.Component {
       getUserData(userData.authentication.user_id);
     }
     this.interval = setInterval(() => {
-      if (userData.isAuthenticated) {
+      if (this.props.userData.isAuthenticated) {
         getUserData(userData.authentication.user_id);
       }
     }, 60 * 1000);

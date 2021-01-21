@@ -11,7 +11,6 @@ class RegisterForm extends React.Component {
 
   render() {
     const {handleSubmit, errors} = this.props;
-    console.log(errors);
     const genderOptions = {"MALE": "Male", "FEMALE": "Female", "OTHER": "Other"}
     return (
       <form onSubmit={handleSubmit}>

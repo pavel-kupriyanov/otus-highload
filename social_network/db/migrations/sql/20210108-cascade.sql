@@ -1,5 +1,5 @@
 ALTER TABLE access_tokens
-    DROP CONSTRAINT access_tokens_ibfk_1;
+    DROP FOREIGN KEY access_tokens_ibfk_1;
 ALTER TABLE access_tokens
     ADD CONSTRAINT access_tokens_ibfk_1
         FOREIGN KEY (user_id)
@@ -7,9 +7,9 @@ ALTER TABLE access_tokens
             ON DELETE CASCADE;
 
 ALTER TABLE friend_requests
-    DROP CONSTRAINT friend_requests_ibfk_1;
+    DROP FOREIGN KEY friend_requests_ibfk_1;
 ALTER TABLE friend_requests
-    DROP CONSTRAINT friend_requests_ibfk_2;
+    DROP FOREIGN KEY friend_requests_ibfk_2;
 ALTER TABLE friend_requests
     ADD CONSTRAINT friend_requests_ibfk_1
         FOREIGN KEY (from_user)
@@ -22,9 +22,9 @@ ALTER TABLE friend_requests
             ON DELETE CASCADE;
 
 ALTER TABLE friendships
-    DROP CONSTRAINT friendships_ibfk_1;
+    DROP FOREIGN KEY friendships_ibfk_1;
 ALTER TABLE friendships
-    DROP CONSTRAINT friendships_ibfk_2;
+    DROP FOREIGN KEY friendships_ibfk_2;
 ALTER TABLE friendships
     ADD CONSTRAINT friendships_ibfk_1
         FOREIGN KEY (user_id1)
