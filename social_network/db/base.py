@@ -18,7 +18,7 @@ from .db import (
     BaseDatabaseConnector,
     DatabaseResponse
 )
-from .excpetions import DatabaseError
+from .exceptions import DatabaseError
 
 M = TypeVar('M', bound='BaseModel', covariant=True)
 

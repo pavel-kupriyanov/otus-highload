@@ -11,7 +11,7 @@ from social_network.db.managers import (
     UserManager,
     UsersHobbyManager
 )
-from social_network.db.excpetions import DatabaseError
+from social_network.db.exceptions import DatabaseError
 
 from .models import UsersQueryParams
 from ..depends import (

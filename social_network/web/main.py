@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from social_network.settings import ROOT_DIR
-from social_network.db.excpetions import RowsNotFoundError
+from social_network.db.exceptions import RowsNotFoundError
 
 from .api import router as api_router
 

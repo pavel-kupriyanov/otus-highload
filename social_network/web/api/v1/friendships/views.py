@@ -15,7 +15,7 @@ from social_network.db.managers import (
     FriendRequestManager,
     FriendshipManager
 )
-from social_network.db.excpetions import (
+from social_network.db.exceptions import (
     DatabaseError,
     RowsNotFoundError
 )

@@ -14,7 +14,7 @@ from social_network.db.managers import (
     AuthUserManager,
     AccessTokenManager
 )
-from social_network.db.excpetions import RowsNotFoundError
+from social_network.db.exceptions import RowsNotFoundError
 from social_network.utils.security import hash_password
 
 from .utils import (

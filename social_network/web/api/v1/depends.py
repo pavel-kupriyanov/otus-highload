@@ -22,7 +22,7 @@ from social_network.db.db import (
     get_connector,
     BaseDatabaseConnector
 )
-from social_network.db.excpetions import RowsNotFoundError
+from social_network.db.exceptions import RowsNotFoundError
 from social_network.settings import settings, Settings
 
 

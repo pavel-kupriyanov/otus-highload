@@ -8,7 +8,7 @@ from fastapi_utils.cbv import cbv
 
 from social_network.db.models import Hobby
 from social_network.db.managers import HobbiesManager
-from social_network.db.excpetions import DatabaseError
+from social_network.db.exceptions import DatabaseError
 
 from ..depends import (
     get_user_id,

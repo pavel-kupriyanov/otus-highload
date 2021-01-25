@@ -8,7 +8,7 @@ from social_network.settings import (
     DatabaseSettings
 )
 
-from .excpetions import RowsNotFoundError
+from .exceptions import RowsNotFoundError
 
 Rows = Tuple[Tuple[Any, ...]]
 DatabaseResponse = Union[Rows, int]
