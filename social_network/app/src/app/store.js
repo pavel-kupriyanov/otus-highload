@@ -124,7 +124,10 @@ export default function reducer(state = initialState, action) {
       return {
         ...state,
         userData: {
-          ...state.userData,
+          user: DEFAULT_USER,
+          friends: [],
+          friendRequests: [],
+          friendRequestUsers: [],
           authentication: DEFAULT_TOKEN,
           isAuthenticated: false,
         },

@@ -17,12 +17,14 @@ class App extends React.Component {
 
   componentDidMount() {
     const {userData, getUserData} = this.props;
-    if (userData.isAuthenticated && userData.user.id === 0) {
-      getUserData(userData.authentication.user_id);
+    const {isAuthenticated, authentication, user} = userData;
+    if (isAuthenticated && user.id === 0) {
+      getUserData(authentication.user_id);
     }
     this.interval = setInterval(() => {
-      if (this.props.userData.isAuthenticated) {
-        getUserData(userData.authentication.user_id);
+      const {isAuthenticated, authentication} = this.props.userData;
+      if (isAuthenticated) {
+        getUserData(authentication.user_id);
       }
     }, 20 * 1000);
 

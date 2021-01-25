@@ -32,7 +32,7 @@ import {
 } from "./utils";
 import {store} from './store';
 
-export const API_BASE = '/api/v1';
+export const API_BASE = 'http://limitless-tor-46576.herokuapp.com/api/v1';
 
 const AXIOS_CONFIG = {
   timeout: 20000,
