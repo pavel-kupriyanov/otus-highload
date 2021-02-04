@@ -48,10 +48,12 @@ class BaseManager:
                       query: str,
                       params: Optional[Iterable[Any]] = None,
                       last_row_id=False,
-                      raise_if_empty=True) -> DatabaseResponse:
+                      raise_if_empty=True,
+                      execute_many=False) -> DatabaseResponse:
         try:
             return await self.db.make_query(query, params,
                                             last_row_id=last_row_id,
-                                            raise_if_empty=raise_if_empty)
+                                            raise_if_empty=raise_if_empty,
+                                            execute_many=execute_many)
         except RawDatabaseError as e:
             raise DatabaseError(e.args) from e

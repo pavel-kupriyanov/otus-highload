@@ -47,11 +47,12 @@ class UserViewSet:
                                              offset=q.offset)
         if not users:
             return []
-        hobbies = await self.user_hobby_manager.get_hobby_for_users(
-            [user.id for user in users]
-        )
-        for user in users:
-            user.hobbies = hobbies[user.id]
+        if q.with_hobbies:
+            hobbies = await self.user_hobby_manager.get_hobby_for_users(
+                [user.id for user in users]
+            )
+            for user in users:
+                user.hobbies = hobbies[user.id]
         return users
 
     @router.get('/{id}/', response_model=User, responses={

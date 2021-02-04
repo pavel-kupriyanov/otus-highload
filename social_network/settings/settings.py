@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     UVICORN = UvicornSettings()
     DATABASE = DatabaseSettings(PASSWORD='password', NAME='otus_highload')
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
-    BASE_PAGE_LIMIT = 10000
+    BASE_PAGE_LIMIT = 10000000
 
     class Config:
         fields = {
@@ -24,7 +24,8 @@ class Settings(BaseSettings):
             },
         }
 
-# Heroku needs ENV VARS for application
-# settings = Settings.from_json(CONFIG_PATH)
 
-settings = Settings()
+settings = Settings.from_json(CONFIG_PATH)
+# Heroku needs ENV VARS for application
+
+# settings = Settings()

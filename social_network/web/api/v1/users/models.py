@@ -25,6 +25,7 @@ class UsersQueryParams:
     friends_of: Optional[int] = Query(None)
     ids: Optional[List[int]] = Query(None)
     order_by: OrderBy = Query(OrderBy.FIRST_NAME)
+    with_hobbies: bool = Query(True)
 
     @property
     def offset(self) -> int:

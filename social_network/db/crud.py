@@ -1,4 +1,5 @@
-from typing import  Tuple, Any, List
+import time
+from typing import Tuple, Any, List
 
 from social_network.settings import settings
 
@@ -9,21 +10,31 @@ CREATE = '''
     INSERT INTO {table_name} ({fields}) VALUES ({values});
     SELECT LAST_INSERT_ID();
 '''
+BULK_CREATE = 'INSERT INTO {table_name} ({fields}) VALUES ({values});'
 GET = 'SELECT {fields} FROM {table_name} WHERE id = %s;'
 DELETE = 'DELETE FROM {table_name} WHERE id = %s;'
 
 
 class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
 
-    async def _create(self, params: Tuple[Any, ...]) -> M:
+    def _make_create_query(self, query=CREATE) -> str:
         fields = [f for f in self.model._fields if f != 'id']
-        query = CREATE.format(
+        return query.format(
             table_name=self.model._table_name,
             fields=", ".join(fields),
             values=", ".join('%s' for _ in fields)
         )
+
+    async def _create(self, params: Tuple[Any, ...]) -> M:
+        query = self._make_create_query()
         id = await self.execute(query, params, last_row_id=True)
         return await self._get(id)
+
+    async def _bulk_create(self, params: Tuple[Tuple[Any, ...], ...]):
+        query = self._make_create_query(BULK_CREATE)
+        await self.execute(query, params,
+                           raise_if_empty=False,
+                           execute_many=True)
 
     async def _update(self, id: int, params: Tuple[Any, ...], query: str) -> M:
         await self.execute(query, params, raise_if_empty=False)
@@ -47,8 +58,15 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         if order_by and order:
             query = self.add_order(query, order_by, order)
         query = self.add_limit(query, limit, offset)
+        # t1 = time.time()
         rows = await self.execute(query, params, raise_if_empty=False)
-        return [self.model.from_db(row) for row in rows]
+        # t2 = time.time()
+        # print(t2 - t1, 'seconds to select')
+        # t3 = time.time()
+        models = [self.model.from_db(row) for row in rows]
+        # t4 = time.time()
+        # print(t4 - t3, 'seconds to parse', len(models))
+        return models
 
     async def _delete(self, id: int):
         query = DELETE.format(table_name=self.model._table_name)
@@ -63,3 +81,6 @@ class CRUDManager(BaseCRUDManager):
 
     async def delete(self, id: int):
         return await self._delete(id)
+
+    async def bulk_create(self, params: Tuple[Tuple[Any, ...], ...]):
+        return await self._bulk_create(params)

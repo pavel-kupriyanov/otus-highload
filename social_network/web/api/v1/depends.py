@@ -5,6 +5,7 @@ from datetime import datetime
 from fastapi import (
     Header,
     Depends,
+    Request,
     HTTPException
 )
 
@@ -19,7 +20,6 @@ from social_network.db.managers import (
 )
 
 from social_network.db.db import (
-    get_connector,
     BaseDatabaseConnector
 )
 from social_network.db.exceptions import RowsNotFoundError
@@ -27,13 +27,12 @@ from social_network.settings import settings, Settings
 
 
 @lru_cache(1)
-def get_connector_depends():
-    return get_connector(settings)
-
-
-@lru_cache(1)
 def get_settings_depends():
     return settings
+
+
+def get_connector_depends(request: Request):
+    return request.app.state.connector
 
 
 @lru_cache(1)

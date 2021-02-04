@@ -8,9 +8,9 @@ from ..models import User
 GET_USERS = '''
     SELECT id, first_name, last_name, age, city, gender FROM users
     WHERE 
-    (UPPER(first_name) LIKE UPPER(CONCAT('%%', %s, '%%')))
+    (first_name LIKE UPPER(CONCAT(%s, '%%')))
      AND 
-    (UPPER(last_name) LIKE UPPER(CONCAT('%%', %s, '%%')) OR ISNULL(last_name))
+    (last_name LIKE UPPER(CONCAT(%s, '%%')) OR ISNULL(last_name))
 '''
 
 GET_FRIENDS = '''
@@ -48,7 +48,7 @@ class UserManager(CRUDManager):
                    order='ASC',
                    limit=settings.BASE_PAGE_LIMIT,
                    offset=0) -> List[User]:
-        params = [first_name, last_name]
+        params = [first_name.upper(), last_name.upper()]
         query = GET_USERS
         if friend_id:
             params.append(friend_id)

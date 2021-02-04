@@ -42,7 +42,7 @@ class AuthViewSet:
         get_access_token_manager
     )
 
-    @router.post('/login/', status_code=201, response_model=AccessToken,
+    @router.post('/login', status_code=201, response_model=AccessToken,
                  responses={
                      201: {'description': 'Success login'},
                      400: {'description': 'Invalid email or password'}
@@ -70,7 +70,7 @@ class AuthViewSet:
             new_expired_at=expired_at
         )
 
-    @router.post('/register/', status_code=201, response_model=AuthUser,
+    @router.post('/register', status_code=201, response_model=AuthUser,
                  responses={
                      201: {'description': 'User created'},
                      400: {'description': 'Invalid email'}

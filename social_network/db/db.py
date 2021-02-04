@@ -22,7 +22,8 @@ class BaseDatabaseConnector:
                          max_rows: Optional[int] = None,
                          only_count=False,
                          last_row_id=False,
-                         raise_if_empty=True) \
+                         raise_if_empty=True,
+                         execute_many=False) \
             -> DatabaseResponse:
         raise NotImplementedError
 
@@ -42,12 +43,16 @@ class DatabaseConnector(BaseDatabaseConnector):
                          max_rows: Optional[int] = None,
                          only_count=False,
                          last_row_id=False,
-                         raise_if_empty=True) \
+                         raise_if_empty=True,
+                         execute_many=False) \
             -> DatabaseResponse:
-        pool = await self.get_pool()
-        async with pool.acquire() as conn:  # type: aiomysql.Connection
+        async with self.pool.acquire() as conn:  # type: aiomysql.Connection
             async with conn.cursor() as cursor:  # type: aiomysql.Cursor
-                rowcount = await cursor.execute(query_template, params)
+                if execute_many:
+                    rowcount = await cursor.executemany(query_template, params)
+                else:
+                    rowcount = await cursor.execute(query_template, params)
+
                 if only_count:
                     return rowcount
                 if last_row_id:
@@ -58,25 +63,26 @@ class DatabaseConnector(BaseDatabaseConnector):
                     raise RowsNotFoundError
                 return data
 
-    async def get_pool(self) -> aiomysql.Pool:
-        if self.pool is None:
-            self.pool = await self._create_pool()
-        return self.pool
+    async def start(self):
+        await  self._create_pool()
 
-    async def _create_pool(self) -> aiomysql.Pool:
+    async def _create_pool(self):
         c = self.conf
         password = c.PASSWORD.get_secret_value()
-        return await aiomysql.create_pool(host=c.HOST, port=c.PORT,
-                                          user=c.USER, password=password,
-                                          db=c.NAME, maxsize=c.MAX_CONNECTIONS,
-                                          autocommit=True)
+        self.pool = await aiomysql.create_pool(host=c.HOST, port=c.PORT,
+                                               user=c.USER, password=password,
+                                               db=c.NAME,
+                                               minsize=c.MAX_CONNECTIONS,
+                                               maxsize=c.MAX_CONNECTIONS,
+                                               autocommit=True)
 
     async def close(self):
-        pool = await self.get_pool()
-        pool.close()
-        await pool.wait_closed()
+        self.pool.close()
+        await self.pool.wait_closed()
 
 
 @lru_cache(1)
-def get_connector(settings: Settings) -> BaseDatabaseConnector:
-    return DatabaseConnector(settings.DATABASE)
+async def get_connector(settings: Settings) -> BaseDatabaseConnector:
+    connector = DatabaseConnector(settings.DATABASE)
+    await connector.start()
+    return connector

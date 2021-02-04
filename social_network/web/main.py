@@ -6,8 +6,9 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from social_network.settings import ROOT_DIR
+from social_network.settings import ROOT_DIR, settings
 from social_network.db.exceptions import RowsNotFoundError
+from social_network.db.db import get_connector
 
 from .api import router as api_router
 
@@ -32,6 +33,11 @@ async def handle_404(request: Request, exc: RowsNotFoundError):
 
 
 app.include_router(api_router, prefix='/api')
+
+
+@app.on_event("startup")
+async def startup():
+    app.state.connector = await get_connector(settings)
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)

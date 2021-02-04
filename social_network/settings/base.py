@@ -10,9 +10,11 @@ from pydantic import (
 
 
 class UvicornSettings(BaseModel):
+    # TODO: fix module object is not callable
     ASGI_PATH: str = 'social_network:app'
     HOST: str = '0.0.0.0'
     PORT: int = int(os.getenv('PORT') or 8000)
+    WORKERS = 4
 
 
 class DatabaseSettings(BaseModel):
@@ -22,7 +24,7 @@ class DatabaseSettings(BaseModel):
     USER: str = 'root'
     PASSWORD: SecretStr
     NAME: str
-    MAX_CONNECTIONS = 10
+    MAX_CONNECTIONS = 1
 
 
 class BaseSettings(PydanticSettings):
