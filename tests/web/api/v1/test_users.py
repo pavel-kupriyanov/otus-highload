@@ -6,13 +6,13 @@ BASE_PATH = '/api/v1/users/'
 
 
 def test_get(app: TestClient, user1, user2, user3):
-    response = app.get(BASE_PATH + str(user1.id))
+    response = app.get(f'{BASE_PATH}{user1.id}/')
     assert response.status_code == 200
     assert response.json()['first_name'] == user1.first_name
 
 
 def test_get_not_found(app: TestClient):
-    response = app.get(BASE_PATH + '10000000000')
+    response = app.get(f'{BASE_PATH}100000/')
     assert response.status_code == 404
 
 
@@ -49,6 +49,13 @@ def test_list_ids(app: TestClient, user1, user2, user3):
     assert response.json()[0]['first_name'] == user1.first_name
 
 
+def test_list_without_hobbies(app: TestClient, user1, user_hobby):
+    response = app.get(BASE_PATH, params={'with_hobbies': False})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0].get('hobbies') == []
+
+
 def test_list_paginate(app: TestClient, user1, user2, user3):
     response = app.get(BASE_PATH, params={'paginate_by': 1, 'page': 1})
     assert response.status_code == 200
@@ -61,34 +68,34 @@ def test_list_paginate(app: TestClient, user1, user2, user3):
 
 
 def test_user_add_hobby(app: TestClient, user1, token1: AccessToken, hobby):
-    response = app.put(BASE_PATH + f'hobbies/{hobby.id}',
+    response = app.put(f'{BASE_PATH}hobbies/{hobby.id}/',
                        headers={'x-auth-token': token1.value})
     assert response.status_code == 201
 
 
 def test_user_add_hobby_already_added(app: TestClient, user1,
                                       token1: AccessToken, hobby, user_hobby):
-    response = app.put(BASE_PATH + f'hobbies/{hobby.id}',
+    response = app.put(f'{BASE_PATH}hobbies/{hobby.id}/',
                        headers={'x-auth-token': token1.value})
     assert response.status_code == 400
 
 
 def test_user_add_hobby_not_found(app: TestClient, user1, token1: AccessToken,
                                   hobby):
-    response = app.put(BASE_PATH + f'hobbies/1000000',
+    response = app.put(f'{BASE_PATH}hobbies/100000/',
                        headers={'x-auth-token': token1.value})
     assert response.status_code == 400
 
 
 def test_user_delete_hobby(app: TestClient, user1,
                            token1: AccessToken, hobby, user_hobby):
-    response = app.delete(BASE_PATH + f'hobbies/{hobby.id}',
+    response = app.delete(f'{BASE_PATH}hobbies/{hobby.id}/',
                           headers={'x-auth-token': token1.value})
     assert response.status_code == 204
 
 
 def test_user_with_hobby(app: TestClient, user1, user_hobby):
-    response = app.get(BASE_PATH + str(user1.id))
+    response = app.get(f'{BASE_PATH}{user1.id}/')
     assert response.status_code == 200
     assert response.json()['first_name'] == user1.first_name
 

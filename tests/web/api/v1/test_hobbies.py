@@ -30,19 +30,20 @@ def test_hobbies_not_authorized(app: TestClient):
 
 
 def test_get(app: TestClient, hobby: Hobby):
-    response = app.get(BASE_PATH + str(hobby.id))
+    response = app.get(f'{BASE_PATH}{hobby.id}/')
     assert response.status_code == 200
     assert response.json()['name'] == hobby.name
 
 
 def test_get_not_found(app: TestClient, hobby: Hobby):
-    response = app.get(BASE_PATH + '1000000000')
+    response = app.get(f'{BASE_PATH}10000/')
     assert response.status_code == 404
 
 
 def test_list(app: TestClient, hobby: Hobby):
     response = app.get(BASE_PATH)
     assert response.status_code == 200
+    assert response.json()[0]['name'] == hobby.name
 
 
 def test_list_search(app: TestClient, hobby: Hobby):

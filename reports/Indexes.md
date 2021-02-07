@@ -6,7 +6,7 @@
 Имена и фамилии для генерации бали разделены на 3 категории — частые, обычные, редкие, распределенные в соотношении 10 :
 5 : 1.
 
-[Скрипт генерации](social_network/db/fill_database/fill.py)
+[Скрипт генерации](../social_network/db/fill_database/fill.py)
 
 ## Тестируемый эндпоинт
 
@@ -57,7 +57,7 @@ AND
 
 ##### График
 
-![](reports/charts/latency_before.png)
+![](charts/latency_before.png)
 
 #### Throughput (KB/sec)
 
@@ -70,7 +70,7 @@ AND
 
 ##### График
 
-![](reports/charts/tp_before.png)
+![](charts/tp_before.png)
 
 ### Выводы
 
@@ -116,7 +116,7 @@ CREATE INDEX last_name_idx ON users(last_name);
 
 ##### График
 
-![](reports/charts/latency_after.png)
+![](charts/latency_after.png)
 
 #### Throughput (KB/sec)
 
@@ -129,29 +129,29 @@ CREATE INDEX last_name_idx ON users(last_name);
 
 ##### График
 
-![](reports/charts/tp_after.png)
+![](charts/tp_after.png)
 
 ## Выводы
 
 ### "Иван" (19 647 записей)
 
-![](reports/charts/latency_ivan.png)
-![](reports/charts/tp_ivan.png)
+![](charts/latency_ivan.png)
+![](charts/tp_ivan.png)
 
 Ввиду низкой селективности запроса не наблюдается прироста производительности, более того, она немного снизилась —
 возможно связано с тем, что обойти таблицу целиком быстрее, чем собрать результаты из индекса.
 
 ### "Святогор" (1 965 записей)
 
-![](reports/charts/latency_svyatogor.png)
-![](reports/charts/tp_svyatogor.png)
+![](charts/latency_svyatogor.png)
+![](charts/tp_svyatogor.png)
 
 Наблюдается прирост производительности в 2-3 раза (В случае с 1000 подключениями - в 17 раз).
 
 ### "Святогор Шульц" (3 записи)
 
-![](reports/charts/latency_svyatogor_shultc.png)
-![](reports/charts/tp_svyatogor_shultc.png)
+![](charts/latency_svyatogor_shultc.png)
+![](charts/tp_svyatogor_shultc.png)
 
 Наблюдается еще больший прирост производительности - в 4 - 5 раз
 (В случае с 10000 - в 42 раза).

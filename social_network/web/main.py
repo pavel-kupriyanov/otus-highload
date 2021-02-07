@@ -41,7 +41,7 @@ async def startup():
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)
-def get_frontend():
+def get_frontend(full_path: str):
     return load_frontend()
 
 
