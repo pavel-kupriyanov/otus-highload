@@ -17,5 +17,6 @@ class FriendshipManager(CRUDManager):
 
     async def get_by_participants(self, user_id: int, friend_id: int) \
             -> Friendship:
-        friendships = await self.execute(GET_FRIENDSHIP, (user_id, friend_id))
+        friendships = await self.execute(GET_FRIENDSHIP, (user_id, friend_id),
+                                         read_only=True)
         return Friendship.from_db(friendships[0])

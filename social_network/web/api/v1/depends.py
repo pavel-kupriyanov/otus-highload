@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from functools import lru_cache
 from datetime import datetime
 
@@ -35,60 +35,86 @@ def get_connector_depends(request: Request):
     return request.app.state.connector
 
 
+def get_slave_connectors_depends(request: Request):
+    return request.app.state.slave_connectors or tuple()
+
+
+# TODO: Remove duplicate dependencies
 @lru_cache(1)
 def get_user_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
+            get_slave_connectors_depends
+        ),
         conf: Settings = Depends(get_settings_depends)
 ) -> UserManager:
-    return UserManager(connector, conf)
+    return UserManager(connector, slave_connectors, conf)
 
 
 @lru_cache(1)
 def get_auth_user_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
+            get_slave_connectors_depends
+        ),
         conf: Settings = Depends(get_settings_depends)
 ) -> AuthUserManager:
-    return AuthUserManager(connector, conf)
+    return AuthUserManager(connector, slave_connectors, conf)
 
 
 @lru_cache(1)
 def get_access_token_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
+            get_slave_connectors_depends
+        ),
         conf: Settings = Depends(get_settings_depends)
 ) -> AccessTokenManager:
-    return AccessTokenManager(connector, conf)
+    return AccessTokenManager(connector, slave_connectors, conf)
 
 
 @lru_cache(1)
 def get_friend_request_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
+            get_slave_connectors_depends
+        ),
         conf: Settings = Depends(get_settings_depends)
 ) -> FriendRequestManager:
-    return FriendRequestManager(connector, conf)
+    return FriendRequestManager(connector, slave_connectors, conf)
 
 
 @lru_cache(1)
 def get_friendship_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
+            get_slave_connectors_depends
+        ),
         conf: Settings = Depends(get_settings_depends)
 ) -> FriendshipManager:
-    return FriendshipManager(connector, conf)
+    return FriendshipManager(connector, slave_connectors, conf)
 
 
 @lru_cache(1)
 def get_hobby_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
+            get_slave_connectors_depends
+        ),
         conf: Settings = Depends(get_settings_depends)
 ) -> HobbiesManager:
-    return HobbiesManager(connector, conf)
+    return HobbiesManager(connector, slave_connectors, conf)
 
 
 @lru_cache(1)
 def get_user_hobby_manager(
         connector: BaseDatabaseConnector = Depends(get_connector_depends),
+        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
+            get_slave_connectors_depends
+        ),
         conf: Settings = Depends(get_settings_depends)
 ) -> UsersHobbyManager:
-    return UsersHobbyManager(connector, conf)
+    return UsersHobbyManager(connector, slave_connectors, conf)
 
 
 async def get_user_id(x_auth_token: Optional[str] = Header(None),

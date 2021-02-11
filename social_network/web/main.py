@@ -37,7 +37,10 @@ app.include_router(api_router, prefix='/api')
 
 @app.on_event("startup")
 async def startup():
-    app.state.connector = await get_connector(settings)
+    app.state.connector = await get_connector(settings.DATABASE)
+    app.state.slave_connectors = tuple([
+        await get_connector(conf) for conf in settings.SLAVE_DATABASES
+    ])
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)

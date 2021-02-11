@@ -1,12 +1,13 @@
 from typing import (
-    Tuple,
     Any,
+    Tuple,
     Optional,
     Iterable,
     TypeVar,
     Type,
 )
 from collections import namedtuple
+from itertools import cycle
 
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -39,21 +40,32 @@ class BaseModel(PydanticBaseModel):
 class BaseManager:
     model: M
 
-    def __init__(self, db: BaseDatabaseConnector,
+    def __init__(self,
+                 db: BaseDatabaseConnector,
+                 read_only_dbs: Optional[Tuple[BaseDatabaseConnector]] = None,
                  conf: Settings = settings):
         self.db = db
         self.conf = conf
+        self.read_only_dbs = cycle(read_only_dbs) if read_only_dbs else None
+
+    @property
+    def read_only_db(self) -> BaseDatabaseConnector:
+        if not self.read_only_dbs:
+            return self.db
+        return next(self.read_only_dbs)
 
     async def execute(self,
                       query: str,
                       params: Optional[Iterable[Any]] = None,
+                      read_only=False,
                       last_row_id=False,
                       raise_if_empty=True,
                       execute_many=False) -> DatabaseResponse:
+        db = self.read_only_db if read_only else self.db
         try:
-            return await self.db.make_query(query, params,
-                                            last_row_id=last_row_id,
-                                            raise_if_empty=raise_if_empty,
-                                            execute_many=execute_many)
+            return await db.make_query(query, params,
+                                       last_row_id=last_row_id,
+                                       raise_if_empty=raise_if_empty,
+                                       execute_many=execute_many)
         except RawDatabaseError as e:
             raise DatabaseError(e.args) from e

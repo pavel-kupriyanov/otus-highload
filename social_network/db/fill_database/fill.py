@@ -66,6 +66,7 @@ def get_raw_users(first_names: Iterator[str], last_names: Iterator[str],
 
 async def fill_db(conf: Settings, count: int = 1000, batch_size: int = 100):
     connector = DatabaseConnector(conf.DATABASE)
+    await connector.start()
     user_manager = AuthUserManager(connector, settings)
     first_names = prepare_sequence(
         list(POPULAR_FIRST_NAMES * 10 +

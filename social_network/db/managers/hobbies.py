@@ -21,7 +21,7 @@ class HobbiesManager(CRUDManager):
     model = Hobby
 
     async def get_by_name(self, name: str) -> Hobby:
-        hobbies = await self.execute(GET_HOBBY_BY_NAME, (name,))
+        hobbies = await self.execute(GET_HOBBY_BY_NAME, (name,), read_only=True)
         return self.model.from_db(hobbies[0])
 
     async def create(self, name: str) -> Hobby:
