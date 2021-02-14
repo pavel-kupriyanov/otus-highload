@@ -2,10 +2,7 @@ from typing import Optional, Tuple, Any, Union
 
 import aiomysql
 
-from social_network.settings import (
-    Settings,
-    DatabaseSettings
-)
+from social_network.settings import DatabaseSettings
 
 from .exceptions import RowsNotFoundError
 
@@ -80,7 +77,7 @@ class DatabaseConnector(BaseDatabaseConnector):
         await self.pool.wait_closed()
 
 
-async def get_connector(settings: Settings) -> BaseDatabaseConnector:
-    connector = DatabaseConnector(settings.DATABASE)
+async def get_connector(conf: DatabaseSettings) -> BaseDatabaseConnector:
+    connector = DatabaseConnector(conf)
     await connector.start()
     return connector

@@ -32,7 +32,10 @@ from social_network.db.managers import (
     UsersHobbyManager
 )
 from social_network.web.main import app
-from social_network.web.api.v1.depends import get_connector_depends
+from social_network.web.api.v1.depends import (
+    get_connector_depends,
+    get_slave_connectors_depends
+)
 from social_network.utils.security import hash_password
 
 CONFIG_PATH = dirname(abspath(__file__)) + '/settings/settings.json'
@@ -125,12 +128,13 @@ async def create_test_database(settings: Settings):
 
 @pytest.fixture(name='db_connector')
 async def get_db_connector(settings) -> BaseDatabaseConnector:
-    return await get_connector(settings)
+    return await get_connector(settings.DATABASE)
 
 
 @pytest.fixture(name='app')
 async def get_test_client(db_connector) -> TestClient:
     app.dependency_overrides[get_connector_depends] = lambda: db_connector
+    app.dependency_overrides[get_slave_connectors_depends] = lambda: tuple()
     yield TestClient(app)
     app.dependency_overrides = {}
 

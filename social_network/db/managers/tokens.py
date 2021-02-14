@@ -38,5 +38,6 @@ class AccessTokenManager(CRUDManager):
         return await self._list((user_id,), GET_USER_ACTIVE_TOKENS)
 
     async def get_by_value(self, value: str) -> AccessToken:
-        tokens = await self.execute(GET_TOKEN_BY_VALUE, (value,))
+        tokens = await self.execute(GET_TOKEN_BY_VALUE, (value,),
+                                    read_only=True)
         return AccessToken.from_db(tokens[0])

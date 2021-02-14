@@ -1,4 +1,3 @@
-import time
 from typing import Tuple, Any, List
 
 from social_network.settings import settings
@@ -28,7 +27,7 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
     async def _create(self, params: Tuple[Any, ...]) -> M:
         query = self._make_create_query()
         id = await self.execute(query, params, last_row_id=True)
-        return await self._get(id)
+        return await self._get(id, read_only=False)
 
     async def _bulk_create(self, params: Tuple[Tuple[Any, ...], ...]):
         query = self._make_create_query(BULK_CREATE)
@@ -38,14 +37,14 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
 
     async def _update(self, id: int, params: Tuple[Any, ...], query: str) -> M:
         await self.execute(query, params, raise_if_empty=False)
-        return await self._get(id)
+        return await self._get(id, read_only=False)
 
-    async def _get(self, id: int) -> M:
+    async def _get(self, id: int, read_only=True) -> M:
         query = GET.format(
             fields=", ".join(self.model._fields),
             table_name=self.model._table_name
         )
-        rows = await self.execute(query, (id,))
+        rows = await self.execute(query, (id,), read_only=read_only)
         return self.model.from_db(rows[0])
 
     async def _list(self,
@@ -58,14 +57,9 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         if order_by and order:
             query = self.add_order(query, order_by, order)
         query = self.add_limit(query, limit, offset)
-        # t1 = time.time()
-        rows = await self.execute(query, params, raise_if_empty=False)
-        # t2 = time.time()
-        # print(t2 - t1, 'seconds to select')
-        # t3 = time.time()
+        rows = await self.execute(query, params, read_only=True,
+                                  raise_if_empty=False)
         models = [self.model.from_db(row) for row in rows]
-        # t4 = time.time()
-        # print(t4 - t3, 'seconds to parse', len(models))
         return models
 
     async def _delete(self, id: int):

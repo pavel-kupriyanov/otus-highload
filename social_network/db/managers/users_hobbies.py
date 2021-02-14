@@ -33,8 +33,8 @@ class UsersHobbyManager(CRUDManager):
     async def get_hobby_for_users(self, user_ids: List[int]) \
             -> Dict[int, List[Hobby]]:
         params = (user_ids,)
-        results = await self.execute(GET_HOBBIES_FOR_USERS,
-                                     params, raise_if_empty=False)
+        results = await self.execute(GET_HOBBIES_FOR_USERS, params,
+                                     read_only=True, raise_if_empty=False)
         parsed_result: Dict[int, List[Hobby]] = defaultdict(list)
         for key, group in groupby(results, lambda x: x[0]):
             for item in group:
