@@ -37,9 +37,10 @@ app.include_router(api_router, prefix='/api')
 
 @app.on_event("startup")
 async def startup():
-    app.state.connector = await get_connector(settings.DATABASE)
+    db = settings.DATABASE
+    app.state.connector = await get_connector(db.MASTER)
     app.state.slave_connectors = tuple([
-        await get_connector(conf) for conf in settings.SLAVE_DATABASES
+        await get_connector(conf) for conf in db.SLAVES
     ])
 
 

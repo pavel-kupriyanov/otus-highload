@@ -1,6 +1,7 @@
 import os
 import json
 from copy import deepcopy
+from typing import List
 
 from pydantic import (
     BaseModel,
@@ -27,10 +28,15 @@ class DatabaseSettings(BaseModel):
     MAX_CONNECTIONS = 1
 
 
+class MasterSlaveDatabaseSettings(BaseModel):
+    MASTER: DatabaseSettings
+    SLAVES: List[DatabaseSettings] = []
+
+
 class BaseSettings(PydanticSettings):
     DEBUG: bool
     UVICORN: UvicornSettings
-    DATABASE: DatabaseSettings
+    DATABASE: MasterSlaveDatabaseSettings
 
     @classmethod
     def from_json(cls, path):

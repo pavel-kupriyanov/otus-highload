@@ -95,7 +95,7 @@ def get_settings() -> Settings:
 
 @pytest.fixture(name='cursor', scope='session')
 async def get_cursor(settings) -> aiomysql.Cursor:
-    db_conf = settings.DATABASE
+    db_conf = settings.DATABASE.MASTER
     conn = await aiomysql.connect(host=db_conf.HOST,
                                   port=db_conf.PORT,
                                   user=db_conf.USER,
@@ -108,7 +108,7 @@ async def get_cursor(settings) -> aiomysql.Cursor:
 
 @pytest.fixture(name='db', autouse=True, scope='session')
 async def create_test_database(settings: Settings):
-    db_conf = settings.DATABASE
+    db_conf = settings.DATABASE.MASTER
     conn = await aiomysql.connect(host=db_conf.HOST,
                                   port=db_conf.PORT,
                                   user=db_conf.USER,
@@ -128,7 +128,7 @@ async def create_test_database(settings: Settings):
 
 @pytest.fixture(name='db_connector')
 async def get_db_connector(settings) -> BaseDatabaseConnector:
-    return await get_connector(settings.DATABASE)
+    return await get_connector(settings.DATABASE.MASTER)
 
 
 @pytest.fixture(name='app')

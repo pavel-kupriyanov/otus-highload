@@ -1,9 +1,13 @@
 {
   "DATABASE": {
-    "HOST": "localhost",
-    "PORT": 3306,
-    "USER": "root",
-    "PASSWORD": "password",
-    "NAME": "otus_highload"
+    "MASTER": {
+      "HOST": "localhost",
+      "PORT": 3306,
+      "USER": "otus",
+      "PASSWORD": "otus",
+      "NAME": "otus"
+    },
+    "SLAVES": []
   }
 }
+
