@@ -15,6 +15,7 @@ from social_network.db.db import (
     get_connector,
     BaseDatabaseConnector
 )
+from social_network.db.connectors_storage import ConnectorsStorage
 from social_network.db.models import (
     AccessToken,
     AuthUser,
@@ -33,8 +34,8 @@ from social_network.db.managers import (
 )
 from social_network.web.main import app
 from social_network.web.api.v1.depends import (
-    get_connector_depends,
-    get_slave_connectors_depends
+    get_connectors_storage_storage,
+    get_settings_depends
 )
 from social_network.utils.security import hash_password
 
@@ -126,83 +127,92 @@ async def create_test_database(settings: Settings):
     await cursor.execute(f"DROP SCHEMA {db_conf.NAME};")
 
 
-@pytest.fixture(name='db_connector')
-async def get_db_connector(settings) -> BaseDatabaseConnector:
-    return await get_connector(settings.DATABASE.MASTER)
+@pytest.fixture(name='connector_storage')
+async def get_connector_storage(settings) -> ConnectorsStorage:
+    storage = ConnectorsStorage()
+    connector = await get_connector(settings.DATABASE.MASTER)
+    storage._connectors[settings.DATABASE.MASTER.json()] = connector
+    return storage
 
 
 @pytest.fixture(name='app')
-async def get_test_client(db_connector) -> TestClient:
-    app.dependency_overrides[get_connector_depends] = lambda: db_connector
-    app.dependency_overrides[get_slave_connectors_depends] = lambda: tuple()
+async def get_test_client(connector_storage, settings) -> TestClient:
+    app.dependency_overrides[get_connectors_storage_storage] = lambda:\
+        connector_storage
+    app.dependency_overrides[get_settings_depends] = lambda: settings
     yield TestClient(app)
     app.dependency_overrides = {}
 
 
 @pytest.fixture(name='user1')
-async def add_user_in_db1(db_connector, settings,
+async def add_user_in_db1(connector_storage, settings,
                           cursor: aiomysql.Cursor) -> AuthUser:
-    yield await add_user_in_db(db_connector, settings, VladimirHarconnen)
+    yield await add_user_in_db(connector_storage, settings, VladimirHarconnen)
     await cursor.execute('DELETE FROM users WHERE email = %s;',
                          (VladimirHarconnen.EMAIL,))
 
 
 @pytest.fixture(name='user2')
-async def add_user_in_db2(db_connector, settings,
+async def add_user_in_db2(connector_storage, settings,
                           cursor: aiomysql.Cursor) -> AuthUser:
-    yield await add_user_in_db(db_connector, settings, LetoAtreides)
+    yield await add_user_in_db(connector_storage, settings, LetoAtreides)
     await cursor.execute('DELETE FROM users WHERE email = %s;',
                          (LetoAtreides.EMAIL,))
 
 
 @pytest.fixture(name='user3')
-async def add_user_in_db3(db_connector, settings,
+async def add_user_in_db3(connector_storage, settings,
                           cursor: aiomysql.Cursor) -> AuthUser:
-    yield await add_user_in_db(db_connector, settings, ShaddamIV)
+    yield await add_user_in_db(connector_storage, settings, ShaddamIV)
     await cursor.execute('DELETE FROM users WHERE email = %s;',
                          (ShaddamIV.EMAIL,))
 
 
 @pytest.fixture(name='token1')
-async def get_token_for_user1(user1, db_connector, settings) -> AccessToken:
-    return await add_token_in_db(db_connector, settings, user1.id)
+async def get_token_for_user1(user1, connector_storage, settings) \
+        -> AccessToken:
+    return await add_token_in_db(connector_storage, settings, user1.id)
 
 
 @pytest.fixture(name='token2')
-async def get_token_for_user2(user2, db_connector, settings) -> AccessToken:
-    return await add_token_in_db(db_connector, settings, user2.id)
+async def get_token_for_user2(user2, connector_storage, settings) \
+        -> AccessToken:
+    return await add_token_in_db(connector_storage, settings, user2.id)
 
 
 @pytest.fixture(name='token3')
-async def get_token_for_user3(user3, db_connector, settings) -> AccessToken:
-    return await add_token_in_db(db_connector, settings, user3.id)
+async def get_token_for_user3(user3, connector_storage, settings) \
+        -> AccessToken:
+    return await add_token_in_db(connector_storage, settings, user3.id)
 
 
 @pytest.fixture(name='friend_request')
-async def get_friend_request(db_connector, settings, user1, user2, cursor) \
-        -> FriendRequest:
-    return await add_friend_request_in_db(db_connector, settings, user1.id,
+async def get_friend_request(connector_storage, settings, user1, user2,
+                             cursor) -> FriendRequest:
+    return await add_friend_request_in_db(connector_storage, settings, user1.id,
                                           user2.id)
 
 
 @pytest.fixture(name='friendship')
-async def get_friendship(db_connector, settings, user1, user2, cursor) \
+async def get_friendship(connector_storage, settings, user1, user2, cursor) \
         -> Friendship:
-    return await add_friendship_in_db(db_connector, settings, user1.id,
+    return await add_friendship_in_db(connector_storage, settings, user1.id,
                                       user2.id)
 
 
 @pytest.fixture(name='hobby')
-async def get_hobby(db_connector, settings, cursor: aiomysql.Cursor) -> Hobby:
-    yield await add_hobby_in_db(db_connector, settings, 'War')
+async def get_hobby(connector_storage, settings, cursor: aiomysql.Cursor) \
+        -> Hobby:
+    yield await add_hobby_in_db(connector_storage, settings, 'War')
     await cursor.execute('DELETE FROM hobbies;')
 
 
 @pytest.fixture(name='user_hobby')
-async def get_user_hobby(db_connector, settings, user1, hobby,
+async def get_user_hobby(connector_storage, settings, user1, hobby,
                          cursor: aiomysql.Cursor) \
         -> UserHobby:
-    yield await add_user_hobby_in_db(db_connector, settings, user1.id, hobby.id)
+    yield await add_user_hobby_in_db(connector_storage, settings,
+                                     user1.id, hobby.id)
     await cursor.execute('DELETE FROM users_hobbies_mtm;')
 
 
@@ -212,8 +222,9 @@ async def drop_users_after_test(cursor: aiomysql.Cursor):
     await cursor.execute('DELETE FROM users')
 
 
-async def add_user_in_db(db_connector, settings, user_data: Any) -> AuthUser:
-    manager = AuthUserManager(db_connector, settings)
+async def add_user_in_db(connector_storage, settings, user_data: Any) \
+        -> AuthUser:
+    manager = AuthUserManager(connector_storage, settings)
     user = await manager.create(email=user_data.EMAIL,
                                 age=user_data.AGE,
                                 hashed_password=user_data.HASHED_PASSWORD,
@@ -226,32 +237,33 @@ async def add_user_in_db(db_connector, settings, user_data: Any) -> AuthUser:
     return user
 
 
-async def add_token_in_db(db_connector, settings, user_id):
-    manager = AccessTokenManager(db_connector, settings)
+async def add_token_in_db(connector_storage, settings, user_id):
+    manager = AccessTokenManager(connector_storage, settings)
     expired_at = datetime.now() + timedelta(
         seconds=settings.TOKEN_EXPIRATION_TIME
     )
     return await manager.create('foobar', user_id, expired_at)
 
 
-async def add_friend_request_in_db(db_connector, settings, from_user_id,
+async def add_friend_request_in_db(connector_storage, settings, from_user_id,
                                    to_user_id) -> FriendRequest:
-    manager = FriendRequestManager(db_connector, settings)
+    manager = FriendRequestManager(connector_storage, settings)
     return await manager.create(from_user_id, to_user_id)
 
 
-async def add_friendship_in_db(db_connector, settings, user_id, friend_id) \
-        -> Friendship:
-    manager = FriendshipManager(db_connector, settings)
+async def add_friendship_in_db(connector_storage, settings, user_id,
+                               friend_id) -> Friendship:
+    manager = FriendshipManager(connector_storage, settings)
     return await manager.create(user_id, friend_id)
 
 
-async def add_hobby_in_db(db_connector, settings, hobby_name: str) -> Hobby:
-    manager = HobbiesManager(db_connector, settings)
+async def add_hobby_in_db(connector_storage, settings, hobby_name: str) \
+        -> Hobby:
+    manager = HobbiesManager(connector_storage, settings)
     return await manager.create(hobby_name)
 
 
-async def add_user_hobby_in_db(db_connector, settings, user_id, hobby_id) \
+async def add_user_hobby_in_db(connector_storage, settings, user_id, hobby_id) \
         -> UserHobby:
-    manager = UsersHobbyManager(db_connector, settings)
+    manager = UsersHobbyManager(connector_storage, settings)
     return await manager.create(user_id, hobby_id)

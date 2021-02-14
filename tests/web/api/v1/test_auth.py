@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 BASE_PATH = '/api/v1/auth/'
 
-# TODO: fix failed tests
+
 def test_login(app: TestClient, user1):
     request = {
         'email': user1.email,

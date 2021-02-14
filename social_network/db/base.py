@@ -1,13 +1,7 @@
-from typing import (
-    Any,
-    Tuple,
-    Optional,
-    Iterable,
-    TypeVar,
-    Type,
-)
-from collections import namedtuple
 from itertools import cycle
+from collections import namedtuple
+from typing import Any, Tuple, Optional, Iterable, TypeVar, Type
+
 
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -20,6 +14,7 @@ from .db import (
     DatabaseResponse
 )
 from .exceptions import DatabaseError
+from .connectors_storage import ConnectorsStorage
 
 M = TypeVar('M', bound='BaseModel', covariant=True)
 
@@ -40,19 +35,19 @@ class BaseModel(PydanticBaseModel):
 class BaseManager:
     model: M
 
-    def __init__(self,
-                 db: BaseDatabaseConnector,
-                 read_only_dbs: Optional[Tuple[BaseDatabaseConnector]] = None,
+    def __init__(self, connector_storage: ConnectorsStorage,
                  conf: Settings = settings):
-        self.db = db
+        db_slaves = conf.DATABASE.SLAVES
+        self.connector_storage = connector_storage
         self.conf = conf
-        self.read_only_dbs = cycle(read_only_dbs) if read_only_dbs else None
+        self.read_only_confs = cycle(db_slaves) if db_slaves else None
 
-    @property
-    def read_only_db(self) -> BaseDatabaseConnector:
-        if not self.read_only_dbs:
-            return self.db
-        return next(self.read_only_dbs)
+    async def get_connector(self, read_only=False) -> BaseDatabaseConnector:
+        connector_storage = self.connector_storage
+        if read_only and self.read_only_confs:
+            slave_conf = next(self.read_only_confs)
+            return await connector_storage.get_connector(slave_conf)
+        return await connector_storage.get_connector(self.conf.DATABASE.MASTER)
 
     async def execute(self,
                       query: str,
@@ -61,11 +56,11 @@ class BaseManager:
                       last_row_id=False,
                       raise_if_empty=True,
                       execute_many=False) -> DatabaseResponse:
-        db = self.read_only_db if read_only else self.db
+        conn = await self.get_connector(read_only=read_only)
         try:
-            return await db.make_query(query, params,
-                                       last_row_id=last_row_id,
-                                       raise_if_empty=raise_if_empty,
-                                       execute_many=execute_many)
+            return await conn.make_query(query, params,
+                                         last_row_id=last_row_id,
+                                         raise_if_empty=raise_if_empty,
+                                         execute_many=execute_many)
         except RawDatabaseError as e:
             raise DatabaseError(e.args) from e

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 from functools import lru_cache
 from datetime import datetime
 
@@ -19,9 +19,7 @@ from social_network.db.managers import (
     UsersHobbyManager,
 )
 
-from social_network.db.db import (
-    BaseDatabaseConnector
-)
+from social_network.db.connectors_storage import ConnectorsStorage
 from social_network.db.exceptions import RowsNotFoundError
 from social_network.settings import settings, Settings
 
@@ -31,90 +29,79 @@ def get_settings_depends():
     return settings
 
 
-def get_connector_depends(request: Request):
-    return request.app.state.connector
-
-
-def get_slave_connectors_depends(request: Request):
-    return request.app.state.slave_connectors or tuple()
+def get_connectors_storage_storage(request: Request):
+    return request.app.state.connectors_storage
 
 
 # TODO: Remove duplicate dependencies
 @lru_cache(1)
 def get_user_manager(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends),
-        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
-            get_slave_connectors_depends
+        connector_storage: ConnectorsStorage = Depends(
+            get_connectors_storage_storage
         ),
         conf: Settings = Depends(get_settings_depends)
 ) -> UserManager:
-    return UserManager(connector, slave_connectors, conf)
+    return UserManager(connector_storage, conf)
 
 
 @lru_cache(1)
 def get_auth_user_manager(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends),
-        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
-            get_slave_connectors_depends
+        connector_storage: ConnectorsStorage = Depends(
+            get_connectors_storage_storage
         ),
         conf: Settings = Depends(get_settings_depends)
 ) -> AuthUserManager:
-    return AuthUserManager(connector, slave_connectors, conf)
+    return AuthUserManager(connector_storage, conf)
 
 
 @lru_cache(1)
 def get_access_token_manager(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends),
-        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
-            get_slave_connectors_depends
+        connector_storage: ConnectorsStorage = Depends(
+            get_connectors_storage_storage
         ),
         conf: Settings = Depends(get_settings_depends)
 ) -> AccessTokenManager:
-    return AccessTokenManager(connector, slave_connectors, conf)
+    return AccessTokenManager(connector_storage, conf)
 
 
 @lru_cache(1)
 def get_friend_request_manager(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends),
-        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
-            get_slave_connectors_depends
+        connector_storage: ConnectorsStorage = Depends(
+            get_connectors_storage_storage
         ),
         conf: Settings = Depends(get_settings_depends)
 ) -> FriendRequestManager:
-    return FriendRequestManager(connector, slave_connectors, conf)
+    return FriendRequestManager(connector_storage, conf)
 
 
 @lru_cache(1)
 def get_friendship_manager(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends),
-        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
-            get_slave_connectors_depends
+        connector_storage: ConnectorsStorage = Depends(
+            get_connectors_storage_storage
         ),
         conf: Settings = Depends(get_settings_depends)
 ) -> FriendshipManager:
-    return FriendshipManager(connector, slave_connectors, conf)
+    return FriendshipManager(connector_storage, conf)
 
 
 @lru_cache(1)
 def get_hobby_manager(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends),
-        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
-            get_slave_connectors_depends
+        connector_storage: ConnectorsStorage = Depends(
+            get_connectors_storage_storage
         ),
         conf: Settings = Depends(get_settings_depends)
 ) -> HobbiesManager:
-    return HobbiesManager(connector, slave_connectors, conf)
+    return HobbiesManager(connector_storage, conf)
 
 
 @lru_cache(1)
 def get_user_hobby_manager(
-        connector: BaseDatabaseConnector = Depends(get_connector_depends),
-        slave_connectors: Tuple[BaseDatabaseConnector] = Depends(
-            get_slave_connectors_depends
+        connector_storage: ConnectorsStorage = Depends(
+            get_connectors_storage_storage
         ),
         conf: Settings = Depends(get_settings_depends)
 ) -> UsersHobbyManager:
-    return UsersHobbyManager(connector, slave_connectors, conf)
+    return UsersHobbyManager(connector_storage, conf)
 
 
 async def get_user_id(x_auth_token: Optional[str] = Header(None),
