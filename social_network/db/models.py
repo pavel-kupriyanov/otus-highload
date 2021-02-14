@@ -9,6 +9,7 @@ from pydantic import (
 )
 
 from .base import M, BaseModel
+from ..settings import DatabaseSettings
 
 
 class FriendRequestStatus(str, Enum):
@@ -94,3 +95,40 @@ class UserHobby(BaseModel):
 
     user_id: int
     hobby_id: int
+
+
+class DatabaseInfo(BaseModel):
+    _table_name = 'database_info'
+    _fields = ('id', 'host', 'port', 'user', 'password', 'name')
+
+    host: str
+    port: int
+    user: str
+    password: SecretStr
+    name: str
+
+    def as_settings(self) -> DatabaseSettings:
+        return DatabaseSettings(
+            HOST=self.host,
+            PORT=self.port,
+            USER=self.user,
+            PASSWORD=self.password.get_secret_value(),
+            NAME=self.name
+        )
+
+
+class ShardState(str, Enum):
+    READY = 'READY'
+    ADDING = 'ADDING'
+    DELETING = 'DELETING'
+    ERROR = 'ERROR'
+
+
+class Shard(BaseModel):
+    _table_name = 'shards_info'
+    _fields = ('id', 'db_info', 'shard_table', 'shard_key', 'state')
+
+    db_info: DatabaseInfo
+    shard_table: str
+    shard_key: int
+    state: ShardState
