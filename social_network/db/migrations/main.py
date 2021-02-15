@@ -14,7 +14,6 @@ def get_db_str(s: DatabaseSettings):
            f'@{s.HOST}:{s.PORT}/{s.NAME}'
 
 
-# TODO: add function to migrate master and shards
 def migrate(conf: DatabaseSettings, path: str = MASTER_PATH):
     backend = get_backend(get_db_str(conf))
     migrations = read_migrations(path)

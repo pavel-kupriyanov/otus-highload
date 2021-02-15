@@ -1,8 +1,9 @@
+from typing import List
+
 from ..crud import CRUDManager
+from ..models import Shard, DatabaseInfo, ShardState
 
-from ..models import Shard, DatabaseInfo
-
-GET_SHARD_WITH_DATABASE_INFO = '''
+GET_SHARDS_WITH_DATABASE_INFO = '''
     SELECT 
        database_info.id       as db_id,
        database_info.host     as db_host,
@@ -19,12 +20,17 @@ FROM shards_info
 
 '''
 
+CREATE_SHARD = '''
+    INSERT INTO shards_info (db_info, shard_table, shard_key, state)
+    VALUES (%s, %s, %s, %s);
+'''
+
 
 class ShardsManager(CRUDManager):
     model = Shard
 
-    async def get_shards(self):
-        rows = await self.execute(GET_SHARD_WITH_DATABASE_INFO, [],
+    async def get_shards(self) -> List[Shard]:
+        rows = await self.execute(GET_SHARDS_WITH_DATABASE_INFO, [],
                                   read_only=True, raise_if_empty=False)
         return [self.parse_shard(row) for row in rows]
 
@@ -33,3 +39,10 @@ class ShardsManager(CRUDManager):
         id, shard_table, shard_key, state = raw_shard[6:]
         return Shard(id=id, db_info=db_info, shard_table=shard_table,
                      shard_key=shard_key, state=state)
+
+    async def create(self, db_info_id: int, shard_table: str, shard_key: str,
+                     state: ShardState = ShardState.ADDING) -> Shard:
+        params = (db_info_id, shard_table, shard_key, state)
+        id = await self.execute(CREATE_SHARD, params, last_row_id=True)
+        shards = await self.get_shards()
+        return [shard for shard in shards if shard.id == id][0]

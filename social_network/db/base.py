@@ -1,7 +1,7 @@
 from itertools import cycle
 from collections import namedtuple
+from datetime import datetime
 from typing import Any, Tuple, Optional, Iterable, TypeVar, Type
-
 
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -14,9 +14,11 @@ from .db import (
     DatabaseResponse
 )
 from .exceptions import DatabaseError
-from .connectors_storage import ConnectorsStorage
+from .connectors_storage import BaseConnectorStorage
 
 M = TypeVar('M', bound='BaseModel', covariant=True)
+
+Timestamp = float  # Alias
 
 
 class BaseModel(PydanticBaseModel):
@@ -29,15 +31,22 @@ class BaseModel(PydanticBaseModel):
     def from_db(cls: Type[M], tpl: tuple) -> M:
         parsing_tuple = namedtuple('_', cls._fields)
         fields = parsing_tuple(*tpl)._asdict()
+
+        # Special parsing for Timestamp field
+        for name, value in fields.items():
+            if isinstance(value, datetime):
+                fields[name] = value.timestamp()
+
         return cls(**fields)
 
 
 class BaseManager:
     model: M
 
-    def __init__(self, connector_storage: ConnectorsStorage,
+    def __init__(self, connector_storage: BaseConnectorStorage,
                  conf: Settings = settings):
         db_slaves = conf.DATABASE.SLAVES
+
         self.connector_storage = connector_storage
         self.conf = conf
         self.read_only_confs = cycle(db_slaves) if db_slaves else None

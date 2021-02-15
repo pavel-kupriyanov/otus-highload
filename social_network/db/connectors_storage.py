@@ -4,7 +4,14 @@ from .db import BaseDatabaseConnector, get_connector
 from ..settings import DatabaseSettings
 
 
-class ConnectorsStorage:
+class BaseConnectorStorage:
+
+    async def get_connector(self, conf: DatabaseSettings) \
+            -> BaseDatabaseConnector:
+        raise NotImplemented
+
+
+class ConnectorsStorage(BaseConnectorStorage):
 
     def __init__(self):
         self._connectors: Dict[str, BaseDatabaseConnector] = {}

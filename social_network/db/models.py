@@ -1,6 +1,5 @@
 from enum import Enum
-from typing import Type, Optional, List
-from collections import namedtuple
+from typing import Optional, List
 
 from pydantic import (
     Field,
@@ -8,7 +7,7 @@ from pydantic import (
     SecretStr
 )
 
-from .base import M, BaseModel
+from .base import BaseModel, Timestamp
 from ..settings import DatabaseSettings
 
 
@@ -41,7 +40,6 @@ class Hobby(BaseModel):
     name: str
 
 
-Timestamp = float  # Alias
 TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
@@ -52,13 +50,6 @@ class AccessToken(BaseModel):
     value: str
     user_id: int
     expired_at: Timestamp
-
-    @classmethod
-    def from_db(cls: Type[M], tpl: tuple) -> M:
-        parsing_tuple = namedtuple('_', cls._fields)
-        raw = parsing_tuple(*tpl)._asdict()
-        raw['expired_at'] = raw['expired_at'].timestamp()
-        return cls(**raw)
 
 
 class Gender(str, Enum):

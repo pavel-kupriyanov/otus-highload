@@ -7,7 +7,7 @@ from social_network.settings import DatabaseSettings
 from .exceptions import RowsNotFoundError
 
 Rows = Tuple[Tuple[Any, ...]]
-DatabaseResponse = Union[Rows, int]
+DatabaseResponse = Union[Rows, int, str]
 
 
 class BaseDatabaseConnector:
