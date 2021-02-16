@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
 
-from social_network.db.db import DatabaseConnector
+from social_network.db.connectors_storage import ConnectorsStorage
 from social_network.db.migrations import migrate, SHARDS_PATH
 from social_network.db.managers import ShardsManager
 from social_network.db.models import Shard
@@ -10,9 +10,9 @@ from social_network.settings import settings, DatabaseSettings
 
 
 async def get_shards_info(conf: DatabaseSettings) -> List[Shard]:
-    connector = DatabaseConnector(conf)
-    await connector.start()
-    manager = ShardsManager(connector, conf=settings)
+    storage = ConnectorsStorage()
+    await storage.create_connector(conf)
+    manager = ShardsManager(storage, conf=settings)
     return await manager.get_shards()
 
 

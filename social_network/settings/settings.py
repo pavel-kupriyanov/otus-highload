@@ -26,13 +26,12 @@ class Settings(BaseSettings):
     class Config:
         fields = {
             'DATABASE': {
-                'env': 'DB_SETTINGS',
+                'env': 'DATABASE_CONF',
             },
         }
 
 
-# TODO: different runners for heroku and local
-settings = Settings.from_json(CONFIG_PATH)
-# Heroku needs ENV VARS for application
-
-# settings = Settings()
+if os.getenv('HEROKU', False):
+    settings = Settings()
+else:
+    settings = Settings.from_json(CONFIG_PATH)
