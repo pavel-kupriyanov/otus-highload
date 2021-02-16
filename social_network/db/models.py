@@ -111,7 +111,6 @@ class DatabaseInfo(BaseModel):
 class ShardState(str, Enum):
     READY = 'READY'
     ADDING = 'ADDING'
-    DELETING = 'DELETING'
     ERROR = 'ERROR'
 
 

@@ -71,7 +71,3 @@ class BaseShardingManager(BaseManager):
     @staticmethod
     def calculate_hash(key: str, max_hash: int) -> int:
         return crc32(key.encode()) % max_hash
-
-
-def is_power_of_2(number: int) -> bool:
-    return number and (not (number & (number - 1)))
