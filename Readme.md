@@ -3,7 +3,10 @@
 
 ## Схема данных:
 
-![Image alt](https://github.com/pavel-kupriyanov/otus-highload/blob/master/scheme.png?raw=true)
+### Master
+![Image alt](scheme.png)
+### Shard
+![Image alt](shard_scheme.png)
 
-Приложение: https://limitless-tor-46576.herokuapp.com
-Сваггер: https://limitless-tor-46576.herokuapp.com/docs
+Приложение: https://limitless-tor-46576.herokuapp.com  
+Сваггер: https://limitless-tor-46576.herokuapp.com/docs  
