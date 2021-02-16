@@ -2,7 +2,7 @@ import {createStore, applyMiddleware} from 'redux';
 import thunk from 'redux-thunk';
 import {composeWithDevTools} from 'redux-devtools-extension';
 
-import {loadTokenFromStorage, REQUEST_STATUSES} from './utils';
+import {loadTokenFromStorage, prepareMessages, REQUEST_STATUSES} from './utils';
 
 import {
   LOGIN_SUCCESS,
@@ -27,17 +27,21 @@ import {
   DECLINE_FRIEND_REQUEST,
   GET_USER_DATA,
   GET_FRIEND_REQUEST_USERS,
+  GET_CHAT_USER,
+  CLEAR_CHAT_USER,
+  GET_MESSAGES,
+  CLEAR_MESSAGES
 } from './actions';
 
 
-const DEFAULT_TOKEN = {
+const INITIAL_TOKEN = {
   id: 0,
   value: '',
   user_id: 0,
   expired_at: '',
 }
 
-const DEFAULT_USER = {
+const INITIAL_USER = {
   id: 0,
   first_name: '',
   last_name: '',
@@ -50,13 +54,17 @@ const DEFAULT_USER = {
 const initialState = {
   userData: {
     isAuthenticated: !!loadTokenFromStorage(),
-    authentication: loadTokenFromStorage() || DEFAULT_TOKEN,
-    user: DEFAULT_USER,
+    authentication: loadTokenFromStorage() || INITIAL_TOKEN,
+    user: INITIAL_USER,
     friends: [],
     friendRequests: [],
-    friendRequestUsers: []
+    friendRequestUsers: [],
   },
-  user: DEFAULT_USER,
+  chat: {
+    user: INITIAL_USER,
+    messages: []
+  },
+  user: INITIAL_USER,
   users: [],
   requestCount: 0,
   message: '',
@@ -124,11 +132,11 @@ export default function reducer(state = initialState, action) {
       return {
         ...state,
         userData: {
-          user: DEFAULT_USER,
+          user: INITIAL_USER,
           friends: [],
           friendRequests: [],
           friendRequestUsers: [],
-          authentication: DEFAULT_TOKEN,
+          authentication: INITIAL_TOKEN,
           isAuthenticated: false,
         },
       }
@@ -148,7 +156,7 @@ export default function reducer(state = initialState, action) {
       return {...state, user: payload}
     }
     case CLEAR_USER: {
-      return {...state, user: DEFAULT_USER}
+      return {...state, user: INITIAL_USER}
     }
     case ADD_HOBBY_SUCCESS: {
       return {
@@ -241,6 +249,47 @@ export default function reducer(state = initialState, action) {
         userData: {
           ...state.userData,
           friendRequestUsers: payload,
+        }
+      }
+    }
+
+    case GET_CHAT_USER: {
+      return {
+        ...state,
+        chat: {
+          ...state.chat,
+          user: payload
+        }
+      }
+    }
+
+    case CLEAR_CHAT_USER: {
+      return {
+        ...state,
+        chat: {
+          ...state.chat,
+          user: INITIAL_USER
+        }
+      }
+    }
+
+    case GET_MESSAGES: {
+      return {
+        ...state,
+        chat: {
+          ...state.chat,
+          // todo: filter, sort, etc
+          messages: prepareMessages(state.chat.messages, payload)
+        }
+      }
+    }
+
+    case CLEAR_MESSAGES: {
+      return {
+        ...state,
+        chat: {
+          ...state.chat,
+          messages: []
         }
       }
     }

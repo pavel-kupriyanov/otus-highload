@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from "prop-types";
 import {Link} from "react-router-dom";
 import UserStatus from "./UserStatus";
-import {Typography} from "@material-ui/core";
+import {Typography, Button} from "@material-ui/core";
 import {connect} from "react-redux";
 
 
@@ -23,6 +23,10 @@ class UserInfo extends React.Component {
         <Link to={`/${user.id}`}>{user.first_name} {user.last_name}</Link>
         {isAuthenticated && <UserStatus user={user}/>}
       </Typography>
+      {isAuthenticated && <Link to={`/chat/${user.id}`}>
+        <Button variant="contained" color="primary">Chat</Button>
+      </Link>}
+
       <p><b>Age:</b> {user.age}</p>
       {user.city && <p><b>City:</b> {user.city}</p>}
       {user.gender && <p><b>Gender:</b> {user.gender}</p>}

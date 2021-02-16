@@ -14,7 +14,7 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - mysql-master:/var/lib/mysql
+      - mysql-master-db:/var/lib/mysql
 
   shard0:
     image: mysql
@@ -78,7 +78,7 @@ services:
 
 
 volumes:
-  mysql-master:
+  mysql-master-db:
   mysql-shard0:
   mysql-shard1:
   mysql-shard2:

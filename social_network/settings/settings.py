@@ -21,7 +21,7 @@ class Settings(BaseSettings):
         )
     )
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
-    BASE_PAGE_LIMIT = 100
+    BASE_PAGE_LIMIT = 10000
 
     class Config:
         fields = {

@@ -3,6 +3,7 @@ import {required} from "./validators";
 
 import Hobbies from "./components/Hobbies";
 import AuthRedirect from "./components/AuthRedirect";
+import NotAuthRedirect from "./components/NotAuthRedirect";
 import Header from "./components/Header";
 import UserCard from "./components/UserCard";
 import Loader from "./components/Loader";
@@ -16,6 +17,7 @@ export {
   SimpleField,
   Hobbies,
   AuthRedirect,
+  NotAuthRedirect,
   Header,
   UserCard,
   Loader,

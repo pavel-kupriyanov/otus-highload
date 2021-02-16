@@ -4,8 +4,9 @@ import {TextField, FormControl, InputLabel, Select, MenuItem} from "@material-ui
 export function SimpleField(
   {
     input: {name, onChange, value, ...restInput},
-    meta, submitError, ...rest
+    meta, submitError, style, ...rest
   }) {
+  const s = style ? style : {};
   return <TextField
     {...rest}
     name={name}
@@ -14,7 +15,7 @@ export function SimpleField(
     inputProps={restInput}
     onChange={onChange}
     value={value}
-    style={{margin: 10, minWidth: '60%'}}
+    style={{margin: 10, minWidth: '60%', ...s}}
     id="outlined-basic"
     variant="outlined"
   />
