@@ -27,7 +27,7 @@ def test_login_invalid_password(app: TestClient, user1):
     assert response.status_code == 400
 
 
-def test_register(app: TestClient, drop_users_after_test):
+def test_register(app: TestClient, clear_users_after):
     request = {
         "email": 'KwisatzHaderach@mail.com',
         "password": 'death_for_atreides!',
@@ -41,7 +41,7 @@ def test_register(app: TestClient, drop_users_after_test):
     assert response.status_code == 201
 
 
-def test_register_invalid_payload(app: TestClient, drop_users_after_test):
+def test_register_invalid_payload(app: TestClient, clear_users_after):
     request = {
         "email": 'Harkonnen.v@mail.com',
         "password": 'death_for_atreides!',
@@ -51,7 +51,7 @@ def test_register_invalid_payload(app: TestClient, drop_users_after_test):
 
 
 def test_register_email_already_exists(app: TestClient, user1,
-                                       drop_users_after_test):
+                                       clear_users_after):
     request = {
         "email": 'Harkonnen.v@mail.com',
         "password": 'death_for_atreides!',

@@ -1,7 +1,7 @@
 import asyncio
 from os.path import dirname, abspath
 from datetime import datetime, timedelta
-from typing import Any, TypeVar, Type
+from typing import Any, TypeVar
 
 import aiomysql
 import pytest
@@ -9,7 +9,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from pydantic import EmailStr
 
-from social_network.settings import Settings, DatabaseSettings
+from social_network.settings import Settings
 from social_network.db.migrations.main import migrate
 from social_network.db.db import get_connector
 from social_network.db.connectors_storage import (
@@ -25,7 +25,10 @@ from social_network.db.models import (
     UserHobby,
     DatabaseInfo,
     Shard,
-    ShardState
+    New,
+    NewsType,
+    AddedPostNewPayload,
+    TIMESTAMP_FORMAT
 )
 from social_network.db.sharding.models import Message
 from social_network.db.managers import (
@@ -36,7 +39,8 @@ from social_network.db.managers import (
     HobbiesManager,
     UsersHobbyManager,
     ShardsManager,
-    DatabaseInfoManager
+    DatabaseInfoManager,
+    NewsManager
 )
 from social_network.db.sharding.managers import MessagesManager
 from social_network.web.main import app
@@ -49,6 +53,8 @@ from social_network.utils.security import hash_password
 
 CONFIG_PATH = dirname(abspath(__file__)) + '/settings/settings.json'
 
+
+# TODO: move local fixtures to test files
 
 class VladimirHarconnen:
     ID: int
@@ -84,23 +90,6 @@ class ShaddamIV:
     AGE = 68
     CITY = None
     GENDER = None
-
-
-SHARD_0_CONF = DatabaseSettings(
-    HOST="localhost",
-    PORT=3370,
-    USER="otus",
-    PASSWORD="otus",
-    NAME="otus"
-)
-
-SHARD_1_CONF = DatabaseSettings(
-    HOST="localhost",
-    PORT=3371,
-    USER="otus",
-    PASSWORD="otus",
-    NAME="otus"
-)
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -168,6 +157,15 @@ class Factory(DependencyInjector):
         message_manager = self.get_manager(MessagesManager)
         key = f'{user_id_1}:{user_id_2}'
         return await message_manager.create(key, user_id_1, text)
+
+    async def add_new(self, user, text) -> New:
+        news_manager = self.get_manager(NewsManager)
+        now = datetime.now().strftime(TIMESTAMP_FORMAT)
+        payload = AddedPostNewPayload(author=user.get_short(), text=text)
+        return await news_manager.create(author_id=user.id,
+                                         news_type=NewsType.ADDED_POST,
+                                         payload=payload,
+                                         created=now)
 
 
 @pytest.fixture(name='settings', scope='session')
@@ -289,39 +287,7 @@ async def get_user_hobby(factory, user1, hobby, cursor: aiomysql.Cursor) \
     await cursor.execute('DELETE FROM users_hobbies_mtm;')
 
 
-@pytest.fixture(name='drop_users_after_test')
-async def drop_users_after_test(cursor: aiomysql.Cursor):
+@pytest.fixture(name='clear_users_after')
+async def clear_users_after(cursor: aiomysql.Cursor):
     yield
     await cursor.execute('DELETE FROM users')
-
-
-@pytest.fixture(name='message_shards')
-async def add_message_shards_into_db(factory, cursor):
-    db_0 = await factory.add_db(SHARD_0_CONF)
-    db_1 = await factory.add_db(SHARD_1_CONF)
-    await factory.add_shard(db_0, 'messages', 0, ShardState.READY)
-    await factory.add_shard(db_1, 'messages', 1, ShardState.READY)
-    yield
-    await cursor.execute('DELETE FROM shards_info')
-    await cursor.execute('DELETE FROM database_info')
-
-
-@pytest.fixture(name='clear_messages_after')
-async def clear_messages(connector_storage: ConnectorsStorage):
-    connector_0 = await connector_storage.get_connector(SHARD_0_CONF)
-    connector_1 = await connector_storage.get_connector(SHARD_1_CONF)
-    yield
-    await connector_0.make_query('DELETE FROM messages', raise_if_empty=False)
-    await connector_1.make_query('DELETE FROM messages', raise_if_empty=False)
-
-
-@pytest.fixture(name='message_1')
-async def add_message_1_into_db(factory, cursor, user1, user2, message_shards,
-                                clear_messages_after):
-    return await factory.add_message(user1.id, user2.id, 'foo')
-
-
-@pytest.fixture(name='message_2')
-async def add_message_2_into_db(factory, cursor, user1, user2, message_shards,
-                                clear_messages_after):
-    return await factory.add_message(user1.id, user2.id, 'bar')

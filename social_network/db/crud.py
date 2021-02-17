@@ -1,4 +1,4 @@
-from typing import Tuple, Any, List
+from typing import Tuple, Any, List, Union
 
 from social_network.settings import settings
 
@@ -15,9 +15,12 @@ DELETE = 'DELETE FROM {table_name} WHERE id = %s;'
 
 
 class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
+    auto_id: bool = True
 
     def _make_create_query(self, query=CREATE) -> str:
-        fields = [f for f in self.model._fields if f != 'id']
+        fields = list(self.model._fields)
+        if self.auto_id:
+            fields.remove('id')
         return query.format(
             table_name=self.model._table_name,
             fields=", ".join(fields),
@@ -39,7 +42,7 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
         await self.execute(query, params, raise_if_empty=False)
         return await self._get(id, read_only=False)
 
-    async def _get(self, id: int, read_only=True) -> M:
+    async def _get(self, id: Union[int, str], read_only=True) -> M:
         query = GET.format(
             fields=", ".join(self.model._fields),
             table_name=self.model._table_name

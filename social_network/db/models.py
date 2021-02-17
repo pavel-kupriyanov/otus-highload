@@ -1,10 +1,13 @@
+from json import loads
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from pydantic import (
     Field,
     EmailStr,
-    SecretStr
+    SecretStr,
+    validator,
+    BaseModel as PydanticBaseModel
 )
 
 from .base import BaseModel, Timestamp
@@ -46,6 +49,7 @@ TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 class AccessToken(BaseModel):
     _table_name = 'access_tokens'
     _fields = ('id', 'value', 'user_id', 'expired_at')
+    _datetime_fields = ('expired_at',)
 
     value: str
     user_id: int
@@ -58,6 +62,12 @@ class Gender(str, Enum):
     OTHER = 'OTHER'
 
 
+class ShortUserInfo(BaseModel):
+    id: int
+    first_name: str
+    last_name: Optional[str]
+
+
 class User(BaseModel):
     _table_name = 'users'
     _fields = ('id', 'first_name', 'last_name', 'age', 'city', 'gender')
@@ -68,6 +78,13 @@ class User(BaseModel):
     gender: Optional[Gender]
     age: int = Field(..., ge=1, le=200)
     hobbies: List[Hobby] = Field(default_factory=list)
+
+    def get_short(self) -> ShortUserInfo:
+        return ShortUserInfo(
+            id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name
+        )
 
 
 class AuthUser(User):
@@ -122,3 +139,53 @@ class Shard(BaseModel):
     shard_table: str
     shard_key: int
     state: ShardState
+
+
+class NewsType(str, Enum):
+    ADDED_FRIEND = 'ADDED_FRIEND'
+    ADDED_HOBBY = 'ADDED_HOBBY'
+    ADDED_POST = 'ADDED_POST'
+
+
+class Payload(PydanticBaseModel):
+    author: ShortUserInfo
+
+
+class AddedFriendNewPayload(Payload):
+    """
+    Model for fast displaying on frontend - no need additional queries
+    """
+    new_friend: ShortUserInfo
+
+
+class AddedHobbyNewPayload(Payload):
+    """
+    Same as AddedFriendNewPayload for hobby
+    """
+    hobby: Hobby
+
+
+class AddedPostNewPayload(Payload):
+    text: str
+
+
+class New(BaseModel):
+    _table_name = 'news'
+    _fields = ('id', 'author_id', 'type', 'payload', 'created')
+    _datetime_fields = ('created',)
+
+    id: str
+    author_id: int
+    type: NewsType
+    payload: Union[
+        AddedPostNewPayload,
+        AddedHobbyNewPayload,
+        AddedFriendNewPayload
+    ]
+    created: Timestamp
+
+    @validator('payload', pre=True)
+    def json_tod_dict(cls, v):
+        if isinstance(v, str):
+            return loads(v)
+        return v

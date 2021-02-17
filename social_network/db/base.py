@@ -23,7 +23,8 @@ Timestamp = float  # Alias
 
 class BaseModel(PydanticBaseModel):
     _table_name: str
-    _fields: Tuple[Any, ...]
+    _fields: Tuple[str, ...]
+    _datetime_fields: Tuple[str, ...] = tuple()
 
     id: int
 
@@ -33,9 +34,9 @@ class BaseModel(PydanticBaseModel):
         fields = parsing_tuple(*tpl)._asdict()
 
         # Special parsing for Timestamp field
-        for name, value in fields.items():
-            if isinstance(value, datetime):
-                fields[name] = value.timestamp()
+        for name in cls._datetime_fields:
+            if isinstance(fields[name], datetime):
+                fields[name] = fields[name].timestamp()
 
         return cls(**fields)
 
