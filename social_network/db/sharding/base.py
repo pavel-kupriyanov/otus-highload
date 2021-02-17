@@ -1,5 +1,5 @@
-from typing import TypeVar, List, Optional, Iterable, Any
 from zlib import crc32
+from typing import TypeVar, List, Optional, Iterable, Any
 
 from aiomysql import DatabaseError as RawDatabaseError
 

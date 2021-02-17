@@ -3,4 +3,6 @@ from social_network.settings.base import (
     BaseSettings,
     DatabaseSettings,
     UvicornSettings,
+    KafkaSettings,
+    MasterSlaveDatabaseSettings
 )

@@ -1,4 +1,6 @@
 import asyncio
+from unittest.mock import MagicMock
+from uuid import uuid4
 from os.path import dirname, abspath
 from datetime import datetime, timedelta
 from typing import Any, TypeVar
@@ -43,10 +45,12 @@ from social_network.db.managers import (
     NewsManager
 )
 from social_network.db.sharding.managers import MessagesManager
+from social_network.services.kafka.producer import KafkaProducer
 from social_network.web.main import app
 from social_network.web.api.v1.depends import (
     get_connectors_storage_storage,
     get_settings_depends,
+    get_kafka_producer,
     DependencyInjector
 )
 from social_network.utils.security import hash_password
@@ -103,6 +107,18 @@ def event_loop(request):
 pytest_asyncio.plugin.event_loop = event_loop
 
 M = TypeVar('M')
+
+
+class FakeKafkaProducer(KafkaProducer):
+
+    async def start(self):
+        pass
+
+    async def send(self, data: str, key: str):
+        pass
+
+    async def close(self):
+        pass
 
 
 class Factory(DependencyInjector):
@@ -162,10 +178,14 @@ class Factory(DependencyInjector):
         news_manager = self.get_manager(NewsManager)
         now = datetime.now().strftime(TIMESTAMP_FORMAT)
         payload = AddedPostNewPayload(author=user.get_short(), text=text)
-        return await news_manager.create(author_id=user.id,
-                                         news_type=NewsType.ADDED_POST,
-                                         payload=payload,
-                                         created=now)
+        # TODO: maybe special method for creating?
+        return await news_manager.create(
+            id=str(uuid4()),
+            author_id=user.id,
+            news_type=NewsType.ADDED_POST,
+            payload=payload,
+            created=now
+        )
 
 
 @pytest.fixture(name='settings', scope='session')
@@ -219,6 +239,9 @@ async def get_test_client(connector_storage, settings) -> TestClient:
     app.dependency_overrides[get_connectors_storage_storage] = lambda: \
         connector_storage
     app.dependency_overrides[get_settings_depends] = lambda: settings
+    app.dependency_overrides[get_kafka_producer] = lambda: FakeKafkaProducer(
+        settings.KAFKA
+    )
     yield TestClient(app)
     app.dependency_overrides = {}
 

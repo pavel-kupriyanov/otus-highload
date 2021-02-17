@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import (
     APIRouter,
     Depends,
@@ -6,18 +6,25 @@ from fastapi import (
 )
 from fastapi_utils.cbv import cbv
 
-from social_network.db.models import User, UserHobby
+from social_network.db.models import (
+    New,
+    User,
+    UserHobby,
+    AddedHobbyNewPayload,
+)
 from social_network.db.managers import (
     UserManager,
     UsersHobbyManager
 )
 from social_network.db.exceptions import DatabaseError
+from social_network.services.kafka import KafkaProducer
 
 from .models import UsersQueryParams
 from ..depends import (
+    get_user,
     get_user_manager,
     get_user_hobby_manager,
-    get_user_id,
+    get_kafka_producer
 )
 from ..utils import authorize_only
 
@@ -26,7 +33,8 @@ router = APIRouter()
 
 @cbv(router)
 class UserViewSet:
-    user_id: int = Depends(get_user_id)
+    user_: Optional[User] = Depends(get_user)
+    kafka_producer: KafkaProducer = Depends(get_kafka_producer)
     user_manager: UserManager = Depends(get_user_manager)
     user_hobby_manager: UsersHobbyManager = Depends(
         get_user_hobby_manager
@@ -75,7 +83,12 @@ class UserViewSet:
     @authorize_only
     async def add_hobby(self, id: int) -> UserHobby:
         try:
-            return await self.user_hobby_manager.create(self.user_id, id)
+            user_hobby = await self.user_hobby_manager.create(self.user_.id, id)
+
+            new = self.prepare_new(user_hobby.hobby_id)
+            await self.kafka_producer.send(new.json(), new.id)
+
+            return user_hobby
         except DatabaseError:
             raise HTTPException(400, detail='Hobby not found or already added')
 
@@ -84,4 +97,11 @@ class UserViewSet:
     })
     @authorize_only
     async def remove_hobby(self, id: int):
-        await self.user_hobby_manager.delete_by_id(self.user_id, id)
+        await self.user_hobby_manager.delete_by_id(self.user_.id, id)
+
+    def prepare_new(self, hobby_id: int) -> New:
+        payload = AddedHobbyNewPayload(
+            author=self.user_.get_short(),
+            hobby=hobby_id
+        )
+        return New.from_payload(payload)

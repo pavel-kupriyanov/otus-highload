@@ -31,9 +31,8 @@ class NewsManager(CRUDManager):
         NewsType.ADDED_FRIEND: AddedFriendNewPayload
     }
 
-    async def create(self, author_id: int, news_type: NewsType,
+    async def create(self, id: str, author_id: int, news_type: NewsType,
                      payload: Payload, created: str) -> New:
-        id = str(uuid4())
         params = (id, author_id, news_type, payload.json(), created)
         query = self._make_create_query()
         await self.execute(query, params, raise_if_empty=False)

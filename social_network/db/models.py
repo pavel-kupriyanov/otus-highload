@@ -1,6 +1,8 @@
+from uuid import uuid4
 from json import loads
 from enum import Enum
-from typing import Optional, List, Union
+from datetime import datetime
+from typing import Optional, List, Union, Dict, Type, TypeVar
 
 from pydantic import (
     Field,
@@ -155,24 +157,35 @@ class AddedFriendNewPayload(Payload):
     """
     Model for fast displaying on frontend - no need additional queries
     """
-    new_friend: ShortUserInfo
+    new_friend: Union[ShortUserInfo, int]
 
 
 class AddedHobbyNewPayload(Payload):
     """
     Same as AddedFriendNewPayload for hobby
     """
-    hobby: Hobby
+    hobby: Union[Hobby, int]
 
 
 class AddedPostNewPayload(Payload):
     text: str
 
 
+N = TypeVar('N', bound='New')
+
+
 class New(BaseModel):
     _table_name = 'news'
     _fields = ('id', 'author_id', 'type', 'payload', 'created')
     _datetime_fields = ('created',)
+    _payload_mapping: Dict[NewsType, Type[Payload]] = {
+        NewsType.ADDED_POST: AddedPostNewPayload,
+        NewsType.ADDED_HOBBY: AddedHobbyNewPayload,
+        NewsType.ADDED_FRIEND: AddedFriendNewPayload
+    }
+    _reversed_payload_mapping: Dict[Type[Payload], NewsType] = {
+        v: k for k, v in _payload_mapping.items()
+    }
 
     id: str
     author_id: int
@@ -183,9 +196,21 @@ class New(BaseModel):
         AddedFriendNewPayload
     ]
     created: Timestamp
+    populated: bool = False
 
     @validator('payload', pre=True)
     def json_tod_dict(cls, v):
         if isinstance(v, str):
             return loads(v)
         return v
+
+    @classmethod
+    def from_payload(cls: Type[N], payload: Payload) -> N:
+        return cls(
+            id=str(uuid4()),
+            author_id=payload.author.id,
+            type=cls._reversed_payload_mapping[type(payload)],
+            payload=payload,
+            created=datetime.now().timestamp(),
+            populated=False
+        )

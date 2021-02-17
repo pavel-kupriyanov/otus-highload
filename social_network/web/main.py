@@ -6,9 +6,15 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from social_network.settings import ROOT_DIR, settings
+from social_network.settings import (
+    ROOT_DIR,
+    settings,
+    KafkaSettings,
+    MasterSlaveDatabaseSettings
+)
 from social_network.db.exceptions import RowsNotFoundError
 from social_network.db.connectors_storage import ConnectorsStorage
+from social_network.services.kafka import KafkaProducer
 
 from .api import router as api_router
 
@@ -35,16 +41,33 @@ async def handle_404(request: Request, exc: RowsNotFoundError):
 app.include_router(api_router, prefix='/api')
 
 
-@app.on_event("startup")
-async def startup():
-    db = settings.DATABASE
+async def get_connectors_storage(conf: MasterSlaveDatabaseSettings):
     connectors_storage = ConnectorsStorage()
-    await connectors_storage.create_connector(db.MASTER)
+    await connectors_storage.create_connector(conf.MASTER)
 
-    for conf in db.SLAVES:
+    for conf in conf.SLAVES:
         await connectors_storage.create_connector(conf)
 
-    app.state.connectors_storage = connectors_storage
+    return connectors_storage
+
+
+async def get_kafka_producer(conf: KafkaSettings):
+    producer = KafkaProducer(conf)
+    await producer.start()
+    return producer
+
+
+@app.on_event('startup')
+async def startup():
+    app.state.kafka_producer = await get_kafka_producer(settings.KAFKA)
+    app.state.connectors_storage = await get_connectors_storage(
+        settings.DATABASE
+    )
+
+
+@app.on_event('shutdown')
+async def shutdown():
+    await app.state.kafka_producer.close()
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)

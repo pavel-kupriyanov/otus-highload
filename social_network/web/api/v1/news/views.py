@@ -1,5 +1,4 @@
-from uuid import uuid4
-from datetime import datetime
+from datetime import datetime as dt
 from typing import Optional, List
 from fastapi import (
     APIRouter,
@@ -10,7 +9,6 @@ from fastapi_utils.cbv import cbv
 from social_network.db.models import (
     New,
     User,
-    NewsType,
     AddedPostNewPayload,
     TIMESTAMP_FORMAT
 )
@@ -28,7 +26,7 @@ router = APIRouter()
 
 @cbv(router)
 class NewsViewSet:
-    user: Optional[User] = Depends(get_user)
+    user_: Optional[User] = Depends(get_user)
     news_manager: NewsManager = Depends(get_news_manager)
 
     @router.post('/', response_model=New, status_code=201,
@@ -38,14 +36,16 @@ class NewsViewSet:
                  })
     @authorize_only
     async def create(self, p: NewCreatePayload) -> New:
-        payload = AddedPostNewPayload(author=self.user.get_short(), text=p.text)
-        now = datetime.now().strftime(TIMESTAMP_FORMAT)
-        new = await self.news_manager.create(
-            self.user.id,
-            news_type=NewsType.ADDED_POST,
+        payload = AddedPostNewPayload(author=self.user_.get_short(), text=p.text)
+        new = New.from_payload(payload)
+        await self.news_manager.create(
+            id=new.id,
+            author_id=new.author_id,
+            news_type=new.type,
             payload=payload,
-            created=now
+            created=dt.fromtimestamp(new.created).strftime(TIMESTAMP_FORMAT),
         )
+        new.populated = True
         # TODO: send to followers
         return new
 
@@ -55,7 +55,7 @@ class NewsViewSet:
     @authorize_only
     async def list(self, q: NewsQueryParams = Depends(NewsQueryParams)) \
             -> List[New]:
-        return await self.news_manager.list(author_id=self.user.id,
+        return await self.news_manager.list(author_id=self.user_.id,
                                             order=q.order,
                                             limit=q.paginate_by,
                                             offset=q.offset)

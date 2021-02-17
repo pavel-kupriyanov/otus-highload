@@ -47,6 +47,10 @@ def get_connectors_storage_storage(request: Request):
     return request.app.state.connectors_storage
 
 
+def get_kafka_producer(request: Request):
+    return request.app.state.kafka_producer
+
+
 def get_injector(
         connector_storage: BaseConnectorStorage = Depends(
             get_connectors_storage_storage

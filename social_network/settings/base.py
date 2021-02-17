@@ -32,10 +32,20 @@ class MasterSlaveDatabaseSettings(BaseModel):
     SLAVES: List[DatabaseSettings] = []
 
 
+class KafkaSettings(BaseModel):
+    HOST = 'localhost'
+    PORT = 9092
+    PARTITIONS = 2
+    TOPIC_NAME = 'news'
+
+
 class BaseSettings(PydanticSettings):
     DEBUG: bool
     UVICORN: UvicornSettings
     DATABASE: MasterSlaveDatabaseSettings
+    KAFKA: KafkaSettings
+    TOKEN_EXPIRATION_TIME: int
+    BASE_PAGE_LIMIT: int
 
     @classmethod
     def from_json(cls, path):
