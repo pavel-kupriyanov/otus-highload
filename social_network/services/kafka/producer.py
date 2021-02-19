@@ -1,13 +1,11 @@
-from zlib import crc32
-
 from aiokafka import AIOKafkaProducer
 
 from social_network.settings import KafkaSettings
 
+from .consts import Topic
 from ..base import BaseService
 
 
-# TODO: partitions
 class KafkaProducer(BaseService):
     producer: AIOKafkaProducer
 
@@ -23,12 +21,5 @@ class KafkaProducer(BaseService):
     async def close(self):
         await self.producer.stop()
 
-    async def choose_partition(self, key: str) -> int:
-        return crc32(key.encode()) % self.conf.PARTITIONS
-
-    async def send(self, data: str, key: str):
-        await self.producer.send(
-            self.conf.TOPIC_NAME,
-            data.encode(),
-            partition=self.choose_partition(key)
-        )
+    async def send(self, data: str, topic: str = Topic.News):
+        await self.producer.send(topic, data.encode())

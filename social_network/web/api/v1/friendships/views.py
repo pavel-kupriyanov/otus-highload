@@ -7,9 +7,12 @@ from fastapi import (
 from fastapi_utils.cbv import cbv
 
 from social_network.db.models import (
+    New,
+    User,
     Friendship,
     FriendRequestStatus,
-    FriendRequest
+    FriendRequest,
+    AddedFriendNewPayload
 )
 from social_network.db.managers import (
     FriendRequestManager,
@@ -19,10 +22,12 @@ from social_network.db.exceptions import (
     DatabaseError,
     RowsNotFoundError
 )
+from social_network.services.kafka import KafkaProducer, Topic
 
 from ..depends import (
+    get_user,
+    get_kafka_producer,
     get_friend_request_manager,
-    get_user_id
 )
 
 from ..depends import get_friendship_manager
@@ -33,7 +38,8 @@ router = APIRouter()
 
 @cbv(router)
 class FriendRequestViewSet:
-    user_id: Optional[int] = Depends(get_user_id)
+    user_: Optional[User] = Depends(get_user)
+    kafka_producer: KafkaProducer = Depends(get_kafka_producer)
     friend_request_manager: FriendRequestManager = Depends(
         get_friend_request_manager
     )
@@ -52,7 +58,7 @@ class FriendRequestViewSet:
     async def create(self, user_id: int) -> FriendRequest:
         try:
             await self.friendship_manager \
-                .get_by_participants(self.user_id, user_id)
+                .get_by_participants(self.user_.id, user_id)
         except RowsNotFoundError:
             pass
         else:
@@ -60,7 +66,7 @@ class FriendRequestViewSet:
 
         try:
             return await self.friend_request_manager \
-                .create(self.user_id, user_id)
+                .create(self.user_.id, user_id)
         except DatabaseError:
             raise HTTPException(404, detail='User not found or request '
                                             'already exists.')
@@ -74,7 +80,7 @@ class FriendRequestViewSet:
     @authorize_only
     async def cancel(self, id: int):
         request = await self.friend_request_manager.get(id)
-        if not is_request_creator(request, self.user_id):
+        if not is_request_creator(request, self.user_.id):
             raise HTTPException(403, detail='You are not allowed to delete'
                                             ' request')
         await self.friend_request_manager.delete(id)
@@ -88,7 +94,7 @@ class FriendRequestViewSet:
     @authorize_only
     async def get(self, id: int) -> FriendRequest:
         request = await self.friend_request_manager.get(id)
-        if not is_request_participant(request, self.user_id):
+        if not is_request_participant(request, self.user_.id):
             raise HTTPException(403, detail='Not allowed')
         return request
 
@@ -101,7 +107,7 @@ class FriendRequestViewSet:
     @authorize_only
     async def decline(self, id: int):
         request = await self.friend_request_manager.get(id)
-        if not is_request_target(request, self.user_id):
+        if not is_request_target(request, self.user_.id):
             raise HTTPException(403, 'Not allowed')
         await self.friend_request_manager.update(id,
                                                  FriendRequestStatus.DECLINED)
@@ -118,12 +124,25 @@ class FriendRequestViewSet:
     async def accept(self, id: int) -> Friendship:
         request = await self.friend_request_manager.get(id)
 
-        if not is_request_target(request, self.user_id):
+        if not is_request_target(request, self.user_.id):
             raise HTTPException(403, detail='Not allowed')
 
         await self.friend_request_manager.delete(id)
-        return await self.friendship_manager.create(request.to_user,
-                                                    request.from_user)
+        friendship = await self.friendship_manager.create(request.to_user,
+                                                          request.from_user)
+
+        payload1 = AddedFriendNewPayload(
+            author=request.to_user, new_friend=request.from_user
+        )
+        payload2 = AddedFriendNewPayload(
+            author=request.from_user, new_friend=request.to_user
+        )
+        new1 = New.from_payload(payload1)
+        new2 = New.from_payload(payload2)
+        await self.kafka_producer.send(new1.json(), Topic.Populate)
+        await self.kafka_producer.send(new2.json(), Topic.Populate)
+
+        return friendship
 
     @router.delete('/friendship/{friend_id}/', status_code=204, responses={
         204: {'description': 'Friendship cancelled.'},
@@ -132,10 +151,10 @@ class FriendRequestViewSet:
     @authorize_only
     async def delete_friendship(self, friend_id: int):
         friendship = await self.friendship_manager.get_by_participants(
-            self.user_id, friend_id)
+            self.user_.id, friend_id)
         try:
             reverse_friendship = await self.friendship_manager \
-                .get_by_participants(friend_id, self.user_id)
+                .get_by_participants(friend_id, self.user_.id)
             await self.friendship_manager.delete(reverse_friendship.id)
         except RowsNotFoundError:
             pass
@@ -146,7 +165,7 @@ class FriendRequestViewSet:
     })
     @authorize_only
     async def list(self) -> List[FriendRequest]:
-        return await self.friend_request_manager.list_for_user(self.user_id)
+        return await self.friend_request_manager.list_for_user(self.user_.id)
 
 
 def is_request_creator(request: FriendRequest, user_id: int) -> bool:

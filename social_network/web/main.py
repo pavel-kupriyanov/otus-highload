@@ -1,4 +1,5 @@
 import os.path
+from asyncio import get_running_loop
 from functools import lru_cache
 
 from fastapi import FastAPI, Request
@@ -14,7 +15,13 @@ from social_network.settings import (
 )
 from social_network.db.exceptions import RowsNotFoundError
 from social_network.db.connectors_storage import ConnectorsStorage
-from social_network.services.kafka import KafkaProducer
+from social_network.services.kafka import (
+    KafkaProducer,
+    NewsKafkaDatabaseConsumer,
+    NewsKafkaCacheConsumer,
+    PopulateNewsKafkaConsumer,
+    KafkaConsumersManager,
+)
 
 from .api import router as api_router
 
@@ -57,17 +64,45 @@ async def get_kafka_producer(conf: KafkaSettings):
     return producer
 
 
+async def get_news_kafka_consumer_storage(
+        conf: KafkaSettings,
+        connector_storage: ConnectorsStorage,
+        kafka_producer: KafkaProducer
+) -> KafkaConsumersManager:
+    consumer_classes = [
+        NewsKafkaCacheConsumer,
+        NewsKafkaDatabaseConsumer,
+        PopulateNewsKafkaConsumer
+    ]
+    consumer_storage = KafkaConsumersManager(
+        conf,
+        consumer_classes,
+        connector_storage,
+        kafka_producer,
+        get_running_loop()
+    )
+    await consumer_storage.start()
+    return consumer_storage
+
+
 @app.on_event('startup')
 async def startup():
-    app.state.kafka_producer = await get_kafka_producer(settings.KAFKA)
-    app.state.connectors_storage = await get_connectors_storage(
-        settings.DATABASE
+    kafka_conf = settings.KAFKA
+    connector_storage = await get_connectors_storage(settings.DATABASE)
+    kafka_producer = await get_kafka_producer(kafka_conf)
+    app.state.consumers = await get_news_kafka_consumer_storage(
+        kafka_conf,
+        connector_storage,
+        kafka_producer
     )
+    app.state.kafka_producer = kafka_producer
+    app.state.connectors_storage = connector_storage
 
 
 @app.on_event('shutdown')
 async def shutdown():
     await app.state.kafka_producer.close()
+    await app.state.kafka_news_consumer.close()
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)

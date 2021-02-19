@@ -150,7 +150,7 @@ class NewsType(str, Enum):
 
 
 class Payload(PydanticBaseModel):
-    author: ShortUserInfo
+    author: Union[ShortUserInfo, int]
 
 
 class AddedFriendNewPayload(Payload):
@@ -196,7 +196,9 @@ class New(BaseModel):
         AddedFriendNewPayload
     ]
     created: Timestamp
+    # non-db fields
     populated: bool = False
+    stored: bool = False
 
     @validator('payload', pre=True)
     def json_tod_dict(cls, v):
@@ -206,11 +208,13 @@ class New(BaseModel):
 
     @classmethod
     def from_payload(cls: Type[N], payload: Payload) -> N:
+        author_id = payload.author
+        if not isinstance(author_id, int):
+            author_id = author_id.id
         return cls(
             id=str(uuid4()),
-            author_id=payload.author.id,
+            author_id=author_id,
             type=cls._reversed_payload_mapping[type(payload)],
             payload=payload,
             created=datetime.now().timestamp(),
-            populated=False
         )

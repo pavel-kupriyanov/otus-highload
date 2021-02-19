@@ -13,9 +13,11 @@ from social_network.db.models import (
     TIMESTAMP_FORMAT
 )
 from social_network.db.managers import NewsManager
+from social_network.services.kafka import KafkaProducer
 
 from ..depends import (
     get_user,
+    get_kafka_producer,
     get_news_manager
 )
 from .models import NewCreatePayload, NewsQueryParams
@@ -23,9 +25,10 @@ from ..utils import authorize_only
 
 router = APIRouter()
 
-
+# TODO: indempotet requests in all places
 @cbv(router)
 class NewsViewSet:
+    kafka_producer: KafkaProducer = Depends(get_kafka_producer)
     user_: Optional[User] = Depends(get_user)
     news_manager: NewsManager = Depends(get_news_manager)
 
@@ -36,7 +39,8 @@ class NewsViewSet:
                  })
     @authorize_only
     async def create(self, p: NewCreatePayload) -> New:
-        payload = AddedPostNewPayload(author=self.user_.get_short(), text=p.text)
+        payload = AddedPostNewPayload(author=self.user_.get_short(),
+                                      text=p.text)
         new = New.from_payload(payload)
         await self.news_manager.create(
             id=new.id,
@@ -45,8 +49,8 @@ class NewsViewSet:
             payload=payload,
             created=dt.fromtimestamp(new.created).strftime(TIMESTAMP_FORMAT),
         )
-        new.populated = True
-        # TODO: send to followers
+        new.populated, new.stored = True, True
+        await self.kafka_producer.send(new.json())
         return new
 
     @router.get('/', response_model=List[New], responses={

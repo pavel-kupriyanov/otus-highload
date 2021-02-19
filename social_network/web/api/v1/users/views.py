@@ -17,7 +17,7 @@ from social_network.db.managers import (
     UsersHobbyManager
 )
 from social_network.db.exceptions import DatabaseError
-from social_network.services.kafka import KafkaProducer
+from social_network.services.kafka import KafkaProducer, Topic
 
 from .models import UsersQueryParams
 from ..depends import (
@@ -86,7 +86,7 @@ class UserViewSet:
             user_hobby = await self.user_hobby_manager.create(self.user_.id, id)
 
             new = self.prepare_new(user_hobby.hobby_id)
-            await self.kafka_producer.send(new.json(), new.id)
+            await self.kafka_producer.send(new.json(), Topic.Populate)
 
             return user_hobby
         except DatabaseError:

@@ -35,8 +35,6 @@ class MasterSlaveDatabaseSettings(BaseModel):
 class KafkaSettings(BaseModel):
     HOST = 'localhost'
     PORT = 9092
-    PARTITIONS = 2
-    TOPIC_NAME = 'news'
 
 
 class BaseSettings(PydanticSettings):
