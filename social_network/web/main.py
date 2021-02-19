@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from social_network.settings import ROOT_DIR, settings
 from social_network.db.exceptions import RowsNotFoundError
-from social_network.db.db import get_connector
+from social_network.db.connectors_storage import ConnectorsStorage
 
 from .api import router as api_router
 
@@ -37,10 +37,14 @@ app.include_router(api_router, prefix='/api')
 
 @app.on_event("startup")
 async def startup():
-    app.state.connector = await get_connector(settings.DATABASE)
-    app.state.slave_connectors = tuple([
-        await get_connector(conf) for conf in settings.SLAVE_DATABASES
-    ])
+    db = settings.DATABASE
+    connectors_storage = ConnectorsStorage()
+    await connectors_storage.create_connector(db.MASTER)
+
+    for conf in db.SLAVES:
+        await connectors_storage.create_connector(conf)
+
+    app.state.connectors_storage = connectors_storage
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)

@@ -19,9 +19,9 @@ counter = Counter()
 
 
 async def create_hobbies(conf: Settings, count: int = 1000, tasks: int = 10):
-    connector = DatabaseConnector(conf.DATABASE)
+    connector = DatabaseConnector(conf.DATABASE.MASTER)
     await connector.start()
-    manager = HobbiesManager(connector, settings)
+    manager = HobbiesManager(connector, conf=settings)
     counter = Counter()
     tasks = [create_hobbies_task(manager, i, counter, count // tasks)
              for i in range(tasks)]

@@ -1,6 +1,7 @@
 import os
 import json
 from copy import deepcopy
+from typing import List
 
 from pydantic import (
     BaseModel,
@@ -10,11 +11,10 @@ from pydantic import (
 
 
 class UvicornSettings(BaseModel):
-    # TODO: fix module object is not callable
-    ASGI_PATH: str = 'web:app'
+    ASGI_PATH: str = 'social_network:app'
     HOST: str = '0.0.0.0'
     PORT: int = int(os.getenv('PORT') or 8000)
-    WORKERS = 4
+    WORKERS = 2
 
 
 class DatabaseSettings(BaseModel):
@@ -27,10 +27,15 @@ class DatabaseSettings(BaseModel):
     MAX_CONNECTIONS = 1
 
 
+class MasterSlaveDatabaseSettings(BaseModel):
+    MASTER: DatabaseSettings
+    SLAVES: List[DatabaseSettings] = []
+
+
 class BaseSettings(PydanticSettings):
     DEBUG: bool
     UVICORN: UvicornSettings
-    DATABASE: DatabaseSettings
+    DATABASE: MasterSlaveDatabaseSettings
 
     @classmethod
     def from_json(cls, path):

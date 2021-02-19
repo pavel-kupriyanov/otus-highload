@@ -21,7 +21,7 @@ import {
   ACCEPT_FRIEND_REQUEST,
   DECLINE_FRIEND_REQUEST,
   GET_USER_DATA,
-  GET_FRIEND_REQUEST_USERS
+  GET_FRIEND_REQUEST_USERS, CLEAR_CHAT_USER, CLEAR_MESSAGES, GET_CHAT_USER, GET_MESSAGES
 } from "./actions";
 import {
   deleteTokenFromStorage,
@@ -83,7 +83,7 @@ export const login = (email, password) => {
     dispatch(showLoader());
     let isSuccess = false;
     try {
-      const response = await axios.post(`${API_BASE}/auth/login/`, {email, password});
+      const response = await axios.post(`${API_BASE}/auth/login`, {email, password});
       isSuccess = true;
       storeTokenIntoStorage(response.data);
       dispatch({type: LOGIN_SUCCESS, payload: response.data});
@@ -166,7 +166,7 @@ export const register = (
     const payload = {email, password, first_name, last_name, age, gender, city};
     let isSuccess = false;
     try {
-      await axios.post(`${API_BASE}/auth/register/`, payload);
+      await axios.post(`${API_BASE}/auth/register`, payload);
       isSuccess = true;
       dispatch(showMessage("Success!"));
       dispatch({type: REGISTER_SUCCESS});
@@ -380,5 +380,73 @@ export const getFriendRequestUsers = ids => {
       console.log(e);
     }
     dispatch(hideLoader());
+  }
+}
+
+
+export const clearChatUser = () => {
+  return dispatch => dispatch({type: CLEAR_CHAT_USER});
+}
+
+export const clearMessages = () => {
+  return dispatch => dispatch({type: CLEAR_MESSAGES});
+}
+
+
+export const getChatUser = userId => {
+  return async dispatch => {
+    let isSuccess = false;
+    dispatch(showLoader());
+    try {
+      const response = await axios.get(`${API_BASE}/users/${userId}/`);
+      isSuccess = true;
+      dispatch({type: GET_CHAT_USER, payload: response.data});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Get user failed'))
+    }
+    dispatch(hideLoader());
+    return isSuccess;
+  }
+}
+
+export const getMessages = (userId, afterTimestamp = 0, page = 1, pageLimit = 100) => {
+  return async dispatch => {
+    let data = [];
+    const payload = {
+      to_user_id: userId,
+      after_timestamp: afterTimestamp,
+      page: page,
+      paginate_by: pageLimit
+    }
+    const query = toQueryString(payload);
+    const axios = getAuthorizedAxios();
+    try {
+      const response = await axios.get(`${API_BASE}/messages/?${query}`);
+      data = response.data;
+      dispatch({type: GET_MESSAGES, payload: data});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Get messages failed'))
+    }
+    return data.length > 0;
+  }
+}
+
+export const sendMessage = (userId, text) => {
+  return async dispatch => {
+    let isSuccess = false;
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      const response = await axios.post(`${API_BASE}/messages/`, {to_user_id: userId, text});
+      isSuccess = true;
+      dispatch({type: GET_MESSAGES, payload: [response.data]});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Send message failed'))
+    }
+    dispatch(hideLoader());
+    return isSuccess;
   }
 }

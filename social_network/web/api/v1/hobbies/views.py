@@ -2,7 +2,6 @@ from typing import Optional, List
 from fastapi import (
     APIRouter,
     Depends,
-    HTTPException
 )
 from fastapi_utils.cbv import cbv
 

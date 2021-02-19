@@ -5,3 +5,5 @@ from .hobbies import HobbiesManager
 from .tokens import AccessTokenManager
 from .users import UserManager
 from .users_hobbies import UsersHobbyManager
+from .shards import ShardsManager
+from .db_infos import DatabaseInfoManager

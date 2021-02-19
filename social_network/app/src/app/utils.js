@@ -52,3 +52,15 @@ export const toQueryString = obj => {
 }
 
 
+export const prepareMessages = (oldMessages, newMessages) => {
+  const alreadyAddedIds = oldMessages.map(m => m.id);
+  const messages = Array.from(oldMessages);
+  newMessages.forEach(m => {
+    if (alreadyAddedIds.includes(m.id)) {
+      return
+    }
+    alreadyAddedIds.push(m.id);
+    messages.push(m);
+  })
+  return messages.sort((a, b) => {return a.created < b.created ? -1 : 1})
+}

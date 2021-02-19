@@ -5,8 +5,8 @@ import {getUserData} from "./app/actionCreators";
 import {connect} from "react-redux";
 import {Container, Grid} from "@material-ui/core";
 
-import AuthRedirect from "./components/common/components/AuthRedirect";
-import {LoginPage, RegisterPage, UserPage, UsersPage} from "./components/pages";
+import {AuthRedirect, NotAuthRedirect} from "./components/common";
+import {LoginPage, RegisterPage, UserPage, UsersPage, ChatPage} from "./components/pages";
 import Header from "./components/common/components/Header";
 import {Notification} from "./components/common";
 
@@ -27,7 +27,6 @@ class App extends React.Component {
         getUserData(authentication.user_id);
       }
     }, 20 * 1000);
-
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -61,6 +60,15 @@ class App extends React.Component {
                   <AuthRedirect>
                     <RegisterPage/>
                   </AuthRedirect>
+                </Route>
+                <Route path="/chat/:id" render={({match}) =>
+                  <NotAuthRedirect>
+                    <ChatPage
+                      key={match.params.id}
+                      chatUserId={match.params.id}
+                    />
+                  </NotAuthRedirect>
+                }>
                 </Route>
                 <Route path="/:id" render={({match}) =>
                   <UserPage
