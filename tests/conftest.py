@@ -2,7 +2,7 @@ import asyncio
 from uuid import uuid4
 from os.path import dirname, abspath
 from datetime import datetime, timedelta
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Dict, List
 
 import aiomysql
 import pytest
@@ -10,7 +10,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from pydantic import EmailStr
 
-from social_network.settings import Settings
+from social_network.settings import Settings, KafkaSettings
 from social_network.db.migrations.main import migrate
 
 from social_network.db.models import (
@@ -103,11 +103,18 @@ M = TypeVar('M')
 
 class FakeKafkaProducer(KafkaProducer):
 
+    def __init__(self, conf: KafkaSettings):
+        super().__init__(conf)
+        self.queue: Dict[str, List[str]] = {
+            Topic.News: [],
+            Topic.Populate: []
+        }
+
     async def start(self):
         pass
 
     async def send(self, data: str, topic: str = Topic.News):
-        pass
+        self.queue[topic].append(data)
 
     async def close(self):
         pass

@@ -34,6 +34,12 @@ GET_BY_IDS = '''
     (id IN  %s)
 '''
 
+GET_FRIENDS_IDS = '''
+    SELECT DISTINCT users.id FROM users
+    JOIN friendships f on users.id = f.user_id
+    WHERE f.friend_id = %s
+'''
+
 
 class UserManager(CRUDManager):
     model = User
@@ -60,3 +66,8 @@ class UserManager(CRUDManager):
                                 query=query,
                                 order_by=order_by, order=order,
                                 limit=limit, offset=offset)
+
+    async def get_friends_ids(self, user_id: int) -> List[int]:
+        rows = await self.execute(GET_FRIENDS_IDS, (user_id,), read_only=True,
+                                  raise_if_empty=False)
+        return [int(row[0]) for row in rows]

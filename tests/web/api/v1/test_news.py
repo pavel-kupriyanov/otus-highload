@@ -37,3 +37,13 @@ def test_get_news(app: TestClient, token1: AccessToken, new1: New,
     news = response.json()
     assert len(news) == 1
     assert news[0]['author_id'] == token1.user_id
+
+
+def test_get_feed(app: TestClient, token1: AccessToken, new1: New,
+                  friendship, new2: New, user2):
+    response = app.get(f'{BASE_PATH}feed/',
+                       headers={'x-auth-token': token1.value})
+    assert response.status_code == 200
+    news = response.json()
+    assert len(news) == 1
+    assert news[0]['author_id'] == user2.id

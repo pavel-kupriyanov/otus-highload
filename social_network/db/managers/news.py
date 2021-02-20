@@ -1,5 +1,4 @@
-from uuid import uuid4
-from typing import Dict, Type, Optional
+from typing import Dict, Type, Optional, List
 
 from ..crud import CRUDManager
 from ..models import (
@@ -13,7 +12,7 @@ from ..models import (
 
 GET_USER_NEWS = '''
     SELECT id, author_id, type, payload, created FROM news
-    WHERE author_id = %s
+    WHERE author_id IN %s
 '''
 
 GET_NEWS = '''
@@ -39,11 +38,11 @@ class NewsManager(CRUDManager):
         return await self._get(id, read_only=False)
 
     # TODO: fix limit in other places
-    async def list(self, author_id: Optional[int] = None, order_by='created',
-                   order='DESC', limit=None, offset=0):
+    async def list(self, author_ids: Optional[List[int]] = None,
+                   order_by='created', order='DESC', limit=None, offset=0):
         params, query = tuple(), GET_NEWS
-        if author_id:
-            params, query = (author_id,), GET_USER_NEWS
+        if author_ids is not None:
+            params, query = ((author_ids,),), GET_USER_NEWS
         limit = limit or self.conf.BASE_PAGE_LIMIT
         return await self._list(params, query, order_by=order_by, order=order,
                                 limit=limit, offset=offset)
