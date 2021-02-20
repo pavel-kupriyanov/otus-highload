@@ -1,5 +1,5 @@
 from asyncio import AbstractEventLoop, create_task
-from typing import List, Dict, Type, Tuple, Any
+from typing import Dict, Tuple
 from datetime import datetime as dt
 from json import loads
 
@@ -15,12 +15,10 @@ from .producer import KafkaProducer
 from ..base import BaseService
 
 
-# TODO: think about better dependency injection
 class BaseKafkaConsumer(BaseService):
     group_id: str
     consumer: AIOKafkaConsumer
     topics: Tuple[str]
-    depends: Dict[str, Type[Any]] = {}
 
     def __init__(self, conf: KafkaSettings, loop: AbstractEventLoop, **kwargs):
         self.conf = conf
@@ -62,10 +60,6 @@ class BaseNewsKafkaConsumer(BaseKafkaConsumer):
 class PopulateNewsKafkaConsumer(BaseKafkaConsumer):
     group_id = 'populate'
     topics = (Topic.Populate,)
-    depends = {
-        'connectors_storage': ConnectorsStorage,
-        'kafka_producer': KafkaProducer
-    }
 
     def __init__(self,
                  conf: KafkaSettings,
@@ -107,9 +101,6 @@ class PopulateNewsKafkaConsumer(BaseKafkaConsumer):
 
 class NewsKafkaDatabaseConsumer(BaseNewsKafkaConsumer):
     group_id = 'news_database'
-    depends = {
-        'connectors_storage': ConnectorsStorage,
-    }
 
     def __init__(self,
                  conf: KafkaSettings,
@@ -137,53 +128,3 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
 
     async def _process(self, raw_new: Dict):
         print(f'Written into cache: {raw_new["id"]}')
-
-
-# TODO: split files
-
-class KafkaConsumersManager(BaseService):
-    conf: KafkaSettings
-    consumer_classes: List[Type[BaseKafkaConsumer]]
-    loop: AbstractEventLoop
-    connectors_storage: ConnectorsStorage
-    kafka_producer: KafkaProducer
-    consumers: List[BaseKafkaConsumer]
-
-    dependency_mapping: Dict[Any, str] = {
-        ConnectorsStorage: 'connectors_storage',
-        KafkaProducer: 'kafka_producer'
-    }
-
-    def __init__(self,
-                 conf: KafkaSettings,
-                 consumer_classes: List[Type[BaseKafkaConsumer]],
-                 connectors_storage: ConnectorsStorage,
-                 kafka_producer: KafkaProducer,
-                 loop: AbstractEventLoop):
-        self.conf = conf
-        self.consumer_classes = consumer_classes
-        self.connectors_storage = connectors_storage
-        self.kafka_producer = kafka_producer
-        self.consumers = []
-        self.loop = loop
-
-    async def start(self):
-        for consumer_cls in self.consumer_classes:
-            dependencies = self.resolve_dependencies(consumer_cls)
-            consumer = consumer_cls(self.conf, loop=self.loop, **dependencies)
-            await consumer.start()
-            self.consumers.append(consumer)
-
-    def resolve_dependencies(
-            self, consumer_cls: Type[BaseKafkaConsumer]
-    ) -> Dict[str, Any]:
-        dependencies = {}
-        for dependency in consumer_cls.depends.values():
-            attr_name = self.dependency_mapping[dependency]
-            dependencies[attr_name] = getattr(self, attr_name)
-
-        return dependencies
-
-    async def close(self):
-        for consumer in self.consumers:
-            await consumer.close()

@@ -1,4 +1,4 @@
-from typing import Optional, Type, TypeVar
+from typing import Optional
 from functools import lru_cache
 from datetime import datetime
 
@@ -20,22 +20,10 @@ from social_network.db.managers import (
     NewsManager,
 )
 from social_network.db.sharding.managers import MessagesManager
-
-from social_network.db.connectors_storage import BaseConnectorStorage
 from social_network.db.exceptions import RowsNotFoundError
-from social_network.settings import settings, Settings
-
-M = TypeVar('M')
-
-
-class DependencyInjector:
-
-    def __init__(self, connector_storage: BaseConnectorStorage, conf: Settings):
-        self.connector_storage = connector_storage
-        self.conf = conf
-
-    def get_manager(self, cls: Type[M]) -> M:
-        return cls(self.connector_storage, self.conf)
+from social_network.services import DependencyInjector
+from social_network.services.kafka import KafkaProducer
+from social_network.settings import settings
 
 
 @lru_cache(1)
@@ -43,68 +31,67 @@ def get_settings_depends():
     return settings
 
 
-def get_connectors_storage_storage(request: Request):
-    return request.app.state.connectors_storage
-
-
-def get_kafka_producer(request: Request):
-    return request.app.state.kafka_producer
-
-
-def get_injector(
-        connector_storage: BaseConnectorStorage = Depends(
-            get_connectors_storage_storage
-        ),
-        conf: Settings = Depends(get_settings_depends)
-) -> DependencyInjector:
-    return DependencyInjector(connector_storage, conf)
+def get_injector_depends(request: Request) -> DependencyInjector:
+    return request.app.state.dependency_injector
 
 
 @lru_cache(1)
-def get_user_manager(injector=Depends(get_injector)) -> UserManager:
+def get_user_manager(injector=Depends(get_injector_depends)) -> UserManager:
     return injector.get_manager(UserManager)
 
 
 @lru_cache(1)
-def get_auth_user_manager(injector=Depends(get_injector)) -> AuthUserManager:
+def get_auth_user_manager(injector=Depends(get_injector_depends)) \
+        -> AuthUserManager:
     return injector.get_manager(AuthUserManager)
 
 
 @lru_cache(1)
-def get_access_token_manager(injector=Depends(get_injector)) \
+def get_access_token_manager(injector=Depends(get_injector_depends)) \
         -> AccessTokenManager:
     return injector.get_manager(AccessTokenManager)
 
 
 @lru_cache(1)
-def get_friend_request_manager(injector=Depends(get_injector)) \
+def get_friend_request_manager(injector=Depends(get_injector_depends)) \
         -> FriendRequestManager:
     return injector.get_manager(FriendRequestManager)
 
 
 @lru_cache(1)
-def get_friendship_manager(injector=Depends(get_injector)) -> FriendshipManager:
+def get_friendship_manager(injector=Depends(get_injector_depends)) \
+        -> FriendshipManager:
     return injector.get_manager(FriendshipManager)
 
 
 @lru_cache(1)
-def get_hobby_manager(injector=Depends(get_injector)) -> HobbiesManager:
+def get_hobby_manager(injector=Depends(get_injector_depends)) \
+        -> HobbiesManager:
     return injector.get_manager(HobbiesManager)
 
 
 @lru_cache(1)
-def get_user_hobby_manager(injector=Depends(get_injector)) -> UsersHobbyManager:
+def get_user_hobby_manager(injector=Depends(get_injector_depends)) \
+        -> UsersHobbyManager:
     return injector.get_manager(UsersHobbyManager)
 
 
 @lru_cache(1)
-def get_messages_manager(injector=Depends(get_injector)) -> MessagesManager:
+def get_messages_manager(injector=Depends(get_injector_depends)) \
+        -> MessagesManager:
     return injector.get_manager(MessagesManager)
 
 
 @lru_cache(1)
-def get_news_manager(injector=Depends(get_injector)) -> MessagesManager:
+def get_news_manager(injector=Depends(get_injector_depends)) \
+        -> MessagesManager:
     return injector.get_manager(NewsManager)
+
+
+@lru_cache(1)
+def get_kafka_producer(injector=Depends(get_injector_depends)) \
+        -> KafkaProducer:
+    return injector.kafka_producer
 
 
 async def get_user_id(

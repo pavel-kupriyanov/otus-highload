@@ -1,1 +1,2 @@
-from .kafka import KafkaProducer, Topic
+from .kafka import KafkaProducer, KafkaConsumersService, Topic
+from .injector import DependencyInjector

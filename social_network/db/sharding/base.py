@@ -9,7 +9,7 @@ from ..db import BaseDatabaseConnector, DatabaseResponse
 from ..exceptions import DatabaseError
 from ..base import BaseManager, BaseModel
 from ..managers import ShardsManager
-from ..connectors_storage import BaseConnectorStorage
+from ..connectors_storage import BaseConnectorsStorage
 from ..models import ShardState, Shard
 
 S = TypeVar('S', bound='BaseShardingModel', covariant=True)
@@ -25,7 +25,7 @@ class BaseShardingModel(BaseModel):
 class BaseShardingManager(BaseManager):
     model: S
 
-    def __init__(self, connector_storage: BaseConnectorStorage,
+    def __init__(self, connector_storage: BaseConnectorsStorage,
                  conf: Settings = settings):
         super(BaseShardingManager, self).__init__(connector_storage, conf)
         self.shards_manager = ShardsManager(connector_storage, conf=conf)

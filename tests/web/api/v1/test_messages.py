@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from social_network.settings import DatabaseSettings
 from social_network.db.models import AccessToken, User, ShardState
-from social_network.db.connectors_storage import ConnectorsStorage
+from social_network.services import DependencyInjector
 from social_network.db.sharding.models import Message
 
 BASE_PATH = '/api/v1/messages/'
@@ -39,9 +39,9 @@ async def add_message_shards_into_db(factory, cursor):
 
 
 @pytest.fixture(name='clear_messages_after')
-async def clear_messages(connector_storage: ConnectorsStorage):
-    connector_0 = await connector_storage.get_connector(SHARD_0_CONF)
-    connector_1 = await connector_storage.get_connector(SHARD_1_CONF)
+async def clear_messages(injector: DependencyInjector):
+    connector_0 = await injector.connectors_storage.get_connector(SHARD_0_CONF)
+    connector_1 = await injector.connectors_storage.get_connector(SHARD_1_CONF)
     yield
     await connector_0.make_query('DELETE FROM messages', raise_if_empty=False)
     await connector_1.make_query('DELETE FROM messages', raise_if_empty=False)

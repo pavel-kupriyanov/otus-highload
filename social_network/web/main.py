@@ -7,22 +7,11 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from social_network.settings import (
-    ROOT_DIR,
-    settings,
-    KafkaSettings,
-    MasterSlaveDatabaseSettings
-)
+from social_network.settings import ROOT_DIR, settings
 from social_network.db.exceptions import RowsNotFoundError
-from social_network.db.connectors_storage import ConnectorsStorage
-from social_network.services.kafka import (
-    KafkaProducer,
-    NewsKafkaDatabaseConsumer,
-    NewsKafkaCacheConsumer,
-    PopulateNewsKafkaConsumer,
-    KafkaConsumersManager,
-)
+from social_network.services.kafka import KafkaConsumersService
 
+from social_network.services import DependencyInjector
 from .api import router as api_router
 
 app = FastAPI()
@@ -48,61 +37,23 @@ async def handle_404(request: Request, exc: RowsNotFoundError):
 app.include_router(api_router, prefix='/api')
 
 
-async def get_connectors_storage(conf: MasterSlaveDatabaseSettings):
-    connectors_storage = ConnectorsStorage()
-    await connectors_storage.create_connector(conf.MASTER)
-
-    for conf in conf.SLAVES:
-        await connectors_storage.create_connector(conf)
-
-    return connectors_storage
-
-
-async def get_kafka_producer(conf: KafkaSettings):
-    producer = KafkaProducer(conf)
-    await producer.start()
-    return producer
-
-
-async def get_news_kafka_consumer_storage(
-        conf: KafkaSettings,
-        connector_storage: ConnectorsStorage,
-        kafka_producer: KafkaProducer
-) -> KafkaConsumersManager:
-    consumer_classes = [
-        NewsKafkaCacheConsumer,
-        NewsKafkaDatabaseConsumer,
-        PopulateNewsKafkaConsumer
-    ]
-    consumer_storage = KafkaConsumersManager(
-        conf,
-        consumer_classes,
-        connector_storage,
-        kafka_producer,
-        get_running_loop()
-    )
-    await consumer_storage.start()
-    return consumer_storage
-
-
 @app.on_event('startup')
 async def startup():
-    kafka_conf = settings.KAFKA
-    connector_storage = await get_connectors_storage(settings.DATABASE)
-    kafka_producer = await get_kafka_producer(kafka_conf)
-    app.state.consumers = await get_news_kafka_consumer_storage(
-        kafka_conf,
-        connector_storage,
-        kafka_producer
+    injector = DependencyInjector(settings)
+    await injector.start()
+    kafka_consumers_service = KafkaConsumersService(
+        settings.KAFKA, injector=injector, loop=get_running_loop()
     )
-    app.state.kafka_producer = kafka_producer
-    app.state.connectors_storage = connector_storage
+    await kafka_consumers_service.start()
+
+    app.state.dependency_injector = injector
+    app.state.kafka_consumers_service = kafka_consumers_service
 
 
 @app.on_event('shutdown')
 async def shutdown():
-    await app.state.kafka_producer.close()
-    await app.state.kafka_news_consumer.close()
+    await app.state.dependency_injector.close()
+    await app.state.kafka_consumers_service.close()
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)

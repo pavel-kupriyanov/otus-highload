@@ -131,16 +131,12 @@ class FriendRequestViewSet:
         friendship = await self.friendship_manager.create(request.to_user,
                                                           request.from_user)
 
-        payload1 = AddedFriendNewPayload(
-            author=request.to_user, new_friend=request.from_user
-        )
-        payload2 = AddedFriendNewPayload(
-            author=request.from_user, new_friend=request.to_user
-        )
-        new1 = New.from_payload(payload1)
-        new2 = New.from_payload(payload2)
-        await self.kafka_producer.send(new1.json(), Topic.Populate)
-        await self.kafka_producer.send(new2.json(), Topic.Populate)
+        author, friend = request.from_user, request.to_user
+
+        for pair in ((author, friend), (friend, author)):
+            payload = AddedFriendNewPayload(author=pair[0], new_friend=pair[1])
+            new = New.from_payload(payload)
+            await self.kafka_producer.send(new.json(), Topic.Populate)
 
         return friendship
 

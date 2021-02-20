@@ -14,7 +14,7 @@ from .db import (
     DatabaseResponse
 )
 from .exceptions import DatabaseError
-from .connectors_storage import BaseConnectorStorage
+from .connectors_storage import BaseConnectorsStorage
 
 M = TypeVar('M', bound='BaseModel', covariant=True)
 
@@ -44,7 +44,7 @@ class BaseModel(PydanticBaseModel):
 class BaseManager:
     model: M
 
-    def __init__(self, connector_storage: BaseConnectorStorage,
+    def __init__(self, connector_storage: BaseConnectorsStorage,
                  conf: Settings = settings):
         db_slaves = conf.DATABASE.SLAVES
 
