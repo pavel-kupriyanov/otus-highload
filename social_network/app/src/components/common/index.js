@@ -2,13 +2,14 @@ import {SimpleField, SimpleSelect} from "./fields";
 import {required} from "./validators";
 
 import Hobbies from "./components/Hobbies";
-import AuthRedirect from "./components/AuthRedirect";
-import NotAuthRedirect from "./components/NotAuthRedirect";
+import AnonymousOnly from "./components/AnonymousOnly";
+import AuthorizedOnly from "./components/AuthorizedOnly";
 import Header from "./components/Header";
 import UserCard from "./components/UserCard";
 import Loader from "./components/Loader";
 import Notification from "./components/Notification";
 import UserInfo from "./components/UserInfo";
+import New from './components/New';
 
 
 export {
@@ -16,11 +17,12 @@ export {
   SimpleSelect,
   SimpleField,
   Hobbies,
-  AuthRedirect,
-  NotAuthRedirect,
+  AnonymousOnly,
+  AuthorizedOnly,
   Header,
   UserCard,
   Loader,
   Notification,
-  UserInfo
+  UserInfo,
+  New
 }

@@ -1,4 +1,3 @@
-from datetime import datetime as dt
 from typing import Optional, List
 from fastapi import (
     APIRouter,
@@ -10,7 +9,6 @@ from social_network.db.models import (
     New,
     User,
     AddedPostNewPayload,
-    TIMESTAMP_FORMAT
 )
 from social_network.db.managers import NewsManager, UserManager
 from social_network.services.kafka import KafkaProducer
@@ -45,13 +43,7 @@ class NewsViewSet:
         payload = AddedPostNewPayload(author=self.user_.get_short(),
                                       text=p.text)
         new = New.from_payload(payload)
-        await self.news_manager.create(
-            id=new.id,
-            author_id=new.author_id,
-            news_type=new.type,
-            payload=payload,
-            created=dt.fromtimestamp(new.created).strftime(TIMESTAMP_FORMAT),
-        )
+        await self.news_manager.create_from_model(new)
         new.populated, new.stored = True, True
         await self.kafka_producer.send(new.json())
         return new

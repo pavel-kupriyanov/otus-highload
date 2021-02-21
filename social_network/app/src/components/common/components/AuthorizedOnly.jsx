@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import {connect} from "react-redux";
 
 
-class NotAuthRedirect extends React.Component {
+class AuthorizedOnly extends React.Component {
 
 
   render() {
@@ -20,7 +20,7 @@ class NotAuthRedirect extends React.Component {
 }
 
 
-NotAuthRedirect.propTypes = {
+AuthorizedOnly.propTypes = {
   userData: PropTypes.object.isRequired,
 }
 
@@ -30,4 +30,4 @@ const mapStateToProps = state => ({
 });
 
 
-export default connect(mapStateToProps, null)(NotAuthRedirect);
+export default connect(mapStateToProps, null)(AuthorizedOnly);

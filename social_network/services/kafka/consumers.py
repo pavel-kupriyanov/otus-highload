@@ -1,12 +1,11 @@
 from asyncio import AbstractEventLoop, create_task
 from typing import Dict, Tuple
-from datetime import datetime as dt
 from json import loads
 
 from aiokafka import AIOKafkaConsumer, ConsumerRecord
 
 from social_network.settings import KafkaSettings
-from social_network.db.models import New, TIMESTAMP_FORMAT, NewsType
+from social_network.db.models import New, NewsType
 from social_network.db.managers import NewsManager, HobbiesManager, UserManager
 from social_network.db.connectors_storage import ConnectorsStorage
 
@@ -114,13 +113,7 @@ class NewsKafkaDatabaseConsumer(BaseNewsKafkaConsumer):
         if new.stored:
             return
         print(f'Write into db: {new}')
-        await self.news_manager.create(
-            id=new.id,
-            author_id=new.author_id,
-            news_type=new.type,
-            payload=new.payload,
-            created=dt.fromtimestamp(new.created).strftime(TIMESTAMP_FORMAT),
-        )
+        await self.news_manager.create_from_model(new)
 
 
 class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):

@@ -21,7 +21,11 @@ import {
   ACCEPT_FRIEND_REQUEST,
   DECLINE_FRIEND_REQUEST,
   GET_USER_DATA,
-  GET_FRIEND_REQUEST_USERS, CLEAR_CHAT_USER, CLEAR_MESSAGES, GET_CHAT_USER, GET_MESSAGES
+  GET_FRIEND_REQUEST_USERS,
+  CLEAR_CHAT_USER,
+  CLEAR_MESSAGES,
+  GET_CHAT_USER,
+  GET_MESSAGES
 } from "./actions";
 import {
   deleteTokenFromStorage,
@@ -32,7 +36,7 @@ import {
 } from "./utils";
 import {store} from './store';
 
-export const API_BASE = '/api/v1';
+export const API_BASE = 'http://localhost:8000/api/v1';
 
 const AXIOS_CONFIG = {
   timeout: 20000,
@@ -46,11 +50,12 @@ const axios = axiosBase.create(AXIOS_CONFIG);
 
 const getAuthorizedAxios = () => {
   const state = store.getState();
+  const authentication = state.userData.authentication;
   const config = {
     ...AXIOS_CONFIG,
     headers: {
       ...AXIOS_CONFIG.headers,
-      "X-Auth-Token": state.userData.authentication && state.userData.authentication.value
+      "X-Auth-Token": authentication && authentication.value
     }
   }
   return axiosBase.create(config)

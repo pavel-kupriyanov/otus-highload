@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import {connect} from "react-redux";
 
 
-class AuthRedirect extends React.Component {
+class AnonymousOnly extends React.Component {
 
 
   render() {
@@ -20,7 +20,7 @@ class AuthRedirect extends React.Component {
 }
 
 
-AuthRedirect.propTypes = {
+AnonymousOnly.propTypes = {
   userData: PropTypes.object.isRequired,
 }
 
@@ -30,4 +30,4 @@ const mapStateToProps = state => ({
 });
 
 
-export default connect(mapStateToProps, null)(AuthRedirect);
+export default connect(mapStateToProps, null)(AnonymousOnly);

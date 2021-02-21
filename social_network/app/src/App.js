@@ -5,8 +5,8 @@ import {getUserData} from "./app/actionCreators";
 import {connect} from "react-redux";
 import {Container, Grid} from "@material-ui/core";
 
-import {AuthRedirect, NotAuthRedirect} from "./components/common";
-import {LoginPage, RegisterPage, UserPage, UsersPage, ChatPage} from "./components/pages";
+import {AuthorizedOnly, AnonymousOnly} from "./components/common";
+import {LoginPage, RegisterPage, UserPage, UsersPage, ChatPage, FeedPage} from "./components/pages";
 import Header from "./components/common/components/Header";
 import {Notification} from "./components/common";
 
@@ -52,22 +52,27 @@ class App extends React.Component {
             <Grid container justify='center'>
               <Switch>
                 <Route path="/login">
-                  <AuthRedirect>
+                  <AnonymousOnly>
                     <LoginPage/>
-                  </AuthRedirect>
+                  </AnonymousOnly>
                 </Route>
                 <Route path="/register">
-                  <AuthRedirect>
+                  <AnonymousOnly>
                     <RegisterPage/>
-                  </AuthRedirect>
+                  </AnonymousOnly>
+                </Route>
+                <Route path="/feed">
+                  <AuthorizedOnly>
+                    <FeedPage/>
+                  </AuthorizedOnly>
                 </Route>
                 <Route path="/chat/:id" render={({match}) =>
-                  <NotAuthRedirect>
+                  <AuthorizedOnly>
                     <ChatPage
                       key={match.params.id}
                       chatUserId={match.params.id}
                     />
-                  </NotAuthRedirect>
+                  </AuthorizedOnly>
                 }>
                 </Route>
                 <Route path="/:id" render={({match}) =>

@@ -1,3 +1,4 @@
+from datetime import datetime as dt
 from typing import Dict, Type, Optional, List
 
 from ..crud import CRUDManager
@@ -5,6 +6,7 @@ from ..models import (
     New,
     NewsType,
     Payload,
+    TIMESTAMP_FORMAT,
     AddedPostNewPayload,
     AddedHobbyNewPayload,
     AddedFriendNewPayload
@@ -36,6 +38,15 @@ class NewsManager(CRUDManager):
         query = self._make_create_query()
         await self.execute(query, params, raise_if_empty=False)
         return await self._get(id, read_only=False)
+
+    async def create_from_model(self, new: New) -> New:
+        return await self.create(
+            new.id,
+            new.author_id,
+            new.type,
+            new.payload,
+            dt.fromtimestamp(new.created).strftime(TIMESTAMP_FORMAT)
+        )
 
     # TODO: fix limit in other places
     async def list(self, author_ids: Optional[List[int]] = None,
