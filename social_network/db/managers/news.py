@@ -48,7 +48,6 @@ class NewsManager(CRUDManager):
             dt.fromtimestamp(new.created).strftime(TIMESTAMP_FORMAT)
         )
 
-    # TODO: fix limit in other places
     async def list(self, author_ids: Optional[List[int]] = None,
                    order_by='created', order='DESC', limit=None, offset=0):
         params, query = tuple(), GET_NEWS

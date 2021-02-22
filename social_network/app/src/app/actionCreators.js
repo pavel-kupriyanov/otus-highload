@@ -25,7 +25,10 @@ import {
   CLEAR_CHAT_USER,
   CLEAR_MESSAGES,
   GET_CHAT_USER,
-  GET_MESSAGES, CLEAR_NEWS, GET_NEWS
+  GET_MESSAGES,
+  CLEAR_NEWS,
+  GET_NEWS,
+  ADD_NEW
 } from "./actions";
 import {
   deleteTokenFromStorage,
@@ -36,7 +39,7 @@ import {
 } from "./utils";
 import {store} from './store';
 
-export const API_BASE = 'http://localhost:8000/api/v1';
+export const API_BASE = '/api/v1';
 
 const AXIOS_CONFIG = {
   timeout: 20000,
@@ -457,25 +460,25 @@ export const sendMessage = (userId, text) => {
 }
 
 
-export const getNews = (page = 1, paginate_by = 100) => {
-  // return async dispatch => {
-  //   dispatch(showLoader());
-  //   const query = toQueryString({page, paginate_by});
-  //   try {
-  //     const response = await axios.get(`${API_BASE}/news/?${query}`,);
-  //     dispatch({type: GET_NEWS, payload: response.data});
-  //   } catch (e) {
-  //     console.log(e);
-  //     dispatch(showMessage('Get news failed'));
-  //   }
-  //   dispatch(hideLoader());
-  // }
-}
-
-export const getFeed = (page = 1, paginate_by = 100) => {
+export const getNews = (userId, page = 1, paginate_by = 100, order='DESC') => {
   return async dispatch => {
     dispatch(showLoader());
-    const query = toQueryString({page, paginate_by});
+    const query = toQueryString({page, paginate_by, order});
+    try {
+      const response = await axios.get(`${API_BASE}/news/${userId}/?${query}`,);
+      dispatch({type: GET_NEWS, payload: response.data});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Get news failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const getFeed = (page = 1, paginate_by = 100, order='DESC') => {
+  return async dispatch => {
+    dispatch(showLoader());
+    const query = toQueryString({page, paginate_by, order});
     const axios = getAuthorizedAxios();
     try {
       const response = await axios.get(`${API_BASE}/news/feed/?${query}`,);
@@ -490,4 +493,22 @@ export const getFeed = (page = 1, paginate_by = 100) => {
 
 export const clearNews = () => {
   return dispatch => dispatch({type: CLEAR_NEWS});
+}
+
+export const addNew = (text) => {
+    return async dispatch => {
+    let isSuccess = false;
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      const response = await axios.post(`${API_BASE}/news/`, {text});
+      isSuccess = true;
+      dispatch({type: ADD_NEW, payload: response.data});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Send message failed'))
+    }
+    dispatch(hideLoader());
+    return isSuccess;
+  }
 }

@@ -32,7 +32,7 @@ import {
   GET_MESSAGES,
   CLEAR_MESSAGES,
   GET_NEWS,
-  CLEAR_NEWS
+  CLEAR_NEWS, ADD_NEW
 } from './actions';
 
 
@@ -302,6 +302,10 @@ export default function reducer(state = initialState, action) {
 
     case CLEAR_NEWS: {
       return {...state, news: []}
+    }
+    
+    case ADD_NEW: {
+      return {...state, news: [payload, ...state.news]}
     }
 
     default:

@@ -49,7 +49,7 @@ class ChatPage extends React.Component {
 
 
   componentDidMount() {
-    const {getMessages, getChatUser, chatUserId, chat} = this.props;
+    const {getMessages, getChatUser, chatUserId} = this.props;
     getChatUser(chatUserId);
     getMessages(chatUserId, 0, 1, PAGE_LIMIT);
 
