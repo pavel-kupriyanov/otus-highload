@@ -6,7 +6,8 @@ import {getUser, getFriends, clearUser, clearUsers} from '../../../app/actionCre
 import {Hobbies, UserInfo, UserCard} from '../../common';
 import EditableHobbies from './EditableHobbies';
 import FriendRequests from './FriendRequests';
-import {Card, Grid, Typography, FormControlLabel, Checkbox} from '@material-ui/core';
+import {Card, Grid, Typography, FormControlLabel, Checkbox, Paper, Tabs, Tab} from '@material-ui/core';
+import New from "../../common/components/New";
 
 const cardStyle = {
   padding: '20px',
@@ -19,12 +20,80 @@ const gridStyle = {
   padding: '20px'
 }
 
+const TABS = {
+  FRIENDS: 'FRIENDS',
+  POSTS: 'POSTS'
+}
+
+const feed = [
+  {
+    "id": "809e8405-b0db-4760-b8ae-bdfa8696725f",
+    "author_id": 2,
+    "type": "ADDED_HOBBY",
+    "payload": {
+      "author": {
+        "id": 2,
+        "first_name": "Pavel",
+        "last_name": "Kupriyanov"
+      },
+      "hobby": {
+        "id": 5,
+        "name": "Rt"
+      }
+    },
+    "created": 1613741844.0,
+    "populated": false,
+    "stored": false
+  },
+  {
+    "id": "63a233f1-897d-4a4e-ac01-b188f85e2004",
+    "author_id": 2,
+    "type": "ADDED_HOBBY",
+    "payload": {
+      "author": {
+        "id": 2,
+        "first_name": "Pavel",
+        "last_name": "Kupriyanov"
+      },
+      "hobby": {
+        "id": 2,
+        "name": "Foobar"
+      }
+    },
+    "created": 1613741907.0,
+    "populated": false,
+    "stored": false
+  },
+  {
+    "id": "98000374-e848-4459-88eb-82d6866935f0",
+    "author_id": 2,
+    "type": "ADDED_FRIEND",
+    "payload": {
+      "author": {
+        "id": 2,
+        "first_name": "Pavel",
+        "last_name": "Kupriyanov"
+      },
+      "new_friend": {
+        "id": 1,
+        "first_name": "sender",
+        "last_name": "sender"
+      }
+    },
+    "created": 1613742983.0,
+    "populated": false,
+    "stored": false
+  }
+]
+
+
 class UserPage extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      showDeclinedFriendRequests: true
+      showDeclinedFriendRequests: true,
+      tab: TABS.POSTS
     }
   }
 
@@ -43,7 +112,8 @@ class UserPage extends React.Component {
 
   render() {
     const {id, user, users, userData} = this.props;
-    const {showDeclinedFriendRequests} = this.state;
+    const news = feed;
+    const {showDeclinedFriendRequests, tab} = this.state;
     const isMyPage = Number(id) === userData.user.id;
     const friends = isMyPage ? userData.friends : users;
 
@@ -90,18 +160,29 @@ class UserPage extends React.Component {
           <FriendRequests showDeclined={showDeclinedFriendRequests}/>
         </Grid>
       </>}
-      <Grid item xs={12} style={gridStyle}>
-        <Typography variant='h5' component='h2'>
-          Friends
-        </Typography>
+      <Grid item xs={12} style={{marginTop: 70}}>
+        <Paper square>
+          <Tabs
+            value={tab}
+            indicatorColor="primary"
+            textColor="primary"
+            onChange={(e, value) => this.setState({...this.state, tab: value})}
+            aria-label="disabled tabs example"
+          >
+            <Tab label="Friends" value={TABS.FRIENDS}/>
+            <Tab label="Posts" value={TABS.POSTS}/>
+          </Tabs>
+        </Paper>
       </Grid>
-      <Grid item xs={12}>
-        <Grid item container spacing={2} justify='space-between' direction='row' xs={12}>
-          {friends.map(user => <Grid item xs={6} key={'friend_' + user.id}>
-              <UserCard user={user}/>
-            </Grid>
-          )}
-        </Grid>
+      <Grid item xs={12} container spacing={2} justify='space-between' direction='row'>
+        {tab === TABS.FRIENDS && friends.map(user => <Grid item xs={6} key={'friend_' + user.id}>
+            <UserCard user={user}/>
+          </Grid>
+        )}
+        {tab === TABS.POSTS && news.map(newItem => <Grid item xs={12} key={'new_' + newItem.id}>
+            <New newItem={newItem}/>
+          </Grid>
+        )}
       </Grid>
     </Grid>
   }

@@ -30,13 +30,13 @@ def test_create_new(app: TestClient, user1, token1: AccessToken):
     assert response.json()['payload']['text'] == new['text']
 
 
-def test_get_news(app: TestClient, token1: AccessToken, new1: New,
-                  new2: New):
-    response = app.get(BASE_PATH, headers={'x-auth-token': token1.value})
+def test_get_news(app: TestClient, token2: AccessToken, new1: New,
+                  new2: New, user1):
+    response = app.get(f'{BASE_PATH}{user1.id}/')
     assert response.status_code == 200
     news = response.json()
     assert len(news) == 1
-    assert news[0]['author_id'] == token1.user_id
+    assert news[0]['author_id'] == user1.id
 
 
 def test_get_feed(app: TestClient, token1: AccessToken, new1: New,

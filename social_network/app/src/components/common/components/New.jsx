@@ -70,7 +70,6 @@ export default class New extends React.Component {
 
   render() {
     const {newItem} = this.props;
-    console.log(newItem);
     return (
       <Card style={style}>
         {this.renderNewText(newItem)}

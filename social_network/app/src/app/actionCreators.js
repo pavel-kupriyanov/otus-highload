@@ -25,7 +25,7 @@ import {
   CLEAR_CHAT_USER,
   CLEAR_MESSAGES,
   GET_CHAT_USER,
-  GET_MESSAGES
+  GET_MESSAGES, CLEAR_NEWS, GET_NEWS
 } from "./actions";
 import {
   deleteTokenFromStorage,
@@ -454,4 +454,40 @@ export const sendMessage = (userId, text) => {
     dispatch(hideLoader());
     return isSuccess;
   }
+}
+
+
+export const getNews = (page = 1, paginate_by = 100) => {
+  // return async dispatch => {
+  //   dispatch(showLoader());
+  //   const query = toQueryString({page, paginate_by});
+  //   try {
+  //     const response = await axios.get(`${API_BASE}/news/?${query}`,);
+  //     dispatch({type: GET_NEWS, payload: response.data});
+  //   } catch (e) {
+  //     console.log(e);
+  //     dispatch(showMessage('Get news failed'));
+  //   }
+  //   dispatch(hideLoader());
+  // }
+}
+
+export const getFeed = (page = 1, paginate_by = 100) => {
+  return async dispatch => {
+    dispatch(showLoader());
+    const query = toQueryString({page, paginate_by});
+    const axios = getAuthorizedAxios();
+    try {
+      const response = await axios.get(`${API_BASE}/news/feed/?${query}`,);
+      dispatch({type: GET_NEWS, payload: response.data});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Get feed failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const clearNews = () => {
+  return dispatch => dispatch({type: CLEAR_NEWS});
 }

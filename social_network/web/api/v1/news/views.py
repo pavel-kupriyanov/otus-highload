@@ -48,19 +48,8 @@ class NewsViewSet:
         await self.kafka_producer.send(new.json())
         return new
 
-    @router.get('/', response_model=List[New], responses={
-        200: {'description': 'List of news.'},
-    })
-    @authorize_only
-    async def list(self, q: NewsQueryParams = Depends(NewsQueryParams)) \
-            -> List[New]:
-        return await self.news_manager.list(author_ids=[self.user_.id],
-                                            order=q.order,
-                                            limit=q.paginate_by,
-                                            offset=q.offset)
-
     @router.get('/feed/', response_model=List[New], responses={
-        200: {'description': 'List of news.'},
+        200: {'description': 'User feed.'},
     })
     @authorize_only
     async def feed(self, q: NewsQueryParams = Depends(NewsQueryParams)) \
@@ -70,3 +59,15 @@ class NewsViewSet:
                                             order=q.order,
                                             limit=q.paginate_by,
                                             offset=q.offset)
+
+    @router.get('/{user_id}/', response_model=List[New], responses={
+        200: {'description': 'List of news for user.'},
+    })
+    async def list(self, user_id: int,
+                   q: NewsQueryParams = Depends(NewsQueryParams)) -> List[New]:
+        return await self.news_manager.list(author_ids=[user_id],
+                                            order=q.order,
+                                            limit=q.paginate_by,
+                                            offset=q.offset)
+
+
