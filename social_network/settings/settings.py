@@ -6,6 +6,7 @@ from social_network.settings.base import (
     DatabaseSettings,
     KafkaSettings,
     RedisSettings,
+    NewsCacheSettings,
     MasterSlaveDatabaseSettings
 )
 
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     )
     KAFKA: KafkaSettings = KafkaSettings()
     REDIS: RedisSettings = RedisSettings()
+    NEWS_CACHE: NewsCacheSettings = NewsCacheSettings()
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
     BASE_PAGE_LIMIT = 10000
 

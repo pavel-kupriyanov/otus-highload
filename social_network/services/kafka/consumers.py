@@ -6,7 +6,7 @@ from json import loads
 from aiokafka import AIOKafkaConsumer, ConsumerRecord
 from aioredis import Redis
 
-from social_network.settings import KafkaSettings
+from social_network.settings import KafkaSettings, NewsCacheSettings
 from social_network.db.models import New, NewsType
 from social_network.db.managers import NewsManager, HobbiesManager, UserManager
 from social_network.db.connectors_storage import ConnectorsStorage
@@ -128,22 +128,21 @@ class NewsKafkaDatabaseConsumer(BaseNewsKafkaConsumer):
 
 class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
     group_id = 'news_cache'
-    MAX_FOLLOWERS = 100
-    MAX_FEED_SIZE = 100
 
     def __init__(self,
                  conf: KafkaSettings,
+                 news_conf: NewsCacheSettings,
                  loop: AbstractEventLoop,
                  connector_storage: ConnectorsStorage,
                  redis_service: RedisService):
         super().__init__(conf, loop)
+        self.news_conf = news_conf
         self.redis: Redis = redis_service
         self.users_manager = UserManager(connector_storage)
 
     async def _process(self, raw_new: Dict):
         new = New(**raw_new)
         follower_ids = await self.get_follower_ids(new.author_id)
-
         add_tasks = []
         for follower_id in follower_ids:
             task = create_task(self.add_new_to_feed(follower_id, new))
@@ -153,26 +152,40 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
 
         print(f'Written into cache: {new.id}')
 
+    # TODO: refactor it, large big O
     async def add_new_to_feed(self, follower_id: int, new: New):
+        max_feed_size = self.news_conf.MAX_FEED_SIZE
+        sort_key = lambda raw_new: raw_new['created']
+
         feed = await self.redis.hget(RedisKeys.USER_FEED, follower_id) or []
-        feed = sorted(feed, key=lambda raw_new: raw_new['created'])
-        offset = len(feed) - self.MAX_FEED_SIZE - 1
+        if new.id in {raw_new['id'] for raw_new in feed}:
+            # Already cached
+            return
+        feed = sorted(feed, key=sort_key)
+
+        earliest = new.created < feed[0]['created']
+        offset = len(feed) - max_feed_size - 1
         if offset > 0:
+            if earliest:
+                # No need to add earliest key into cache
+                return
+
             feed = feed[offset:]
 
         feed.append(new.dict())
 
-        await self.redis.hset(RedisKeys.USER_FEED, follower_id, feed)
+        await self.redis.hset(RedisKeys.USER_FEED, follower_id,
+                              sorted(feed, key=sort_key))
 
     async def get_follower_ids(self, user_id: int) -> List[int]:
+        max_followers = self.news_conf.MAX_FOLLOWERS_PER_USERS
         followers = await self.redis.hget(RedisKeys.FOLLOWERS, user_id)
+
         if not followers:
             followers = await self.users_manager.get_friends_ids(user_id)
             await self.redis.hset(RedisKeys.FOLLOWERS, user_id, followers)
-        else:
-            print('from cache')
-        print(followers)
-        if len(followers) > self.MAX_FOLLOWERS:
-            followers = sample(followers, self.MAX_FOLLOWERS)
+
+        if len(followers) > max_followers:
+            followers = sample(followers, max_followers)
 
         return followers

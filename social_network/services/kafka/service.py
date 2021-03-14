@@ -1,7 +1,7 @@
 from asyncio import AbstractEventLoop
 from typing import List, Type
 
-from social_network.settings import KafkaSettings
+from social_network.settings import KafkaSettings, NewsCacheSettings
 
 from .consumers import (
     BaseKafkaConsumer,
@@ -22,9 +22,11 @@ class KafkaConsumersService(BaseService):
 
     def __init__(self,
                  conf: KafkaSettings,
+                 news_conf: NewsCacheSettings,
                  loop: AbstractEventLoop,
                  injector: DependencyInjector):
         self.conf = conf
+        self.news_conf = news_conf
         self.loop = loop
         self.injector = injector
         self.consumers = []
@@ -34,9 +36,9 @@ class KafkaConsumersService(BaseService):
         connectors_storage = injector.connectors_storage
         kafka_producer = injector.kafka_producer
         db_consumer = NewsKafkaDatabaseConsumer(conf, loop, connectors_storage)
-        cache_consumer = NewsKafkaCacheConsumer(
-            conf, loop, connectors_storage, injector.redis_client
-        )
+        cache_consumer = NewsKafkaCacheConsumer(conf, self.news_conf, loop,
+                                                connectors_storage,
+                                                injector.redis_client)
         populate_consumer = PopulateNewsKafkaConsumer(
             conf, loop, connectors_storage, kafka_producer
         )

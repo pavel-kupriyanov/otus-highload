@@ -5,5 +5,6 @@ from social_network.settings.base import (
     UvicornSettings,
     KafkaSettings,
     RedisSettings,
+    NewsCacheSettings,
     MasterSlaveDatabaseSettings
 )

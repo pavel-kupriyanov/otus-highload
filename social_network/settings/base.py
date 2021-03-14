@@ -42,11 +42,19 @@ class RedisSettings(BaseModel):
     PORT = 6379
 
 
+class NewsCacheSettings(BaseModel):
+    MAX_FOLLOWERS_PER_USERS: int = 100
+    MAX_FEED_SIZE: int = 1000
+    WARMUP_CACHE_PERIOD: int = 1 * 24 * 60 * 60
+
+
 class BaseSettings(PydanticSettings):
     DEBUG: bool
     UVICORN: UvicornSettings
     DATABASE: MasterSlaveDatabaseSettings
     KAFKA: KafkaSettings
+    REDIS: RedisSettings
+    NEWS_CACHE: NewsCacheSettings
     TOKEN_EXPIRATION_TIME: int
     BASE_PAGE_LIMIT: int
 
@@ -64,8 +72,8 @@ class BaseSettings(PydanticSettings):
 def deep_merge(first: dict, second: dict) -> dict:
     res = deepcopy(first)
     for key, value in second.items():
-        if key in res and isinstance(res[key], dict) and isinstance(value,
-                                                                    dict):
+        if key in res and isinstance(res[key], dict) \
+                and isinstance(value, dict):
             res[key] = deep_merge(res[key], value)
         else:
             res[key] = value

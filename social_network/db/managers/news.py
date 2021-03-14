@@ -21,6 +21,11 @@ GET_NEWS = '''
     SELECT id, author_id, type, payload, created FROM news
 '''
 
+GET_NEWS_AFTER_TIMESTAMP = '''
+    SELECT id, author_id, type, payload, created FROM news
+    WHERE created > %s
+'''
+
 
 class NewsManager(CRUDManager):
     model = New
@@ -53,6 +58,13 @@ class NewsManager(CRUDManager):
         params, query = tuple(), GET_NEWS
         if author_ids is not None:
             params, query = (tuple(author_ids),), GET_USER_NEWS
+        limit = limit or self.conf.BASE_PAGE_LIMIT
+        return await self._list(params, query, order_by=order_by, order=order,
+                                limit=limit, offset=offset)
+
+    async def list_after_timestamp(self, timestamp: str, order_by='created',
+                                   order='DESC', limit=None, offset=0):
+        params, query = (timestamp,), GET_NEWS_AFTER_TIMESTAMP
         limit = limit or self.conf.BASE_PAGE_LIMIT
         return await self._list(params, query, order_by=order_by, order=order,
                                 limit=limit, offset=offset)
