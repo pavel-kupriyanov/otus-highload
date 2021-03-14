@@ -37,6 +37,11 @@ class KafkaSettings(BaseModel):
     PORT = 9092
 
 
+class RedisSettings(BaseModel):
+    HOST = 'localhost'
+    PORT = 6379
+
+
 class BaseSettings(PydanticSettings):
     DEBUG: bool
     UVICORN: UvicornSettings

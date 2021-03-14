@@ -1,3 +1,4 @@
+from async_lru import alru_cache
 from datetime import datetime
 from typing import List
 
@@ -37,6 +38,8 @@ class AccessTokenManager(CRUDManager):
     async def list_user_active(self, user_id: int) -> List[AccessToken]:
         return await self._list((user_id,), GET_USER_ACTIVE_TOKENS)
 
+    # todo: rewrite on redis cache  - this way insecure
+    @alru_cache(maxsize=1000)
     async def get_by_value(self, value: str) -> AccessToken:
         tokens = await self.execute(GET_TOKEN_BY_VALUE, (value,),
                                     read_only=True)

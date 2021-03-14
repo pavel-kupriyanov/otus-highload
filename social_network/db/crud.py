@@ -1,3 +1,4 @@
+from async_lru import alru_cache
 from typing import Tuple, Any, List, Union
 
 from social_network.settings import settings
@@ -73,6 +74,7 @@ class BaseCRUDManager(BaseManager, LimitMixin, OrderMixin):
 class CRUDManager(BaseCRUDManager):
     model: M
 
+    @alru_cache(maxsize=1000)
     async def get(self, id: int) -> M:
         return await self._get(id)
 

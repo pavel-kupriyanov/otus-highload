@@ -23,6 +23,7 @@ from social_network.db.sharding.managers import MessagesManager
 from social_network.db.exceptions import RowsNotFoundError
 from social_network.services import DependencyInjector
 from social_network.services.kafka import KafkaProducer
+from social_network.services.redis import RedisService
 from social_network.settings import settings
 
 
@@ -92,6 +93,11 @@ def get_news_manager(injector=Depends(get_injector_depends)) \
 def get_kafka_producer(injector=Depends(get_injector_depends)) \
         -> KafkaProducer:
     return injector.kafka_producer
+
+
+@lru_cache(1)
+def get_redis_client(injector=Depends(get_injector_depends)) -> RedisService:
+    return injector.redis_client
 
 
 async def get_user_id(

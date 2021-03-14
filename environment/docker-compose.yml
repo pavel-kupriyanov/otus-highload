@@ -86,6 +86,13 @@ services:
     ports:
       - 9000:9000
 
+  redis:
+    image: bitnami/redis
+    container_name: redis
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'true'
+    ports:
+      - 6379:6379
 
 volumes:
   mysql-master-db:

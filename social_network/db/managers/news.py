@@ -52,7 +52,7 @@ class NewsManager(CRUDManager):
                    order_by='created', order='DESC', limit=None, offset=0):
         params, query = tuple(), GET_NEWS
         if author_ids is not None:
-            params, query = ((author_ids,),), GET_USER_NEWS
+            params, query = (tuple(author_ids),), GET_USER_NEWS
         limit = limit or self.conf.BASE_PAGE_LIMIT
         return await self._list(params, query, order_by=order_by, order=order,
                                 limit=limit, offset=offset)

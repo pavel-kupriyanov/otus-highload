@@ -5,6 +5,7 @@ from social_network.settings.base import (
     UvicornSettings,
     DatabaseSettings,
     KafkaSettings,
+    RedisSettings,
     MasterSlaveDatabaseSettings
 )
 
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
         )
     )
     KAFKA: KafkaSettings = KafkaSettings()
+    REDIS: RedisSettings = RedisSettings()
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
     BASE_PAGE_LIMIT = 10000
 
@@ -32,6 +34,9 @@ class Settings(BaseSettings):
             },
             'KAFKA': {
                 'env': 'KAFKA_CONF'
+            },
+            'REDIS': {
+                'env': 'REDIS_CONF'
             }
         }
 

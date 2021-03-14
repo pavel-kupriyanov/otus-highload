@@ -30,11 +30,13 @@ class KafkaConsumersService(BaseService):
         self.consumers = []
 
     def init_consumers(self) -> List[BaseKafkaConsumer]:
-        conf, loop = self.conf, self.loop
-        connectors_storage = self.injector.connectors_storage
-        kafka_producer = self.injector.kafka_producer
+        conf, loop, injector = self.conf, self.loop, self.injector
+        connectors_storage = injector.connectors_storage
+        kafka_producer = injector.kafka_producer
         db_consumer = NewsKafkaDatabaseConsumer(conf, loop, connectors_storage)
-        cache_consumer = NewsKafkaCacheConsumer(conf, loop)
+        cache_consumer = NewsKafkaCacheConsumer(
+            conf, loop, connectors_storage, injector.redis_client
+        )
         populate_consumer = PopulateNewsKafkaConsumer(
             conf, loop, connectors_storage, kafka_producer
         )

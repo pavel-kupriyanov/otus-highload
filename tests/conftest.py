@@ -10,7 +10,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from pydantic import EmailStr
 
-from social_network.settings import Settings, KafkaSettings
+from social_network.settings import Settings, KafkaSettings, RedisSettings
 from social_network.db.migrations.main import migrate
 
 from social_network.db.models import (
@@ -42,6 +42,7 @@ from social_network.db.managers import (
 from social_network.db.sharding.managers import MessagesManager
 from social_network.services import DependencyInjector
 from social_network.services.kafka import Topic, KafkaProducer
+from social_network.services.redis import RedisService
 from social_network.web.main import app
 from social_network.web.api.v1.depends import (
     get_settings_depends,
@@ -120,10 +121,32 @@ class FakeKafkaProducer(KafkaProducer):
         pass
 
 
+class FakeRedisService(RedisService):
+
+    def __init__(self, conf: RedisSettings):
+        super().__init__(conf)
+        self.storage = {}
+
+    async def get(self, key):
+        return self.storage.get(key)
+
+    async def set(self, key, value, *args, **kwargs):
+        self.storage[key] = value
+
+    async def start(self):
+        pass
+
+    async def close(self):
+        pass
+
+
 class FakeDependencyInjector(DependencyInjector):
 
     async def get_kafka_producer(self) -> KafkaProducer:
         return FakeKafkaProducer(self.conf.KAFKA)
+
+    async def get_redis_client(self) -> RedisService:
+        return FakeRedisService(self.conf.REDIS)
 
 
 class FixtureFactory:

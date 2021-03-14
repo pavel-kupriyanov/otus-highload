@@ -5,6 +5,7 @@ from social_network.settings import Settings
 
 from .base import BaseService
 from .kafka import KafkaProducer
+from .redis import RedisService
 
 M = TypeVar('M')
 
@@ -12,6 +13,7 @@ M = TypeVar('M')
 class DependencyInjector(BaseService):
     connectors_storage: ConnectorsStorage
     kafka_producer: KafkaProducer
+    redis_client: RedisService
 
     def __init__(self, conf: Settings):
         self.conf = conf
@@ -19,6 +21,7 @@ class DependencyInjector(BaseService):
     async def start(self):
         self.connectors_storage = await self.get_connectors_storage()
         self.kafka_producer = await self.get_kafka_producer()
+        self.redis_client = await self.get_redis_client()
 
     async def close(self):
         await self.kafka_producer.close()
@@ -36,6 +39,11 @@ class DependencyInjector(BaseService):
         producer = KafkaProducer(self.conf.KAFKA)
         await producer.start()
         return producer
+
+    async def get_redis_client(self) -> RedisService:
+        client = RedisService(self.conf.REDIS)
+        await client.start()
+        return client
 
     def get_manager(self, cls: Type[M]) -> M:
         return cls(self.connectors_storage, self.conf)
