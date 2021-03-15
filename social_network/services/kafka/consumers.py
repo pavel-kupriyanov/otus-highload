@@ -171,7 +171,7 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
         feed.append(new.dict())
 
         await self.redis.hset(RedisKeys.USER_FEED, follower_id,
-                              sorted(feed, key=sort_key))
+                              sorted(feed, key=sort_key, reverse=True))
 
     async def get_follower_ids(self, user_id: int) -> List[int]:
         max_followers = self.news_conf.MAX_FOLLOWERS_PER_USERS
@@ -180,6 +180,7 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
         if not followers:
             followers = await self.users_manager.get_friends_ids(user_id)
             await self.redis.hset(RedisKeys.FOLLOWERS, user_id, followers)
+            await self.redis.expire(RedisKeys.FOLLOWERS, 5 * 60)
 
         if len(followers) > max_followers:
             followers = sample(followers, max_followers)
