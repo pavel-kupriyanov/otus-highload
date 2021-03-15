@@ -6,5 +6,6 @@ from social_network.settings.base import (
     KafkaSettings,
     RedisSettings,
     NewsCacheSettings,
+    KafkaSSLSettings,
     MasterSlaveDatabaseSettings
 )

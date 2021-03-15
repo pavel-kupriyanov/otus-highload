@@ -4,6 +4,7 @@ from typing import Dict, Tuple, List
 from json import loads
 
 from aiokafka import AIOKafkaConsumer, ConsumerRecord
+
 from aioredis import Redis
 
 from social_network.settings import KafkaSettings, NewsCacheSettings
@@ -12,7 +13,8 @@ from social_network.db.managers import NewsManager, HobbiesManager, UserManager
 from social_network.db.connectors_storage import ConnectorsStorage
 from social_network.services.redis import RedisService, RedisKeys
 
-from .consts import Topic
+from .utils import prepare_ssl_context
+from .consts import Topic, Protocol
 from .producer import KafkaProducer
 from ..base import BaseService
 
@@ -31,9 +33,12 @@ class BaseKafkaConsumer(BaseService):
         self.task = None
 
     async def start(self):
+        protocol = Protocol.SSL if self.conf.USE_SSL else Protocol.PLAIN
         self.consumer = AIOKafkaConsumer(
             *self.topics,
             bootstrap_servers=f'{self.conf.HOST}:{self.conf.PORT}',
+            security_protocol=protocol,
+            ssl_context=prepare_ssl_context(self.conf),
             loop=self.loop,
             group_id=self.group_id,
             consumer_timeout_ms=5000
@@ -51,11 +56,7 @@ class BaseKafkaConsumer(BaseService):
 
     async def process(self):
         async for record in self.consumer:
-            try:
-                await self._process(self.parse(record))
-            except Exception as e:
-                print(repr(e))
-                raise
+            await self._process(self.parse(record))
             await self.consumer.commit()
 
     async def _process(self, msg: Dict):
@@ -81,11 +82,9 @@ class PopulateNewsKafkaConsumer(BaseKafkaConsumer):
         self.user_manager = UserManager(connectors_storage)
 
     async def _process(self, raw_new: Dict):
-        print(f'To populated: {raw_new["id"]}')
         new = New(**raw_new)
         if not new.populated:
             await self.populate(new)
-        print(f'After populate: {new}')
         await self.kafka_producer.send(new.json())
 
     async def populate(self, new: New):
@@ -122,7 +121,6 @@ class NewsKafkaDatabaseConsumer(BaseNewsKafkaConsumer):
         new = New(**raw_new)
         if new.stored:
             return
-        print(f'Write into db: {new}')
         await self.news_manager.create_from_model(new)
 
 
@@ -149,8 +147,6 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
             add_tasks.append(task)
 
         await gather(*add_tasks)
-
-        print(f'Written into cache: {new.id}')
 
     # TODO: refactor it, large big O
     async def add_new_to_feed(self, follower_id: int, new: New):

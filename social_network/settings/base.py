@@ -32,14 +32,24 @@ class MasterSlaveDatabaseSettings(BaseModel):
     SLAVES: List[DatabaseSettings] = []
 
 
+class KafkaSSLSettings(BaseModel):
+    CA: SecretStr = ''
+    CERT: SecretStr = ''
+    KEY: SecretStr = ''
+
+
 class KafkaSettings(BaseModel):
-    HOST = 'localhost'
-    PORT = 9092
+    HOST: str = 'localhost'
+    PORT: int = 9092
+    USE_SSL: bool = False
+    SSL: KafkaSSLSettings = KafkaSSLSettings()
 
 
 class RedisSettings(BaseModel):
-    HOST = 'localhost'
-    PORT = 6379
+    HOST: str = 'localhost'
+    PORT: int = 6379
+    USER: str = ''
+    PASSWORD: SecretStr = ''
 
 
 class NewsCacheSettings(BaseModel):
