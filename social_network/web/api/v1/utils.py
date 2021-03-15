@@ -12,7 +12,8 @@ class Order(str, Enum):
 def authorize_only(func):
     @wraps(func)
     async def wrapper(self, *args, **kwargs):
-        if getattr(self, 'user_id') is None:
+        u_id, u = getattr(self, 'user_id', None), getattr(self, 'user_', None)
+        if not (u_id or u):
             raise HTTPException(401, detail='Authorized user only.')
         return await func(self, *args, **kwargs)
 

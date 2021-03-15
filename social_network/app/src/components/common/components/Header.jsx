@@ -39,6 +39,11 @@ class Header extends React.Component {
           </Button>}
           {isAuthenticated && <Button
             color="inherit"
+            onClick={() => this.toPath('/feed')}>
+            News
+          </Button>}
+          {isAuthenticated && <Button
+            color="inherit"
             onClick={logout}>
             Logout
           </Button>}

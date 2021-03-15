@@ -140,6 +140,7 @@ cython_debug/
 
 tests/settings/settings.json
 social_network/settings/settings.json
+social_network/settings/settings.local.json
 
 social_network/app/.idea
 social_network/app/node_modules

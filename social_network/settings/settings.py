@@ -4,11 +4,14 @@ from social_network.settings.base import (
     BaseSettings,
     UvicornSettings,
     DatabaseSettings,
+    KafkaSettings,
+    RedisSettings,
+    NewsCacheSettings,
     MasterSlaveDatabaseSettings
 )
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_PATH = os.path.join(ROOT_DIR, 'settings/settings.json')
+CONFIG_PATH = os.path.join(ROOT_DIR, 'settings/settings.local.json')
 
 
 class Settings(BaseSettings):
@@ -20,6 +23,9 @@ class Settings(BaseSettings):
             NAME='otus_highload'
         )
     )
+    KAFKA: KafkaSettings = KafkaSettings()
+    REDIS: RedisSettings = RedisSettings()
+    NEWS_CACHE: NewsCacheSettings = NewsCacheSettings()
     TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 7
     BASE_PAGE_LIMIT = 10000
 
@@ -28,6 +34,12 @@ class Settings(BaseSettings):
             'DATABASE': {
                 'env': 'DATABASE_CONF',
             },
+            'KAFKA': {
+                'env': 'KAFKA_CONF'
+            },
+            'REDIS': {
+                'env': 'REDIS_CONF'
+            }
         }
 
 

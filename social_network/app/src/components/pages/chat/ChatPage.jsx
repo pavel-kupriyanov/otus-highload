@@ -22,7 +22,7 @@ import Message from "./Message";
 import MessageForm from "./Form";
 import {Button} from "@material-ui/core";
 
-const PAGE_LIMIT = 10;
+const PAGE_LIMIT = 100;
 
 
 const chatStyle = {
@@ -49,7 +49,7 @@ class ChatPage extends React.Component {
 
 
   componentDidMount() {
-    const {getMessages, getChatUser, chatUserId, chat} = this.props;
+    const {getMessages, getChatUser, chatUserId} = this.props;
     getChatUser(chatUserId);
     getMessages(chatUserId, 0, 1, PAGE_LIMIT);
 

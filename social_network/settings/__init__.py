@@ -3,4 +3,9 @@ from social_network.settings.base import (
     BaseSettings,
     DatabaseSettings,
     UvicornSettings,
+    KafkaSettings,
+    RedisSettings,
+    NewsCacheSettings,
+    KafkaSSLSettings,
+    MasterSlaveDatabaseSettings
 )

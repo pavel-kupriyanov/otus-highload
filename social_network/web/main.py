@@ -1,4 +1,5 @@
 import os.path
+from asyncio import get_running_loop, create_task
 from functools import lru_cache
 
 from fastapi import FastAPI, Request
@@ -8,9 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from social_network.settings import ROOT_DIR, settings
 from social_network.db.exceptions import RowsNotFoundError
-from social_network.db.connectors_storage import ConnectorsStorage
+from social_network.db.managers import NewsManager
+from social_network.services.kafka import KafkaConsumersService
 
+from social_network.services import DependencyInjector
 from .api import router as api_router
+from .utils import warmup_news
 
 app = FastAPI()
 
@@ -35,16 +39,29 @@ async def handle_404(request: Request, exc: RowsNotFoundError):
 app.include_router(api_router, prefix='/api')
 
 
-@app.on_event("startup")
+@app.on_event('startup')
 async def startup():
-    db = settings.DATABASE
-    connectors_storage = ConnectorsStorage()
-    await connectors_storage.create_connector(db.MASTER)
+    injector = DependencyInjector(settings)
+    await injector.start()
+    kafka_consumers_service = KafkaConsumersService(
+        settings.KAFKA, settings.NEWS_CACHE,
+        injector=injector, loop=get_running_loop()
+    )
+    await kafka_consumers_service.start()
+    coro = warmup_news(
+        settings.NEWS_CACHE,
+        NewsManager(injector.connectors_storage),
+        injector.kafka_producer
+    )
+    create_task(coro)
+    app.state.dependency_injector = injector
+    app.state.kafka_consumers_service = kafka_consumers_service
 
-    for conf in db.SLAVES:
-        await connectors_storage.create_connector(conf)
 
-    app.state.connectors_storage = connectors_storage
+@app.on_event('shutdown')
+async def shutdown():
+    await app.state.dependency_injector.close()
+    await app.state.kafka_consumers_service.close()
 
 
 @app.get('{full_path:path}', response_class=HTMLResponse)

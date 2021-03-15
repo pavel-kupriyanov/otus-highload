@@ -21,7 +21,14 @@ import {
   ACCEPT_FRIEND_REQUEST,
   DECLINE_FRIEND_REQUEST,
   GET_USER_DATA,
-  GET_FRIEND_REQUEST_USERS, CLEAR_CHAT_USER, CLEAR_MESSAGES, GET_CHAT_USER, GET_MESSAGES
+  GET_FRIEND_REQUEST_USERS,
+  CLEAR_CHAT_USER,
+  CLEAR_MESSAGES,
+  GET_CHAT_USER,
+  GET_MESSAGES,
+  CLEAR_NEWS,
+  GET_NEWS,
+  ADD_NEW
 } from "./actions";
 import {
   deleteTokenFromStorage,
@@ -46,11 +53,12 @@ const axios = axiosBase.create(AXIOS_CONFIG);
 
 const getAuthorizedAxios = () => {
   const state = store.getState();
+  const authentication = state.userData.authentication;
   const config = {
     ...AXIOS_CONFIG,
     headers: {
       ...AXIOS_CONFIG.headers,
-      "X-Auth-Token": state.userData.authentication && state.userData.authentication.value
+      "X-Auth-Token": authentication && authentication.value
     }
   }
   return axiosBase.create(config)
@@ -442,6 +450,60 @@ export const sendMessage = (userId, text) => {
       const response = await axios.post(`${API_BASE}/messages/`, {to_user_id: userId, text});
       isSuccess = true;
       dispatch({type: GET_MESSAGES, payload: [response.data]});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Send message failed'))
+    }
+    dispatch(hideLoader());
+    return isSuccess;
+  }
+}
+
+
+export const getNews = (userId, page = 1, paginate_by = 100, order='DESC') => {
+  return async dispatch => {
+    dispatch(showLoader());
+    const query = toQueryString({page, paginate_by, order});
+    try {
+      const response = await axios.get(`${API_BASE}/news/${userId}/?${query}`,);
+      dispatch({type: GET_NEWS, payload: response.data});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Get news failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const getFeed = (page = 1, paginate_by = 100, order='DESC') => {
+  return async dispatch => {
+    dispatch(showLoader());
+    const query = toQueryString({page, paginate_by, order});
+    const axios = getAuthorizedAxios();
+    try {
+      const response = await axios.get(`${API_BASE}/news/feed/?${query}`,);
+      dispatch({type: GET_NEWS, payload: response.data});
+    } catch (e) {
+      console.log(e);
+      dispatch(showMessage('Get feed failed'));
+    }
+    dispatch(hideLoader());
+  }
+}
+
+export const clearNews = () => {
+  return dispatch => dispatch({type: CLEAR_NEWS});
+}
+
+export const addNew = (text) => {
+    return async dispatch => {
+    let isSuccess = false;
+    const axios = getAuthorizedAxios();
+    dispatch(showLoader());
+    try {
+      const response = await axios.post(`${API_BASE}/news/`, {text});
+      isSuccess = true;
+      dispatch({type: ADD_NEW, payload: response.data});
     } catch (e) {
       console.log(e);
       dispatch(showMessage('Send message failed'))

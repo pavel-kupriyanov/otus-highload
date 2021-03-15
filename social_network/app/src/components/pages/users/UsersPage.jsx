@@ -3,24 +3,15 @@ import {connect} from "react-redux";
 import PropTypes from "prop-types";
 import {bindActionCreators} from "redux";
 import {Form} from "react-final-form";
-import {Button, Container, Grid, Typography} from "@material-ui/core";
+import {Container, Grid, Typography} from "@material-ui/core";
 
 
 import {getUsers, clearUsers} from "../../../app/actionCreators";
 import SearchForm from "./Form";
 import UserCard from "../../common/components/UserCard";
+import PaginateButtons from "../../common/components/PaginateButtons";
 
 const PAGE_LIMIT = 100;
-
-const style = {
-  backgroundColor: '#f5f5f5',
-  minWidth: '100%',
-  minHeight: '50px',
-  padding: '10px',
-  textAlign: 'center',
-  marginBottom: '10px',
-  justifyContent: 'center'
-}
 
 
 class UsersPage extends React.Component {
@@ -48,10 +39,7 @@ class UsersPage extends React.Component {
     if (prevProps.users.length === users.length) {
       return
     }
-    let isAll = false;
-    if (users.length < PAGE_LIMIT) {
-      isAll = true;
-    }
+    const isAll = users.length < PAGE_LIMIT;
     this.setState({...this.state, isAll});
   }
 
@@ -82,33 +70,16 @@ class UsersPage extends React.Component {
           component={SearchForm}
           onSubmit={this.handleSubmit}
         />
-          <Grid item container spacing={2} justify="space-between" direction="row">
-            {users.map(user => <Grid item xs={6} key={'user_' + user.id}>
-                <UserCard user={user}/>
-              </Grid>
-            )}
-            {!users.length && <Typography variant="h5" component="h2" style={{marginBottom: "10px"}}>
-              Users not found
-            </Typography>}
-          </Grid>
-        {(page > 1) && <Button
-          variant="contained"
-          color="primary"
-          type="submit"
-          size="large"
-          style={{marginRight: '10px'}}
-          onClick={() => this.handlePage(page - 1)}>
-          Previous
-        </Button>}
-        {!isAll && <Button
-          variant="contained"
-          color="primary"
-          type="submit"
-          size="large"
-          style={{marginRight: '10px'}}
-          onClick={() => this.handlePage(page + 1)}>
-          Next
-        </Button>}
+        <Grid item container spacing={2} justify="space-between" direction="row">
+          {users.map(user => <Grid item xs={6} key={'user_' + user.id}>
+              <UserCard user={user}/>
+            </Grid>
+          )}
+          {!users.length && <Typography variant="h5" component="h2" style={{marginBottom: "10px"}}>
+            Users not found
+          </Typography>}
+        </Grid>
+        <PaginateButtons page={page} isAll={isAll} handlePage={this.handlePage}/>
       </Container>
     );
   }

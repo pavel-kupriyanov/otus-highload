@@ -30,7 +30,9 @@ import {
   GET_CHAT_USER,
   CLEAR_CHAT_USER,
   GET_MESSAGES,
-  CLEAR_MESSAGES
+  CLEAR_MESSAGES,
+  GET_NEWS,
+  CLEAR_NEWS, ADD_NEW
 } from './actions';
 
 
@@ -68,6 +70,7 @@ const initialState = {
   users: [],
   requestCount: 0,
   message: '',
+  news: [],
   registerErrors: {
     email: null,
     first_name: null,
@@ -278,7 +281,6 @@ export default function reducer(state = initialState, action) {
         ...state,
         chat: {
           ...state.chat,
-          // todo: filter, sort, etc
           messages: prepareMessages(state.chat.messages, payload)
         }
       }
@@ -292,6 +294,18 @@ export default function reducer(state = initialState, action) {
           messages: []
         }
       }
+    }
+
+    case GET_NEWS: {
+      return {...state, news: payload}
+    }
+
+    case CLEAR_NEWS: {
+      return {...state, news: []}
+    }
+    
+    case ADD_NEW: {
+      return {...state, news: [payload, ...state.news]}
     }
 
     default:

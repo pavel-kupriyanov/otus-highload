@@ -1,7 +1,8 @@
 import asyncio
+from uuid import uuid4
 from os.path import dirname, abspath
 from datetime import datetime, timedelta
-from typing import Any, TypeVar, Type
+from typing import Any, TypeVar, Dict, List
 
 import aiomysql
 import pytest
@@ -9,13 +10,9 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from pydantic import EmailStr
 
-from social_network.settings import Settings, DatabaseSettings
+from social_network.settings import Settings, KafkaSettings, RedisSettings
 from social_network.db.migrations.main import migrate
-from social_network.db.db import get_connector
-from social_network.db.connectors_storage import (
-    ConnectorsStorage,
-    BaseConnectorStorage
-)
+
 from social_network.db.models import (
     AccessToken,
     AuthUser,
@@ -25,7 +22,10 @@ from social_network.db.models import (
     UserHobby,
     DatabaseInfo,
     Shard,
-    ShardState
+    New,
+    NewsType,
+    AddedPostNewPayload,
+    TIMESTAMP_FORMAT
 )
 from social_network.db.sharding.models import Message
 from social_network.db.managers import (
@@ -36,14 +36,17 @@ from social_network.db.managers import (
     HobbiesManager,
     UsersHobbyManager,
     ShardsManager,
-    DatabaseInfoManager
+    DatabaseInfoManager,
+    NewsManager
 )
 from social_network.db.sharding.managers import MessagesManager
+from social_network.services import DependencyInjector
+from social_network.services.kafka import Topic, KafkaProducer
+from social_network.services.redis import RedisService
 from social_network.web.main import app
 from social_network.web.api.v1.depends import (
-    get_connectors_storage_storage,
     get_settings_depends,
-    DependencyInjector
+    get_injector_depends,
 )
 from social_network.utils.security import hash_password
 
@@ -86,23 +89,6 @@ class ShaddamIV:
     GENDER = None
 
 
-SHARD_0_CONF = DatabaseSettings(
-    HOST="localhost",
-    PORT=3370,
-    USER="otus",
-    PASSWORD="otus",
-    NAME="otus"
-)
-
-SHARD_1_CONF = DatabaseSettings(
-    HOST="localhost",
-    PORT=3371,
-    USER="otus",
-    PASSWORD="otus",
-    NAME="otus"
-)
-
-
 @pytest.fixture(scope='session', autouse=True)
 def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
@@ -116,10 +102,61 @@ pytest_asyncio.plugin.event_loop = event_loop
 M = TypeVar('M')
 
 
-class Factory(DependencyInjector):
+class FakeKafkaProducer(KafkaProducer):
+
+    def __init__(self, conf: KafkaSettings):
+        super().__init__(conf)
+        self.queue: Dict[str, List[str]] = {
+            Topic.News: [],
+            Topic.Populate: []
+        }
+
+    async def start(self):
+        pass
+
+    async def send(self, data: str, topic: str = Topic.News):
+        self.queue[topic].append(data)
+
+    async def close(self):
+        pass
+
+
+class FakeRedisService(RedisService):
+
+    def __init__(self, conf: RedisSettings):
+        super().__init__(conf)
+        self.storage = {}
+
+    async def get(self, key):
+        return self.storage.get(key)
+
+    async def set(self, key, value, *args, **kwargs):
+        self.storage[key] = value
+
+    async def start(self):
+        pass
+
+    async def close(self):
+        pass
+
+
+class FakeDependencyInjector(DependencyInjector):
+
+    async def get_kafka_producer(self) -> KafkaProducer:
+        return FakeKafkaProducer(self.conf.KAFKA)
+
+    async def get_redis_client(self) -> RedisService:
+        return FakeRedisService(self.conf.REDIS)
+
+
+class FixtureFactory:
+
+    def __init__(self, conf: Settings, injector: FakeDependencyInjector):
+        self.conf = conf
+        self.injector = injector
 
     async def add_user_in_db(self, user_data: Any) -> AuthUser:
-        manager = self.get_manager(AuthUserManager)
+        manager = self.injector.get_manager(AuthUserManager)
         user = await manager.create(email=user_data.EMAIL,
                                     age=user_data.AGE,
                                     hashed_password=user_data.HASHED_PASSWORD,
@@ -132,7 +169,7 @@ class Factory(DependencyInjector):
         return user
 
     async def add_token_in_db(self, user_id):
-        manager = self.get_manager(AccessTokenManager)
+        manager = self.injector.get_manager(AccessTokenManager)
         expired_at = datetime.now() + timedelta(
             seconds=self.conf.TOKEN_EXPIRATION_TIME
         )
@@ -140,34 +177,47 @@ class Factory(DependencyInjector):
 
     async def add_friend_request_in_db(self, from_user_id, to_user_id) \
             -> FriendRequest:
-        manager = self.get_manager(FriendRequestManager)
+        manager = self.injector.get_manager(FriendRequestManager)
         return await manager.create(from_user_id, to_user_id)
 
     async def add_friendship_in_db(self, user_id, friend_id) -> Friendship:
-        manager = self.get_manager(FriendshipManager)
+        manager = self.injector.get_manager(FriendshipManager)
         return await manager.create(user_id, friend_id)
 
     async def add_hobby_in_db(self, hobby_name: str) -> Hobby:
-        manager = self.get_manager(HobbiesManager)
+        manager = self.injector.get_manager(HobbiesManager)
         return await manager.create(hobby_name)
 
     async def add_user_hobby_in_db(self, user_id, hobby_id) -> UserHobby:
-        manager = self.get_manager(UsersHobbyManager)
+        manager = self.injector.get_manager(UsersHobbyManager)
         return await manager.create(user_id, hobby_id)
 
     async def add_db(self, db_conf) -> DatabaseInfo:
-        db_info_manager = self.get_manager(DatabaseInfoManager)
+        db_info_manager = self.injector.get_manager(DatabaseInfoManager)
         return await db_info_manager.create(db_conf)
 
     async def add_shard(self, db_info, shard_table, shard_key, state) -> Shard:
-        shard_manager = self.get_manager(ShardsManager)
+        shard_manager = self.injector.get_manager(ShardsManager)
         return await shard_manager.create(db_info.id, shard_table, shard_key,
                                           state)
 
     async def add_message(self, user_id_1, user_id_2, text) -> Message:
-        message_manager = self.get_manager(MessagesManager)
+        message_manager = self.injector.get_manager(MessagesManager)
         key = f'{user_id_1}:{user_id_2}'
         return await message_manager.create(key, user_id_1, text)
+
+    async def add_new(self, user, text) -> New:
+        news_manager = self.injector.get_manager(NewsManager)
+        now = datetime.now().strftime(TIMESTAMP_FORMAT)
+        payload = AddedPostNewPayload(author=user.get_short(), text=text)
+        # TODO: maybe special method for creating?
+        return await news_manager.create(
+            id=str(uuid4()),
+            author_id=user.id,
+            news_type=NewsType.ADDED_POST,
+            payload=payload,
+            created=now
+        )
 
 
 @pytest.fixture(name='settings', scope='session')
@@ -208,26 +258,24 @@ async def create_test_database(settings: Settings):
     await cursor.execute(f"DROP SCHEMA {db_conf.NAME};")
 
 
-@pytest.fixture(name='connector_storage')
-async def get_connector_storage(settings) -> BaseConnectorStorage:
-    storage = ConnectorsStorage()
-    connector = await get_connector(settings.DATABASE.MASTER)
-    storage._connectors[settings.DATABASE.MASTER.json()] = connector
-    return storage
+@pytest.fixture(name='injector')
+async def get_dependency_injector(settings):
+    injector = FakeDependencyInjector(settings)
+    await injector.start()
+    return injector
 
 
 @pytest.fixture(name='app')
-async def get_test_client(connector_storage, settings) -> TestClient:
-    app.dependency_overrides[get_connectors_storage_storage] = lambda: \
-        connector_storage
+async def get_test_client(injector, settings) -> TestClient:
+    app.dependency_overrides[get_injector_depends] = lambda: injector
     app.dependency_overrides[get_settings_depends] = lambda: settings
     yield TestClient(app)
     app.dependency_overrides = {}
 
 
 @pytest.fixture(name='factory')
-def get_factory(connector_storage, settings) -> Factory:
-    return Factory(connector_storage, settings)
+def get_factory(settings, injector) -> FixtureFactory:
+    return FixtureFactory(settings, injector)
 
 
 @pytest.fixture(name='user1')
@@ -289,39 +337,7 @@ async def get_user_hobby(factory, user1, hobby, cursor: aiomysql.Cursor) \
     await cursor.execute('DELETE FROM users_hobbies_mtm;')
 
 
-@pytest.fixture(name='drop_users_after_test')
-async def drop_users_after_test(cursor: aiomysql.Cursor):
+@pytest.fixture(name='clear_users_after')
+async def clear_users_after(cursor: aiomysql.Cursor):
     yield
     await cursor.execute('DELETE FROM users')
-
-
-@pytest.fixture(name='message_shards')
-async def add_message_shards_into_db(factory, cursor):
-    db_0 = await factory.add_db(SHARD_0_CONF)
-    db_1 = await factory.add_db(SHARD_1_CONF)
-    await factory.add_shard(db_0, 'messages', 0, ShardState.READY)
-    await factory.add_shard(db_1, 'messages', 1, ShardState.READY)
-    yield
-    await cursor.execute('DELETE FROM shards_info')
-    await cursor.execute('DELETE FROM database_info')
-
-
-@pytest.fixture(name='clear_messages_after')
-async def clear_messages(connector_storage: ConnectorsStorage):
-    connector_0 = await connector_storage.get_connector(SHARD_0_CONF)
-    connector_1 = await connector_storage.get_connector(SHARD_1_CONF)
-    yield
-    await connector_0.make_query('DELETE FROM messages', raise_if_empty=False)
-    await connector_1.make_query('DELETE FROM messages', raise_if_empty=False)
-
-
-@pytest.fixture(name='message_1')
-async def add_message_1_into_db(factory, cursor, user1, user2, message_shards,
-                                clear_messages_after):
-    return await factory.add_message(user1.id, user2.id, 'foo')
-
-
-@pytest.fixture(name='message_2')
-async def add_message_2_into_db(factory, cursor, user1, user2, message_shards,
-                                clear_messages_after):
-    return await factory.add_message(user1.id, user2.id, 'bar')

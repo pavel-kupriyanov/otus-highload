@@ -37,3 +37,7 @@ export const CLEAR_MESSAGES = 'CLEAR_MESSAGES';
 
 export const GET_CHAT_USER = 'GET_CHAT_USER';
 export const CLEAR_CHAT_USER = 'CLEAR_CHAT_USER';
+
+export const ADD_NEW = 'ADD_NEW';
+export const GET_NEWS = 'GET_NEWS';
+export const CLEAR_NEWS = 'CLEAR_NEWS';

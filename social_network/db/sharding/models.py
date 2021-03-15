@@ -5,6 +5,7 @@ from ..models import Timestamp
 class Message(BaseShardingModel):
     _table_name = 'messages'
     _fields = ('id', 'chat_key', 'author_id', 'text', 'created')
+    _datetime_fields = ('created',)
 
     chat_key: str
     author_id: int
