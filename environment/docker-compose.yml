@@ -1,6 +1,24 @@
 version: '3.7'
 
 services:
+
+  replication-master:
+    image: actency/docker-mysql-replication:5.7
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: mysql-replication-master
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: otus
+      MYSQL_USER: otus
+      MYSQL_PASSWORD: otus
+      MYSQL_ROOT_PASSWORD: 'otus'
+      REPLICATION_USER: replication_user
+      REPLICATION_PASSWORD: myreplpassword
+    ports:
+      - 3666:3666
+    volumes:
+      - mysql-replication-master-db:/var/lib/mysql
+
   master:
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -94,10 +112,28 @@ services:
     ports:
       - 6379:6379
 
+  tarantool:
+    image: tarantool/tarantool:1.10.2
+    environment:
+      TARANTOOL_USER_NAME: tarantool
+      TARANTOOL_USER_PASSWORD: tarantool
+    ports:
+      - 3301:3301
+    volumes:
+      - tarantool-data:/var/lib/tarantool
+
+  tarantool-mysql-replicator:
+    build:
+      context: replicatord
+      dockerfile: Dockerfile
+    container_name: tarantool-mysql-replicator
+
 volumes:
   mysql-master-db:
   mysql-shard0:
   mysql-shard1:
   kafka-data:
+  tarantool-data:
+  mysql-replication-master-db:
 
 

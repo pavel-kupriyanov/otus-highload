@@ -1,0 +1,25 @@
+mysql:
+    host: localhost
+    port: 3306
+    user: otus
+    password: otus
+    connect_retry: 15 # seconds
+
+tarantool:
+    host: localohost:3301
+    binlog_pos_space: 512
+    binlog_pos_key: 0
+    connect_retry: 15 # seconds
+    sync_retry: 1000 # milliseconds
+
+mappings:
+    - database: otus
+      table: users
+      columns: [ id, first_name, last_name, age, city, gender ]
+      space: 513
+      key_fields: [ 0 ]
+      # insert_call: function_name
+      # update_call: function_name
+      # delete_call: function_name
+
+
