@@ -39,7 +39,8 @@ import {
 } from "./utils";
 import {store} from './store';
 
-export const API_BASE = '/api/v1';
+export const HTTP_API_BASE = `/api/v1`;
+
 
 const AXIOS_CONFIG = {
   timeout: 20000,
@@ -91,7 +92,7 @@ export const login = (email, password) => {
     dispatch(showLoader());
     let isSuccess = false;
     try {
-      const response = await axios.post(`${API_BASE}/auth/login`, {email, password});
+      const response = await axios.post(`${HTTP_API_BASE}/auth/login`, {email, password});
       isSuccess = true;
       storeTokenIntoStorage(response.data);
       dispatch({type: LOGIN_SUCCESS, payload: response.data});
@@ -137,9 +138,9 @@ export const getUserData = id => {
   return async dispatch => {
     const axios = getAuthorizedAxios();
     try {
-      const userPromise = axios.get(`${API_BASE}/users/${id}/`);
-      const friendsPromise = axios.get(`${API_BASE}/users/?friends_of=${id}`);
-      const friendRequestsPromise = axios.get(`${API_BASE}/friendships/`);
+      const userPromise = axios.get(`${HTTP_API_BASE}/users/${id}/`);
+      const friendsPromise = axios.get(`${HTTP_API_BASE}/users/?friends_of=${id}`);
+      const friendRequestsPromise = axios.get(`${HTTP_API_BASE}/friendships/`);
       const [user, friends, friendRequests] = await Promise.all(
         [userPromise, friendsPromise, friendRequestsPromise]
       );
@@ -174,7 +175,7 @@ export const register = (
     const payload = {email, password, first_name, last_name, age, gender, city};
     let isSuccess = false;
     try {
-      await axios.post(`${API_BASE}/auth/register`, payload);
+      await axios.post(`${HTTP_API_BASE}/auth/register`, payload);
       isSuccess = true;
       dispatch(showMessage("Success!"));
       dispatch({type: REGISTER_SUCCESS});
@@ -215,7 +216,7 @@ export const getUser = userId => {
     let isSuccess = false;
     dispatch(showLoader());
     try {
-      const response = await axios.get(`${API_BASE}/users/${userId}/`);
+      const response = await axios.get(`${HTTP_API_BASE}/users/${userId}/`);
       isSuccess = true;
       dispatch({type: GET_USER_SUCCESS, payload: response.data});
     } catch (e) {
@@ -233,8 +234,8 @@ export const addHobby = name => {
     dispatch(showLoader());
     const axios = getAuthorizedAxios();
     try {
-      const createResponse = await axios.post(`${API_BASE}/hobbies/`, {name});
-      await axios.put(`${API_BASE}/users/hobbies/${createResponse.data.id}/`);
+      const createResponse = await axios.post(`${HTTP_API_BASE}/hobbies/`, {name});
+      await axios.put(`${HTTP_API_BASE}/users/hobbies/${createResponse.data.id}/`);
       dispatch({type: ADD_HOBBY_SUCCESS, payload: createResponse.data});
     } catch (e) {
       console.log(e);
@@ -249,7 +250,7 @@ export const deleteHobby = id => {
     dispatch(showLoader());
     const axios = getAuthorizedAxios();
     try {
-      await axios.delete(`${API_BASE}/users/hobbies/${id}/`);
+      await axios.delete(`${HTTP_API_BASE}/users/hobbies/${id}/`);
       dispatch({type: DELETE_HOBBY_SUCCESS, payload: id});
     } catch (e) {
       console.log(e);
@@ -263,7 +264,7 @@ export const getFriends = id => {
   return async dispatch => {
     dispatch(showLoader());
     try {
-      const response = await axios.get(`${API_BASE}/users/?friends_of=${id}`,);
+      const response = await axios.get(`${HTTP_API_BASE}/users/?friends_of=${id}`,);
       dispatch({type: GET_USERS, payload: response.data});
     } catch (e) {
       console.log(e);
@@ -290,7 +291,7 @@ export const getUsers = (first_name, last_name, page = 1, paginate_by = 100) => 
     dispatch(showLoader());
     const query = toQueryString({first_name, last_name, page, paginate_by});
     try {
-      const response = await axios.get(`${API_BASE}/users/?${query}`,);
+      const response = await axios.get(`${HTTP_API_BASE}/users/?${query}`,);
       dispatch({type: GET_USERS, payload: response.data});
     } catch (e) {
       console.log(e);
@@ -305,7 +306,7 @@ export const deleteFriendship = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      await axios.delete(`${API_BASE}/friendships/friendship/${id}/`,);
+      await axios.delete(`${HTTP_API_BASE}/friendships/friendship/${id}/`,);
       dispatch({type: DELETE_FRIENDSHIP, payload: id});
     } catch (e) {
       console.log(e);
@@ -320,7 +321,7 @@ export const addFriendRequest = userId => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      const response = await axios.post(`${API_BASE}/friendships/${userId}/`);
+      const response = await axios.post(`${HTTP_API_BASE}/friendships/${userId}/`);
       dispatch({type: ADD_FRIEND_REQUEST, payload: response.data});
     } catch (e) {
       console.log(e);
@@ -335,7 +336,7 @@ export const deleteFriendRequest = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      await axios.delete(`${API_BASE}/friendships/${id}/`);
+      await axios.delete(`${HTTP_API_BASE}/friendships/${id}/`);
       dispatch({type: DELETE_FRIEND_REQUEST, payload: id});
     } catch (e) {
       console.log(e);
@@ -350,8 +351,8 @@ export const acceptFriendRequest = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      const response = await axios.put(`${API_BASE}/friendships/accept/${id}/`);
-      const userResponse = await axios.get(`${API_BASE}/users/${response.data.friend_id}/`);
+      const response = await axios.put(`${HTTP_API_BASE}/friendships/accept/${id}/`);
+      const userResponse = await axios.get(`${HTTP_API_BASE}/users/${response.data.friend_id}/`);
       dispatch({type: ACCEPT_FRIEND_REQUEST, payload: {requestId: id, friend: userResponse.data}});
     } catch (e) {
       console.log(e);
@@ -367,7 +368,7 @@ export const declineFriendRequest = id => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      await axios.put(`${API_BASE}/friendships/decline/${id}/`);
+      await axios.put(`${HTTP_API_BASE}/friendships/decline/${id}/`);
       dispatch({type: DECLINE_FRIEND_REQUEST, payload: id});
     } catch (e) {
       console.log(e);
@@ -382,7 +383,7 @@ export const getFriendRequestUsers = ids => {
   return async dispatch => {
     dispatch(showLoader());
     try {
-      const response = await axios.get(`${API_BASE}/users/?${arrayToQueryString('ids', ids)}`);
+      const response = await axios.get(`${HTTP_API_BASE}/users/?${arrayToQueryString('ids', ids)}`);
       dispatch({type: GET_FRIEND_REQUEST_USERS, payload: response.data});
     } catch (e) {
       console.log(e);
@@ -406,7 +407,7 @@ export const getChatUser = userId => {
     let isSuccess = false;
     dispatch(showLoader());
     try {
-      const response = await axios.get(`${API_BASE}/users/${userId}/`);
+      const response = await axios.get(`${HTTP_API_BASE}/users/${userId}/`);
       isSuccess = true;
       dispatch({type: GET_CHAT_USER, payload: response.data});
     } catch (e) {
@@ -430,7 +431,7 @@ export const getMessages = (userId, afterTimestamp = 0, page = 1, pageLimit = 10
     const query = toQueryString(payload);
     const axios = getAuthorizedAxios();
     try {
-      const response = await axios.get(`${API_BASE}/messages/?${query}`);
+      const response = await axios.get(`${HTTP_API_BASE}/messages/?${query}`);
       data = response.data;
       dispatch({type: GET_MESSAGES, payload: data});
     } catch (e) {
@@ -447,7 +448,7 @@ export const sendMessage = (userId, text) => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      const response = await axios.post(`${API_BASE}/messages/`, {to_user_id: userId, text});
+      const response = await axios.post(`${HTTP_API_BASE}/messages/`, {to_user_id: userId, text});
       isSuccess = true;
       dispatch({type: GET_MESSAGES, payload: [response.data]});
     } catch (e) {
@@ -465,7 +466,7 @@ export const getNews = (userId, page = 1, paginate_by = 100, order='DESC') => {
     dispatch(showLoader());
     const query = toQueryString({page, paginate_by, order});
     try {
-      const response = await axios.get(`${API_BASE}/news/${userId}/?${query}`,);
+      const response = await axios.get(`${HTTP_API_BASE}/news/${userId}/?${query}`,);
       dispatch({type: GET_NEWS, payload: response.data});
     } catch (e) {
       console.log(e);
@@ -481,7 +482,7 @@ export const getFeed = (page = 1, paginate_by = 100, order='DESC') => {
     const query = toQueryString({page, paginate_by, order});
     const axios = getAuthorizedAxios();
     try {
-      const response = await axios.get(`${API_BASE}/news/feed/?${query}`,);
+      const response = await axios.get(`${HTTP_API_BASE}/news/feed/?${query}`,);
       dispatch({type: GET_NEWS, payload: response.data});
     } catch (e) {
       console.log(e);
@@ -501,7 +502,7 @@ export const addNew = (text) => {
     const axios = getAuthorizedAxios();
     dispatch(showLoader());
     try {
-      const response = await axios.post(`${API_BASE}/news/`, {text});
+      const response = await axios.post(`${HTTP_API_BASE}/news/`, {text});
       isSuccess = true;
       dispatch({type: ADD_NEW, payload: response.data});
     } catch (e) {

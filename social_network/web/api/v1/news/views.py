@@ -1,7 +1,10 @@
+import asyncio
+from uuid import uuid4
 from typing import Optional, List
 from fastapi import (
     APIRouter,
     Depends,
+    WebSocket
 )
 from fastapi_utils.cbv import cbv
 
@@ -83,3 +86,27 @@ class NewsViewSet:
             RedisKeys.USER_FEED, str(self.user_.id)
         ) or []
         return [New(**new) for new in feed]
+
+
+@router.websocket('/ws')
+async def real_time_feed(ws: WebSocket):
+    await ws.accept()
+    while True:
+        await asyncio.sleep(5)
+        data = {
+            "id": str(uuid4()),
+            "author_id": 1,
+            "type": "ADDED_POST",
+            "payload": {
+                "author": {
+                    "id": 1,
+                    "first_name": "sender",
+                    "last_name": "sender"
+                },
+                "text": "Hello world"
+            },
+            "created": 1613736977.09478,
+            "populated": True,
+            "stored": True
+        }
+        await ws.send_json(data)
