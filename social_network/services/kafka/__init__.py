@@ -1,8 +1,8 @@
 from .producer import KafkaProducer
 from .consumers import (
-    NewsKafkaDatabaseConsumer,
-    PopulateNewsKafkaConsumer,
-    NewsKafkaCacheConsumer
+    NewsDatabaseConsumer,
+    PopulateNewsConsumer,
+    NewsCacheConsumer
 )
 from .service import KafkaConsumersService
 from .consts import Topic

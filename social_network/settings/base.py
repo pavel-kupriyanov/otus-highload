@@ -58,12 +58,20 @@ class NewsCacheSettings(BaseModel):
     WARMUP_CACHE_PERIOD: int = 1 * 24 * 60 * 60
 
 
+class RabbitMQSettings(BaseModel):
+    HOST: str = 'localhost'
+    PORT: int = 5672
+    USERNAME: str = 'rabbit'
+    PASSWORD: SecretStr = 'rabbit'
+
+
 class BaseSettings(PydanticSettings):
     DEBUG: bool
     UVICORN: UvicornSettings
     DATABASE: MasterSlaveDatabaseSettings
     KAFKA: KafkaSettings
     REDIS: RedisSettings
+    RABBIT: RabbitMQSettings
     NEWS_CACHE: NewsCacheSettings
     TOKEN_EXPIRATION_TIME: int
     BASE_PAGE_LIMIT: int
