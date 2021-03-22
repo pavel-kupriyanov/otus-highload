@@ -13,7 +13,7 @@ from social_network.db.managers import NewsManager, HobbiesManager, UserManager
 from social_network.db.connectors_storage import ConnectorsStorage
 
 from ..redis import RedisService, RedisKeys
-from ..rabbitmq import RabbitMQPProducer
+from ..rabbitmq import RabbitMQProducer
 
 from .utils import prepare_ssl_context
 from .consts import Topic, Protocol
@@ -194,21 +194,23 @@ class NewsCacheAndRabbitConsumer(NewsCacheConsumer):
                  news_conf: NewsCacheSettings,
                  connector_storage: ConnectorsStorage,
                  redis_service: RedisService,
-                 rabbit_producer: RabbitMQPProducer):
+                 rabbit_producer: RabbitMQProducer):
         super().__init__(conf, news_conf, connector_storage, redis_service)
         self.rabbit_producer = rabbit_producer
 
     async def _process(self, raw_new: Dict):
         new = New(**raw_new)
+        print('process', new)
         follower_ids = await self.get_follower_ids(new.author_id)
 
-        to_rabbit = self.add_news_to_rabbit(new, follower_ids)
-        to_feed = self.add_news_to_feed(new, follower_ids)
+        await self.add_news_to_rabbit(new, follower_ids)
+        await self.add_news_to_feed(new, follower_ids)
 
-        await gather(create_task(to_feed), create_task(to_rabbit))
+        # await gather(create_task(to_feed), create_task(to_rabbit))
 
     async def add_news_to_rabbit(self, new: New, follower_ids: List[int]):
         add_tasks = []
+        print('add news', follower_ids)
         for follower_id in follower_ids:
             task = create_task(self.add_new_to_rabbit(follower_id, new))
             add_tasks.append(task)
@@ -216,6 +218,7 @@ class NewsCacheAndRabbitConsumer(NewsCacheConsumer):
         await gather(*add_tasks)
 
     async def add_new_to_rabbit(self, follower_id: int, new: New):
+        print('kafka to rabbit send', new)
         await self.rabbit_producer.send(
             new.dict(), routing_key=str(follower_id)
         )

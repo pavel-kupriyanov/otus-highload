@@ -100,9 +100,9 @@ class WebSocketNewsViewSet:
     @router.websocket('/ws')
     @authorize_only
     async def real_time_feed(self, ws: WebSocket):
-        self.ws_service.add(self.user_.id, ws)
+        await self.ws_service.add(self.user_.id, ws)
         try:
             while True:
                 await asyncio.sleep(1000)
         except WebSocketException:
-            self.ws_service.remove(self.user_.id, ws)
+            await self.ws_service.remove(self.user_.id, ws)

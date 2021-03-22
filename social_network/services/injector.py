@@ -6,7 +6,7 @@ from social_network.settings import Settings
 from .base import BaseService, BaseController
 from .kafka import KafkaProducer, KafkaConsumersService
 from .redis import RedisService
-from .rabbitmq import RabbitMQPProducer
+from .rabbitmq import RabbitMQProducer, FeedConsumer
 from .ws import FeedWebSocketService
 
 M = TypeVar('M')
@@ -15,7 +15,7 @@ M = TypeVar('M')
 class DependencyInjector(BaseController):
     connectors_storage: ConnectorsStorage
     kafka_producer: KafkaProducer
-    rabbit_producer: RabbitMQPProducer
+    rabbit_producer: RabbitMQProducer
     redis_service: RedisService
     ws_service: FeedWebSocketService
     kafka_consumer_service: KafkaConsumersService
@@ -24,7 +24,7 @@ class DependencyInjector(BaseController):
         self.conf = conf
         self.connectors_storage = ConnectorsStorage()
         self.redis_service = RedisService(conf.REDIS)
-        self.rabbit_producer = RabbitMQPProducer(conf.RABBIT)
+        self.rabbit_producer = RabbitMQProducer(conf.RABBIT)
         self.kafka_producer = KafkaProducer(conf.KAFKA)
         self.kafka_consumer_service = KafkaConsumersService(
             self.conf.KAFKA,
@@ -34,7 +34,7 @@ class DependencyInjector(BaseController):
             kafka_producer=self.kafka_producer,
             rabbit_producer=self.rabbit_producer
         )
-        self.ws_service = FeedWebSocketService()
+        self.ws_service = FeedWebSocketService(self.conf.RABBIT)
 
     @property
     def services(self) -> List[BaseService]:

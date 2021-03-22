@@ -92,7 +92,7 @@ export const login = (email, password) => {
     dispatch(showLoader());
     let isSuccess = false;
     try {
-      const response = await axios.post(`${HTTP_API_BASE}/auth/login`, {email, password});
+      const response = await axios.post(`${HTTP_API_BASE}/auth/login/`, {email, password});
       isSuccess = true;
       storeTokenIntoStorage(response.data);
       dispatch({type: LOGIN_SUCCESS, payload: response.data});
@@ -175,7 +175,7 @@ export const register = (
     const payload = {email, password, first_name, last_name, age, gender, city};
     let isSuccess = false;
     try {
-      await axios.post(`${HTTP_API_BASE}/auth/register`, payload);
+      await axios.post(`${HTTP_API_BASE}/auth/register/`, payload);
       isSuccess = true;
       dispatch(showMessage("Success!"));
       dispatch({type: REGISTER_SUCCESS});

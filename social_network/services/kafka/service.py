@@ -11,7 +11,7 @@ from .consumers import (
     PopulateNewsConsumer
 )
 from ..redis import RedisService
-from ..rabbitmq import RabbitMQPProducer
+from ..rabbitmq import RabbitMQProducer
 from ..base import BaseService, BaseController
 
 
@@ -20,7 +20,7 @@ class KafkaConsumersService(BaseController):
     connectors_storage: ConnectorsStorage
     redis_service: RedisService
     kafka_producer: KafkaProducer
-    rabbit_producer: RabbitMQPProducer
+    rabbit_producer: RabbitMQProducer
     consumer_classes: List[Type[BaseKafkaConsumer]]
     consumers: List[BaseKafkaConsumer]
 
@@ -28,7 +28,7 @@ class KafkaConsumersService(BaseController):
                  conf: KafkaSettings,
                  news_conf: NewsCacheSettings,
                  kafka_producer: KafkaProducer,
-                 rabbit_producer: RabbitMQPProducer,
+                 rabbit_producer: RabbitMQProducer,
                  connectors_storage: ConnectorsStorage,
                  redis_service: RedisService):
         self.conf = conf

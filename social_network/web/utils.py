@@ -13,6 +13,5 @@ async def warmup_news(conf: NewsCacheSettings,
     timestamp = timestamp.strftime(TIMESTAMP_FORMAT)
     news = await news_manager.list_after_timestamp(timestamp)
     for new in news:
-        print(new)
         new.populated, new.stored = True, True
         await producer.send(new.json())
