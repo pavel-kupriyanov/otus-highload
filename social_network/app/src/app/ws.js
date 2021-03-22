@@ -25,6 +25,9 @@ export const createFeedWebsocket = async () => {
     };
     ws.onopen = () => {
       resolve(ws);
+      const state = store.getState();
+      const authentication = state.userData.authentication;
+      ws.send(JSON.stringify(authentication));
     };
   })
 }

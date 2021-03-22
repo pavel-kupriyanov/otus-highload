@@ -29,7 +29,8 @@ class RedisService(BaseService, CommandMixin):
     async def start(self):
         self.redis = await create_redis_pool(
             f'redis://@{self.conf.HOST}:{self.conf.PORT}',
-            password=self.conf.PASSWORD.get_secret_value(),
+            # TODO: return password
+            password=None,
         )
 
     async def close(self):

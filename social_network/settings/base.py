@@ -14,7 +14,7 @@ class UvicornSettings(BaseModel):
     ASGI_PATH: str = 'social_network:app'
     HOST: str = '0.0.0.0'
     PORT: int = int(os.getenv('PORT') or 8000)
-    WORKERS = 2
+    WORKERS = 1
 
 
 class DatabaseSettings(BaseModel):

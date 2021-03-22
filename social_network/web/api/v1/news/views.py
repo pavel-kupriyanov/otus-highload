@@ -1,11 +1,12 @@
 import asyncio
-from uuid import uuid4
 from typing import Optional, List
+
 from fastapi import (
     APIRouter,
     Depends,
-    WebSocket
+    WebSocket,
 )
+from websockets import WebSocketException
 from fastapi_utils.cbv import cbv
 
 from social_network.db.models import (
@@ -16,6 +17,7 @@ from social_network.db.models import (
 from social_network.db.managers import NewsManager, UserManager
 from social_network.services.kafka import KafkaProducer
 from social_network.services.redis import RedisService, RedisKeys
+from social_network.services.ws import FeedWebSocketService
 
 from ..depends import (
     get_user,
@@ -23,6 +25,8 @@ from ..depends import (
     get_redis_client,
     get_news_manager,
     get_user_manager,
+    get_ws_user,
+    get_ws_service
 )
 from .models import NewCreatePayload, NewsQueryParams
 from ..utils import authorize_only
@@ -88,25 +92,17 @@ class NewsViewSet:
         return [New(**new) for new in feed]
 
 
-@router.websocket('/ws')
-async def real_time_feed(ws: WebSocket):
-    await ws.accept()
-    while True:
-        await asyncio.sleep(5)
-        data = {
-            "id": str(uuid4()),
-            "author_id": 1,
-            "type": "ADDED_POST",
-            "payload": {
-                "author": {
-                    "id": 1,
-                    "first_name": "sender",
-                    "last_name": "sender"
-                },
-                "text": "Hello world"
-            },
-            "created": 1613736977.09478,
-            "populated": True,
-            "stored": True
-        }
-        await ws.send_json(data)
+@cbv(router)
+class WebSocketNewsViewSet:
+    user_: Optional[User] = Depends(get_ws_user)
+    ws_service: FeedWebSocketService = Depends(get_ws_service)
+
+    @router.websocket('/ws')
+    @authorize_only
+    async def real_time_feed(self, ws: WebSocket):
+        self.ws_service.add(self.user_.id, ws)
+        try:
+            while True:
+                await asyncio.sleep(1000)
+        except WebSocketException:
+            self.ws_service.remove(self.user_.id, ws)
