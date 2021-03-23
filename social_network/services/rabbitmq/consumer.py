@@ -12,7 +12,7 @@ from .base import BaseRabbitMQ
 Callback = Callable[[dict], Coroutine]
 
 
-class BaseRabbitMQConsumer(BaseRabbitMQ):
+class FeedConsumer(BaseRabbitMQ):
     prefetch_count = 1000
     callback: Callback
     queue: Queue
@@ -27,13 +27,12 @@ class BaseRabbitMQConsumer(BaseRabbitMQ):
     async def start(self):
         await super().start()
         await self.channel.set_qos(prefetch_count=100)
-        exchange = await self.channel.get_exchange('feed')
-        queue = await self.channel.declare_queue(
+        self.queue = await self.channel.declare_queue(
             self.queue_name,
             auto_delete=True
         )
-        await queue.bind(exchange, routing_key=self.routing_key)
-        self.task = create_task(queue.consume(self.process_message))
+        await self.queue.bind(self.exchange, routing_key=self.routing_key)
+        self.task = create_task(self.queue.consume(self.process_message))
 
     async def close(self):
         await super().close()
@@ -43,7 +42,3 @@ class BaseRabbitMQConsumer(BaseRabbitMQ):
     async def process_message(self, message: IncomingMessage):
         async with message.process():
             await self.callback(loads(message.body.decode()))
-
-
-class FeedConsumer(BaseRabbitMQConsumer):
-    queue_name: str = 'feed'

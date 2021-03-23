@@ -1,4 +1,5 @@
 from random import sample
+import traceback
 from asyncio import create_task, gather, get_running_loop
 from typing import Dict, Tuple, List
 from json import loads
@@ -54,12 +55,18 @@ class BaseKafkaConsumer(BaseService):
         return loads(record.value)
 
     async def process(self):
-        async for record in self.consumer:
-            await self._process(self.parse(record))
-            await self.consumer.commit()
+        while True:
+            try:
+                async for record in self.consumer:
+                    await self._process(self.parse(record))
+                    await self.consumer.commit()
+            except Exception as e:
+                print(repr(e))
+                print(traceback.print_tb(e.__traceback__))
 
-    async def _process(self, msg: Dict):
-        raise NotImplemented
+
+async def _process(self, msg: Dict):
+    raise NotImplemented
 
 
 class BaseNewsConsumer(BaseKafkaConsumer):
@@ -202,10 +209,10 @@ class NewsCacheAndRabbitConsumer(NewsCacheConsumer):
         new = New(**raw_new)
         follower_ids = await self.get_follower_ids(new.author_id)
 
-        await self.add_news_to_rabbit(new, follower_ids)
-        await self.add_news_to_feed(new, follower_ids)
+        to_rabbit = self.add_news_to_rabbit(new, follower_ids)
+        to_feed = self.add_news_to_feed(new, follower_ids)
 
-        # await gather(create_task(to_feed), create_task(to_rabbit))
+        await gather(create_task(to_feed), create_task(to_rabbit))
 
     async def add_news_to_rabbit(self, new: New, follower_ids: List[int]):
         add_tasks = []

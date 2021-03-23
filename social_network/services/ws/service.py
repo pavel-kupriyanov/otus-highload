@@ -1,7 +1,5 @@
 import asyncio
 from typing import Dict, List
-from itertools import chain
-from uuid import uuid4
 
 from fastapi import WebSocket
 from websockets import WebSocketException
@@ -67,7 +65,7 @@ class FeedWebSocketService(BaseWebSocketService):
 
     async def remove(self, user_id: int, ws: WebSocket):
         await super().remove(user_id, ws)
-        if not len(self.sockets[user_id]):
+        if not self.sockets[user_id]:
             await self.remove_consumer(user_id)
 
     async def add_consumer(self, user_id: int):
@@ -79,12 +77,12 @@ class FeedWebSocketService(BaseWebSocketService):
             callback=wrapper,
             key=str(user_id)
         )
-        await consumer.start()
         self.consumers[user_id] = consumer
+        await consumer.start()
 
     async def remove_consumer(self, user_id: int):
-        await self.consumers[user_id].close()
-        del self.consumers[user_id]
+        consumer = self.consumers.pop(user_id)
+        await consumer.close()
 
     async def process(self):
         while True:

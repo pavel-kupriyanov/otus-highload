@@ -1,15 +1,15 @@
 from json import dumps
 
-from aio_pika import Message
+from aio_pika import Message, Exchange
 
 from .base import BaseRabbitMQ
 
 
 class RabbitMQProducer(BaseRabbitMQ):
+    exchange: Exchange
 
     async def send(self, data: dict, routing_key: str):
-        exchange = await self.channel.get_exchange('feed')
-        await exchange.publish(
+        await self.exchange.publish(
             Message(dumps(data).encode()),
             routing_key=routing_key
         )

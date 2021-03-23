@@ -70,6 +70,8 @@ class NewsViewSet:
             return cached
 
         friends_ids = await self.user_manager.get_friends_ids(self.user_.id)
+        if not friends_ids:
+            return []
         return await self.news_manager.list(author_ids=friends_ids,
                                             order=q.order,
                                             limit=q.paginate_by,

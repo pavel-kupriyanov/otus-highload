@@ -63,6 +63,8 @@ class RabbitMQSettings(BaseModel):
     PORT: int = 5672
     USERNAME: str = 'rabbit'
     PASSWORD: SecretStr = 'rabbit'
+    EXCHANGE: str = 'feed'
+    PATH: str = ''
 
 
 class BaseSettings(PydanticSettings):
