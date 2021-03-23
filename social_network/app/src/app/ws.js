@@ -11,7 +11,7 @@ export const createFeedWebsocket = async () => {
   let ws;
   return new Promise((resolve, reject) => {
     try {
-      ws = new WebSocket(`ws://${window.location.host}/api/v1/news/ws`);
+      ws = new WebSocket(`wss://${window.location.host}/api/v1/news/ws`);
     } catch (e) {
       reject(e);
     }
