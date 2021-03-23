@@ -1,1 +1,1 @@
-from .web import app
+from .web import app as application
