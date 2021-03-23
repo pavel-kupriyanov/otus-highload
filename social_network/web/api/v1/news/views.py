@@ -4,9 +4,9 @@ from typing import Optional, List
 from fastapi import (
     APIRouter,
     Depends,
-    WebSocket,
+    WebSocket
 )
-from websockets import WebSocketException
+from starlette.websockets import WebSocketState
 from fastapi_utils.cbv import cbv
 
 from social_network.db.models import (
@@ -101,8 +101,5 @@ class WebSocketNewsViewSet:
     @authorize_only
     async def real_time_feed(self, ws: WebSocket):
         await self.ws_service.add(self.user_.id, ws)
-        try:
-            while True:
-                await asyncio.sleep(1000)
-        except WebSocketException:
-            await self.ws_service.remove(self.user_.id, ws)
+        while ws.application_state != WebSocketState.DISCONNECTED:
+            await asyncio.sleep(1)

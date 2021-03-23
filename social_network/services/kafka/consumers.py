@@ -158,9 +158,9 @@ class NewsCacheConsumer(BaseNewsConsumer):
             return
         feed = sorted(feed, key=sort_key)
 
-        earliest = new.created < feed[0]['created']
         offset = len(feed) - max_feed_size - 1
         if offset > 0:
+            earliest = new.created < feed[0]['created']
             if earliest:
                 # No need to add earliest key into cache
                 return
@@ -200,7 +200,6 @@ class NewsCacheAndRabbitConsumer(NewsCacheConsumer):
 
     async def _process(self, raw_new: Dict):
         new = New(**raw_new)
-        print('process', new)
         follower_ids = await self.get_follower_ids(new.author_id)
 
         await self.add_news_to_rabbit(new, follower_ids)
@@ -210,7 +209,6 @@ class NewsCacheAndRabbitConsumer(NewsCacheConsumer):
 
     async def add_news_to_rabbit(self, new: New, follower_ids: List[int]):
         add_tasks = []
-        print('add news', follower_ids)
         for follower_id in follower_ids:
             task = create_task(self.add_new_to_rabbit(follower_id, new))
             add_tasks.append(task)
@@ -218,7 +216,6 @@ class NewsCacheAndRabbitConsumer(NewsCacheConsumer):
         await gather(*add_tasks)
 
     async def add_new_to_rabbit(self, follower_id: int, new: New):
-        print('kafka to rabbit send', new)
         await self.rabbit_producer.send(
             new.dict(), routing_key=str(follower_id)
         )
