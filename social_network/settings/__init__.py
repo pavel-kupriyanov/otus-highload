@@ -7,5 +7,6 @@ from social_network.settings.base import (
     RedisSettings,
     NewsCacheSettings,
     KafkaSSLSettings,
+    RabbitMQSettings,
     MasterSlaveDatabaseSettings
 )

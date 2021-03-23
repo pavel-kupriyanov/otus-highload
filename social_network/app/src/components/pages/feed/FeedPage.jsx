@@ -4,6 +4,7 @@ import {bindActionCreators} from "redux";
 import {Container, Grid, Typography} from "@material-ui/core";
 
 import {getFeed, clearNews} from "../../../app/actionCreators";
+import {createFeedWebsocket} from "../../../app/ws";
 import New from "../../common/components/New";
 import PaginateButtons from "../../common/components/PaginateButtons";
 
@@ -15,13 +16,15 @@ class FeedPage extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {page: 1, isAll: false}
+    this.state = {page: 1, isAll: false};
+    this.ws = null;
     this.handlePage = this.handlePage.bind(this);
   }
 
 
   componentDidMount() {
     this.props.getFeed(1, PAGE_LIMIT);
+    createFeedWebsocket().then(ws => {this.ws = ws});
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -35,6 +38,9 @@ class FeedPage extends React.Component {
 
   componentWillUnmount() {
     this.props.clearNews();
+    if (this.ws){
+      this.ws.close();
+    }
   }
 
 

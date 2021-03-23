@@ -32,7 +32,8 @@ import {
   GET_MESSAGES,
   CLEAR_MESSAGES,
   GET_NEWS,
-  CLEAR_NEWS, ADD_NEW
+  CLEAR_NEWS,
+  ADD_NEW
 } from './actions';
 
 

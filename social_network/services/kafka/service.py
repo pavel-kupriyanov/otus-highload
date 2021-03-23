@@ -1,54 +1,56 @@
-from asyncio import AbstractEventLoop
 from typing import List, Type
 
 from social_network.settings import KafkaSettings, NewsCacheSettings
+from social_network.db.connectors_storage import ConnectorsStorage
 
+from .producer import KafkaProducer
 from .consumers import (
     BaseKafkaConsumer,
-    NewsKafkaDatabaseConsumer,
-    NewsKafkaCacheConsumer,
-    PopulateNewsKafkaConsumer
+    NewsDatabaseConsumer,
+    NewsCacheAndRabbitConsumer,
+    PopulateNewsConsumer
 )
-from ..base import BaseService
-from ..injector import DependencyInjector
+from ..redis import RedisService
+from ..rabbitmq import RabbitMQProducer
+from ..base import BaseService, BaseController
 
 
-class KafkaConsumersService(BaseService):
+class KafkaConsumersService(BaseController):
     conf: KafkaSettings
-    loop: AbstractEventLoop
-    injector: DependencyInjector
+    connectors_storage: ConnectorsStorage
+    redis_service: RedisService
+    kafka_producer: KafkaProducer
+    rabbit_producer: RabbitMQProducer
     consumer_classes: List[Type[BaseKafkaConsumer]]
     consumers: List[BaseKafkaConsumer]
 
     def __init__(self,
                  conf: KafkaSettings,
                  news_conf: NewsCacheSettings,
-                 loop: AbstractEventLoop,
-                 injector: DependencyInjector):
+                 kafka_producer: KafkaProducer,
+                 rabbit_producer: RabbitMQProducer,
+                 connectors_storage: ConnectorsStorage,
+                 redis_service: RedisService):
         self.conf = conf
         self.news_conf = news_conf
-        self.loop = loop
-        self.injector = injector
-        self.consumers = []
+        self.kafka_producer = kafka_producer
+        self.rabbit_producer = rabbit_producer
+        self.connectors_storage = connectors_storage
+        self.redis_service = redis_service
 
-    def init_consumers(self) -> List[BaseKafkaConsumer]:
-        conf, loop, injector = self.conf, self.loop, self.injector
-        connectors_storage = injector.connectors_storage
-        kafka_producer = injector.kafka_producer
-        db_consumer = NewsKafkaDatabaseConsumer(conf, loop, connectors_storage)
-        cache_consumer = NewsKafkaCacheConsumer(conf, self.news_conf, loop,
-                                                connectors_storage,
-                                                injector.redis_client)
-        populate_consumer = PopulateNewsKafkaConsumer(
-            conf, loop, connectors_storage, kafka_producer
+        self.db_consumer = NewsDatabaseConsumer(conf, connectors_storage)
+        self.cache_consumer = NewsCacheAndRabbitConsumer(conf, self.news_conf,
+                                                         connectors_storage,
+                                                         self.redis_service,
+                                                         self.rabbit_producer)
+        self.populate_consumer = PopulateNewsConsumer(
+            conf, connectors_storage, kafka_producer
         )
-        return [db_consumer, cache_consumer, populate_consumer]
 
-    async def start(self):
-        self.consumers = self.init_consumers()
-        for consumer in self.consumers:
-            await consumer.start()
-
-    async def close(self):
-        for consumer in self.consumers:
-            await consumer.close()
+    @property
+    def services(self) -> List[BaseService]:
+        return [
+            self.db_consumer,
+            self.cache_consumer,
+            self.populate_consumer
+        ]

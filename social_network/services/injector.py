@@ -1,49 +1,59 @@
-from typing import Type, TypeVar
+from typing import Type, TypeVar, List
 
 from social_network.db.connectors_storage import ConnectorsStorage
 from social_network.settings import Settings
 
-from .base import BaseService
-from .kafka import KafkaProducer
+from .base import BaseService, BaseController
+from .kafka import KafkaProducer, KafkaConsumersService
 from .redis import RedisService
+from .rabbitmq import RabbitMQProducer, FeedConsumer
+from .ws import FeedWebSocketService
 
 M = TypeVar('M')
 
 
-class DependencyInjector(BaseService):
+class DependencyInjector(BaseController):
     connectors_storage: ConnectorsStorage
     kafka_producer: KafkaProducer
-    redis_client: RedisService
+    rabbit_producer: RabbitMQProducer
+    redis_service: RedisService
+    ws_service: FeedWebSocketService
+    kafka_consumer_service: KafkaConsumersService
 
     def __init__(self, conf: Settings):
         self.conf = conf
+        self.connectors_storage = ConnectorsStorage()
+        self.redis_service = RedisService(conf.REDIS)
+        self.rabbit_producer = RabbitMQProducer(conf.RABBIT)
+        self.kafka_producer = KafkaProducer(conf.KAFKA)
+        self.kafka_consumer_service = KafkaConsumersService(
+            self.conf.KAFKA,
+            self.conf.NEWS_CACHE,
+            connectors_storage=self.connectors_storage,
+            redis_service=self.redis_service,
+            kafka_producer=self.kafka_producer,
+            rabbit_producer=self.rabbit_producer
+        )
+        self.ws_service = FeedWebSocketService(self.conf.RABBIT)
+
+    @property
+    def services(self) -> List[BaseService]:
+        return [
+            self.kafka_producer,
+            self.kafka_consumer_service,
+            self.redis_service,
+            self.ws_service,
+            self.rabbit_producer
+        ]
 
     async def start(self):
-        self.connectors_storage = await self.get_connectors_storage()
-        self.kafka_producer = await self.get_kafka_producer()
-        self.redis_client = await self.get_redis_client()
-
-    async def close(self):
-        await self.kafka_producer.close()
-
-    async def get_connectors_storage(self) -> ConnectorsStorage:
-        connectors_storage = ConnectorsStorage()
+        connectors_storage = self.connectors_storage
         await connectors_storage.create_connector(self.conf.DATABASE.MASTER)
 
         for conf in self.conf.DATABASE.SLAVES:
             await connectors_storage.create_connector(conf)
 
-        return connectors_storage
-
-    async def get_kafka_producer(self) -> KafkaProducer:
-        producer = KafkaProducer(self.conf.KAFKA)
-        await producer.start()
-        return producer
-
-    async def get_redis_client(self) -> RedisService:
-        client = RedisService(self.conf.REDIS)
-        await client.start()
-        return client
+        await super().start()
 
     def get_manager(self, cls: Type[M]) -> M:
         return cls(self.connectors_storage, self.conf)

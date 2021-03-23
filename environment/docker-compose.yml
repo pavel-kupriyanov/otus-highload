@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.3'
 
 services:
   master:
@@ -54,7 +54,7 @@ services:
 
   kafka:
     build:
-      context: image
+      context: kafka
       dockerfile: Dockerfile
     container_name: kafka
     environment:
@@ -94,10 +94,27 @@ services:
     ports:
       - 6379:6379
 
+  rabbitmq:
+    build:
+      context: rabbitmq
+      dockerfile: Dockerfile
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_ERLANG_COOKIE: '!SecretCookie!'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq-logs:/var/log/rabbitmq
+
+
 volumes:
   mysql-master-db:
   mysql-shard0:
   mysql-shard1:
   kafka-data:
+  rabbitmq-data:
+  rabbitmq-logs:
 
 

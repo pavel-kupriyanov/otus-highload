@@ -1,5 +1,6 @@
 from random import sample
-from asyncio import AbstractEventLoop, create_task, gather
+import traceback
+from asyncio import create_task, gather, get_running_loop
 from typing import Dict, Tuple, List
 from json import loads
 
@@ -11,7 +12,9 @@ from social_network.settings import KafkaSettings, NewsCacheSettings
 from social_network.db.models import New, NewsType
 from social_network.db.managers import NewsManager, HobbiesManager, UserManager
 from social_network.db.connectors_storage import ConnectorsStorage
-from social_network.services.redis import RedisService, RedisKeys
+
+from ..redis import RedisService, RedisKeys
+from ..rabbitmq import RabbitMQProducer
 
 from .utils import prepare_ssl_context
 from .consts import Topic, Protocol
@@ -24,12 +27,9 @@ class BaseKafkaConsumer(BaseService):
     consumer: AIOKafkaConsumer
     topics: Tuple[str]
 
-    def __init__(self,
-                 conf: KafkaSettings,
-                 loop: AbstractEventLoop,
-                 **kwargs):
+    def __init__(self, conf: KafkaSettings, **kwargs):
         self.conf = conf
-        self.loop = loop
+        self.loop = get_running_loop()
         self.task = None
 
     async def start(self):
@@ -55,28 +55,33 @@ class BaseKafkaConsumer(BaseService):
         return loads(record.value)
 
     async def process(self):
-        async for record in self.consumer:
-            await self._process(self.parse(record))
-            await self.consumer.commit()
+        while True:
+            try:
+                async for record in self.consumer:
+                    await self._process(self.parse(record))
+                    await self.consumer.commit()
+            except Exception as e:
+                print(repr(e))
+                print(traceback.print_tb(e.__traceback__))
 
-    async def _process(self, msg: Dict):
-        raise NotImplemented
+
+async def _process(self, msg: Dict):
+    raise NotImplemented
 
 
-class BaseNewsKafkaConsumer(BaseKafkaConsumer):
+class BaseNewsConsumer(BaseKafkaConsumer):
     topics = (Topic.News,)
 
 
-class PopulateNewsKafkaConsumer(BaseKafkaConsumer):
+class PopulateNewsConsumer(BaseKafkaConsumer):
     group_id = 'populate'
     topics = (Topic.Populate,)
 
     def __init__(self,
                  conf: KafkaSettings,
-                 loop: AbstractEventLoop,
                  connectors_storage: ConnectorsStorage,
                  kafka_producer: KafkaProducer):
-        super().__init__(conf, loop)
+        super().__init__(conf)
         self.kafka_producer = kafka_producer
         self.hobbies_manager = HobbiesManager(connectors_storage)
         self.user_manager = UserManager(connectors_storage)
@@ -107,14 +112,13 @@ class PopulateNewsKafkaConsumer(BaseKafkaConsumer):
             new.payload.hobby = await self.hobbies_manager.get(hobby_id)
 
 
-class NewsKafkaDatabaseConsumer(BaseNewsKafkaConsumer):
+class NewsDatabaseConsumer(BaseNewsConsumer):
     group_id = 'news_database'
 
     def __init__(self,
                  conf: KafkaSettings,
-                 loop: AbstractEventLoop,
                  connectors_storage: ConnectorsStorage):
-        super().__init__(conf, loop)
+        super().__init__(conf)
         self.news_manager = NewsManager(connectors_storage)
 
     async def _process(self, raw_new: Dict):
@@ -124,16 +128,15 @@ class NewsKafkaDatabaseConsumer(BaseNewsKafkaConsumer):
         await self.news_manager.create_from_model(new)
 
 
-class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
+class NewsCacheConsumer(BaseNewsConsumer):
     group_id = 'news_cache'
 
     def __init__(self,
                  conf: KafkaSettings,
                  news_conf: NewsCacheSettings,
-                 loop: AbstractEventLoop,
                  connector_storage: ConnectorsStorage,
                  redis_service: RedisService):
-        super().__init__(conf, loop)
+        super().__init__(conf)
         self.news_conf = news_conf
         self.redis: Redis = redis_service
         self.users_manager = UserManager(connector_storage)
@@ -141,6 +144,9 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
     async def _process(self, raw_new: Dict):
         new = New(**raw_new)
         follower_ids = await self.get_follower_ids(new.author_id)
+        await self.add_news_to_feed(new, follower_ids)
+
+    async def add_news_to_feed(self, new: New, follower_ids: List[int]):
         add_tasks = []
         for follower_id in follower_ids:
             task = create_task(self.add_new_to_feed(follower_id, new))
@@ -159,9 +165,9 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
             return
         feed = sorted(feed, key=sort_key)
 
-        earliest = new.created < feed[0]['created']
         offset = len(feed) - max_feed_size - 1
         if offset > 0:
+            earliest = new.created < feed[0]['created']
             if earliest:
                 # No need to add earliest key into cache
                 return
@@ -186,3 +192,37 @@ class NewsKafkaCacheConsumer(BaseNewsKafkaConsumer):
             followers = sample(followers, max_followers)
 
         return followers
+
+
+class NewsCacheAndRabbitConsumer(NewsCacheConsumer):
+
+    def __init__(self,
+                 conf: KafkaSettings,
+                 news_conf: NewsCacheSettings,
+                 connector_storage: ConnectorsStorage,
+                 redis_service: RedisService,
+                 rabbit_producer: RabbitMQProducer):
+        super().__init__(conf, news_conf, connector_storage, redis_service)
+        self.rabbit_producer = rabbit_producer
+
+    async def _process(self, raw_new: Dict):
+        new = New(**raw_new)
+        follower_ids = await self.get_follower_ids(new.author_id)
+
+        to_rabbit = self.add_news_to_rabbit(new, follower_ids)
+        to_feed = self.add_news_to_feed(new, follower_ids)
+
+        await gather(create_task(to_feed), create_task(to_rabbit))
+
+    async def add_news_to_rabbit(self, new: New, follower_ids: List[int]):
+        add_tasks = []
+        for follower_id in follower_ids:
+            task = create_task(self.add_new_to_rabbit(follower_id, new))
+            add_tasks.append(task)
+
+        await gather(*add_tasks)
+
+    async def add_new_to_rabbit(self, follower_id: int, new: New):
+        await self.rabbit_producer.send(
+            new.dict(), routing_key=str(follower_id)
+        )

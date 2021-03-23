@@ -1,8 +1,12 @@
+import asyncio
 from typing import Optional, List
+
 from fastapi import (
     APIRouter,
     Depends,
+    WebSocket
 )
+from starlette.websockets import WebSocketState
 from fastapi_utils.cbv import cbv
 
 from social_network.db.models import (
@@ -13,6 +17,7 @@ from social_network.db.models import (
 from social_network.db.managers import NewsManager, UserManager
 from social_network.services.kafka import KafkaProducer
 from social_network.services.redis import RedisService, RedisKeys
+from social_network.services.ws import FeedWebSocketService
 
 from ..depends import (
     get_user,
@@ -20,6 +25,8 @@ from ..depends import (
     get_redis_client,
     get_news_manager,
     get_user_manager,
+    get_ws_user,
+    get_ws_service
 )
 from .models import NewCreatePayload, NewsQueryParams
 from ..utils import authorize_only
@@ -63,6 +70,8 @@ class NewsViewSet:
             return cached
 
         friends_ids = await self.user_manager.get_friends_ids(self.user_.id)
+        if not friends_ids:
+            return []
         return await self.news_manager.list(author_ids=friends_ids,
                                             order=q.order,
                                             limit=q.paginate_by,
@@ -83,3 +92,16 @@ class NewsViewSet:
             RedisKeys.USER_FEED, str(self.user_.id)
         ) or []
         return [New(**new) for new in feed]
+
+
+@cbv(router)
+class WebSocketNewsViewSet:
+    user_: Optional[User] = Depends(get_ws_user)
+    ws_service: FeedWebSocketService = Depends(get_ws_service)
+
+    @router.websocket('/ws')
+    @authorize_only
+    async def real_time_feed(self, ws: WebSocket):
+        await self.ws_service.add(self.user_.id, ws)
+        while ws.application_state != WebSocketState.DISCONNECTED:
+            await asyncio.sleep(1)
